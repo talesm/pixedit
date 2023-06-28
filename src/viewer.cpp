@@ -31,6 +31,7 @@ private:
   void handleWindowEvent(const SDL_WindowEvent& ev);
   void handleMotionEvent(const SDL_MouseMotionEvent& ev);
   void handleWheelEvent(const SDL_MouseWheelEvent& ev);
+  void handleDropEvent(const SDL_DropEvent& ev);
 
   void setupImGui();
 
@@ -72,6 +73,10 @@ ViewerApp::run()
       case SDL_MOUSEWHEEL:
         if (ImGui::GetIO().WantCaptureMouse) break;
         handleWheelEvent(ev.wheel);
+        break;
+      case SDL_DROPFILE:
+        if (ImGui::GetIO().WantCaptureMouse) break;
+        handleDropEvent(ev.drop);
         break;
       default: break;
       }
@@ -150,6 +155,19 @@ ViewerApp::handleWheelEvent(const SDL_MouseWheelEvent& ev)
   } else if (ev.y > 0) {
     canvas.scale *= 2;
   }
+}
+
+void
+ViewerApp::handleDropEvent(const SDL_DropEvent& ev)
+{
+  try {
+    canvas.buffer = Buffer{ev.file};
+  } catch (...) {
+    SDL_Log("Failed to open file: %s", ev.file);
+  }
+  canvas.updatePreview(renderer);
+  canvas.offset = {0, 0};
+  canvas.scale = 1.f;
 }
 
 void
