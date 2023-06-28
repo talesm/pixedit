@@ -25,7 +25,7 @@ INC_FLAGS := $(addprefix -I,$(INC_DIRS)) $(shell sdl2-config --cflags)
 
 # The -MMD and -MP flags together generate Makefiles for us!
 # These files will have .d instead of .o as the output.
-CPPFLAGS := $(INC_FLAGS) -MMD -MP -Wall
+CPPFLAGS := $(INC_FLAGS) -g -MMD -MP -Wall
 
 # # Use latest C++ versin
 CXXFLAGS := $(CXXFLAGS) -std=gnu++20

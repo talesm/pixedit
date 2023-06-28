@@ -35,7 +35,7 @@ private:
 
   void setupImGui();
 
-  void showCanvasOptions(pixedit::Canvas& canvas);
+  void showCanvasOptions();
 };
 
 ViewerApp::ViewerApp(InitSettings settings)
@@ -86,9 +86,7 @@ ViewerApp::run()
     ImGui_ImplSDLRenderer_NewFrame();
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
-
-    showCanvasOptions(canvas);
-
+    showCanvasOptions();
     ImGui::ShowDemoWindow();
 
     /// Render
@@ -103,6 +101,8 @@ ViewerApp::run()
     SDL_RenderPresent(renderer);
     SDL_Delay(1);
   }
+  ImGui::DestroyContext(nullptr);
+  SDL_Quit();
   return EXIT_SUCCESS;
 }
 
@@ -171,9 +171,14 @@ ViewerApp::handleDropEvent(const SDL_DropEvent& ev)
 }
 
 void
-ViewerApp::showCanvasOptions(pixedit::Canvas& canvas)
+ViewerApp::showCanvasOptions()
 {
   if (ImGui::Begin("Canvas options")) {
+    auto& filename = canvas.buffer.filename;
+    size_t pos = filename.find_last_of('/') + 1;
+    if (pos >= std::string::npos) pos = 0;
+    ImGui::InputText(
+      "File", filename.data() + pos, filename.size() - pos + 1, 0);
     ImGui::DragFloat2("offset", &canvas.offset.x, 1.f, -10000, +10000);
     if (ImGui::Button("Reset offset")) { canvas.offset = {0}; }
     if (ImGui::ArrowButton("Decrease zoom", ImGuiDir_Left)) {
