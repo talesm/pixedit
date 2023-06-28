@@ -12,6 +12,9 @@ SDL_Renderer* renderer = nullptr;
 static void
 setupImGui();
 
+static void
+showCanvasOptions(pixedit::Canvas& canvas);
+
 int
 main()
 {
@@ -48,6 +51,14 @@ main()
         default: break;
         }
         break;
+      case SDL_MOUSEMOTION:
+        if (ImGui::GetIO().WantCaptureMouse ||
+            !(ev.motion.state & SDL_BUTTON_LMASK)) {
+          break;
+        }
+        canvas.offset.x += ev.motion.xrel;
+        canvas.offset.y += ev.motion.yrel;
+        break;
       default: break;
       }
     }
@@ -56,6 +67,8 @@ main()
     ImGui_ImplSDLRenderer_NewFrame();
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
+
+    showCanvasOptions(canvas);
 
     ImGui::ShowDemoWindow();
 
@@ -93,4 +106,14 @@ setupImGui()
   // Setup Platform/Renderer backends
   ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
   ImGui_ImplSDLRenderer_Init(renderer);
+}
+
+static void
+showCanvasOptions(pixedit::Canvas& canvas)
+{
+  if (ImGui::Begin("Canvas options")) {
+    ImGui::DragFloat2("offset", &canvas.offset.x, 1.f, -10000, +10000);
+    if (ImGui::Button("Reset offset")) { canvas.offset = {0}; }
+  }
+  ImGui::End();
 }

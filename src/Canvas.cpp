@@ -13,8 +13,8 @@ void
 Canvas::render(SDL_Renderer* renderer) const
 {
   SDL_FRect rect{
-    viewPort.x + (viewPort.w - buffer.surface->w) / 2.f,
-    viewPort.y + (viewPort.h - buffer.surface->h) / 2.f,
+    viewPort.x + offset.x + (viewPort.w - buffer.surface->w) / 2.f,
+    viewPort.y + offset.y + (viewPort.h - buffer.surface->h) / 2.f,
     buffer.surface->w,
     buffer.surface->h,
   };
