@@ -8,10 +8,17 @@
 #include "imgui_impl_sdlrenderer.h"
 
 namespace pixedit {
+
+struct InitSettings
+{
+  std::string filename{"../assets/samples/redball_128x128.png"};
+  SDL_Point windowSz{1024, 768};
+};
+
 class ViewerApp
 {
 public:
-  ViewerApp(SDL_Point windowSz);
+  ViewerApp(InitSettings settings = {});
 
   int run();
 
@@ -30,17 +37,17 @@ private:
   void showCanvasOptions(pixedit::Canvas& canvas);
 };
 
-ViewerApp::ViewerApp(SDL_Point windowSz)
+ViewerApp::ViewerApp(InitSettings settings)
   : window(SDL_CreateWindow("Pixedit viewer",
                             SDL_WINDOWPOS_UNDEFINED,
                             SDL_WINDOWPOS_UNDEFINED,
-                            windowSz.x,
-                            windowSz.y,
+                            settings.windowSz.x,
+                            settings.windowSz.y,
                             SDL_WINDOW_RESIZABLE))
   , renderer(SDL_CreateRenderer(window, -1, 0))
   , canvas{
-      .buffer{"../assets/samples/redball_128x128.png"},
-      .viewPort{0, 0, windowSz.x, windowSz.y},
+      .buffer{std::move(settings.filename)},
+      .viewPort{0, 0, settings.windowSz.x, settings.windowSz.y},
     }
 {
   if (!window || !renderer) { throw std::runtime_error{SDL_GetError()}; }
@@ -189,11 +196,14 @@ ViewerApp::showCanvasOptions(pixedit::Canvas& canvas)
 }
 
 int
-main()
+main(int argc, char** argv)
 {
   try {
     if (SDL_Init(SDL_INIT_VIDEO)) throw std::runtime_error{SDL_GetError()};
-    pixedit::ViewerApp app{{1024, 768}};
+    pixedit::InitSettings settings;
+    if (argc > 1) { settings.filename = argv[argc - 1]; }
+
+    pixedit::ViewerApp app{settings};
     return app.run();
   } catch (std::exception& e) {
     std::cerr << e.what() << '\n';
