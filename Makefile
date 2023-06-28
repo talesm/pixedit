@@ -3,7 +3,7 @@
 EXEC_VIEWER := pixedit_viewer
 
 BUILD_DIR := ./build
-SRC_DIRS := ./src ./external/imgui
+SRC_DIRS := ./src ./external
 
 # Find all the C and C++ files we want to compile
 # Note the single quotes around the * expressions. The shell will incorrectly expand these otherwise, but we want to send the * directly to the find command.

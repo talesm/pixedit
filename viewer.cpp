@@ -1,11 +1,13 @@
 #include <iostream>
 #include <stdexcept>
+#include <tuple>
 #include <SDL.h>
 #include "Buffer.hpp"
 #include "Canvas.hpp"
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_sdlrenderer.h"
+#include "tinyfiledialogs.h"
 
 namespace pixedit {
 
@@ -32,10 +34,13 @@ private:
   void handleMotionEvent(const SDL_MouseMotionEvent& ev);
   void handleWheelEvent(const SDL_MouseWheelEvent& ev);
   void handleDropEvent(const SDL_DropEvent& ev);
+  void handleKeyboardEvent(const SDL_KeyboardEvent& ev);
 
   void setupImGui();
 
   void showCanvasOptions();
+
+  void changeFile(const std::string& filename);
 };
 
 ViewerApp::ViewerApp(InitSettings settings)
@@ -77,6 +82,10 @@ ViewerApp::run()
       case SDL_DROPFILE:
         if (ImGui::GetIO().WantCaptureMouse) break;
         handleDropEvent(ev.drop);
+        break;
+      case SDL_KEYDOWN:
+        if (ImGui::GetIO().WantCaptureKeyboard) break;
+        handleKeyboardEvent(ev.key);
         break;
       default: break;
       }
@@ -158,16 +167,45 @@ ViewerApp::handleWheelEvent(const SDL_MouseWheelEvent& ev)
 }
 
 void
-ViewerApp::handleDropEvent(const SDL_DropEvent& ev)
+ViewerApp::changeFile(const std::string& filename)
 {
   try {
-    canvas.buffer = Buffer{ev.file};
+    canvas.buffer = Buffer{filename};
+    canvas.updatePreview(renderer);
+    canvas.offset = {0, 0};
+    canvas.scale = 1.f;
   } catch (...) {
-    SDL_Log("Failed to open file: %s", ev.file);
+    SDL_Log("Failed to open file: %s", filename);
   }
-  canvas.updatePreview(renderer);
-  canvas.offset = {0, 0};
-  canvas.scale = 1.f;
+}
+
+void
+ViewerApp::handleDropEvent(const SDL_DropEvent& ev)
+{
+  changeFile(ev.file);
+}
+
+void
+ViewerApp::handleKeyboardEvent(const SDL_KeyboardEvent& ev)
+{
+  constexpr int shift = 1, ctrl = 2, alt = 4;
+  int mod = 0;
+  if (ev.keysym.mod & KMOD_SHIFT) mod |= shift;
+  if (ev.keysym.mod & KMOD_CTRL) mod |= ctrl;
+  if (ev.keysym.mod & KMOD_ALT) mod |= alt;
+  std::tuple<SDL_Keycode, int> key{ev.keysym.sym, mod};
+  if (key == std::tuple{SDLK_o, ctrl}) {
+    static char* filePatterns[] = {"*.png", "*.jpg", "*.jpeg", "*.bmp"};
+    auto filename =
+      tinyfd_openFileDialog("Select file to open",
+                            nullptr,
+                            sizeof(filePatterns) / sizeof(filePatterns[0]),
+                            filePatterns,
+                            "Image files",
+                            false);
+    if (filename) { changeFile(filename); }
+    return;
+  }
 }
 
 void
