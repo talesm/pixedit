@@ -59,6 +59,14 @@ main()
         canvas.offset.x += ev.motion.xrel;
         canvas.offset.y += ev.motion.yrel;
         break;
+      case SDL_MOUSEWHEEL:
+        if (ImGui::GetIO().WantCaptureMouse) { break; }
+        if (ev.wheel.y < 0) {
+          canvas.scale /= 2;
+        } else if (ev.wheel.y > 0) {
+          canvas.scale *= 2;
+        }
+        break;
       default: break;
       }
     }
@@ -114,6 +122,15 @@ showCanvasOptions(pixedit::Canvas& canvas)
   if (ImGui::Begin("Canvas options")) {
     ImGui::DragFloat2("offset", &canvas.offset.x, 1.f, -10000, +10000);
     if (ImGui::Button("Reset offset")) { canvas.offset = {0}; }
+    if (ImGui::ArrowButton("Decrease zoom", ImGuiDir_Left)) {
+      canvas.scale /= 2;
+    }
+    ImGui::SameLine();
+    ImGui::Text("%g%%", canvas.scale * 100);
+    ImGui::SameLine();
+    if (ImGui::ArrowButton("Increase zoom", ImGuiDir_Right)) {
+      canvas.scale *= 2;
+    }
   }
   ImGui::End();
 }
