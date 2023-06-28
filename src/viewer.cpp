@@ -152,6 +152,7 @@ showCanvasOptions(pixedit::Canvas& canvas)
         canvas.checkerColors[1].g = color2[1] * 255.f;
         canvas.checkerColors[1].b = color2[2] * 255.f;
       }
+      ImGui::DragInt("Square size", &canvas.checkerSize, 1, 1, 1024);
     }
   }
   ImGui::End();

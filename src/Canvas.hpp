@@ -15,6 +15,7 @@ struct Canvas
 
   SDL_Texture* preview = nullptr;
   SDL_Color checkerColors[2] = {{200, 200, 200, 255}, {150, 150, 150, 255}};
+  int checkerSize = 16;
 
   void updatePreview(SDL_Renderer* renderer);
 
