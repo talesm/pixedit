@@ -1,13 +1,13 @@
 #include <iostream>
 #include <SDL.h>
 #include "Buffer.hpp"
+#include "Canvas.hpp"
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_sdlrenderer.h"
 
 SDL_Window* window = nullptr;
 SDL_Renderer* renderer = nullptr;
-SDL_Point windowSz = {1024, 768};
 
 static void
 setupImGui();
@@ -16,18 +16,22 @@ int
 main()
 {
   SDL_Init(SDL_INIT_VIDEO);
+  constexpr SDL_Point windowSz = {1024, 768};
   window = SDL_CreateWindow("Pixedit viewer",
                             SDL_WINDOWPOS_UNDEFINED,
                             SDL_WINDOWPOS_UNDEFINED,
-                            1024,
-                            768,
+                            windowSz.x,
+                            windowSz.y,
                             SDL_WINDOW_RESIZABLE);
   renderer = SDL_CreateRenderer(window, -1, 0);
   setupImGui();
 
   using namespace pixedit;
-  Buffer buffer{"../assets/samples/redball_128x128.png"};
-  SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, buffer.surface);
+  Canvas canvas{
+    .buffer{"../assets/samples/redball_128x128.png"},
+    .viewPort{0, 0, windowSz.x, windowSz.y},
+  };
+  canvas.updatePreview(renderer);
 
   bool exited = false;
   while (!exited) {
@@ -38,7 +42,8 @@ main()
       case SDL_WINDOWEVENT:
         switch (ev.window.event) {
         case SDL_WINDOWEVENT_SIZE_CHANGED:
-          windowSz = {ev.window.data1, ev.window.data2};
+          canvas.viewPort.w = ev.window.data1;
+          canvas.viewPort.h = ev.window.data2;
           break;
         default: break;
         }
@@ -58,8 +63,7 @@ main()
     SDL_SetRenderDrawColor(renderer, 60, 60, 60, 255);
     SDL_RenderClear(renderer);
 
-    SDL_FRect rect{windowSz.x / 2.f - 64, windowSz.y / 2.f - 64, 128, 128};
-    SDL_RenderCopyF(renderer, texture, nullptr, &rect);
+    canvas.render(renderer);
 
     ImGui::Render();
     ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
