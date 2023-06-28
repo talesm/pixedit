@@ -1,4 +1,5 @@
 #include <iostream>
+#include <stdexcept>
 #include <SDL.h>
 #include "Buffer.hpp"
 #include "Canvas.hpp"
@@ -6,37 +7,46 @@
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_sdlrenderer.h"
 
-SDL_Window* window = nullptr;
-SDL_Renderer* renderer = nullptr;
-
-static void
-setupImGui();
-
-static void
-showCanvasOptions(pixedit::Canvas& canvas);
-
-int
-main()
+namespace pixedit {
+class ViewerApp
 {
-  SDL_Init(SDL_INIT_VIDEO);
-  constexpr SDL_Point windowSz = {1024, 768};
-  window = SDL_CreateWindow("Pixedit viewer",
+public:
+  ViewerApp(SDL_Point windowSz);
+
+  int run();
+
+private:
+  SDL_Window* window = nullptr;
+  SDL_Renderer* renderer = nullptr;
+  Canvas canvas;
+  bool exited = false;
+
+  void setupImGui();
+
+  void showCanvasOptions(pixedit::Canvas& canvas);
+};
+
+ViewerApp::ViewerApp(SDL_Point windowSz)
+  : window(SDL_CreateWindow("Pixedit viewer",
                             SDL_WINDOWPOS_UNDEFINED,
                             SDL_WINDOWPOS_UNDEFINED,
                             windowSz.x,
                             windowSz.y,
-                            SDL_WINDOW_RESIZABLE);
-  renderer = SDL_CreateRenderer(window, -1, 0);
-  setupImGui();
-
-  using namespace pixedit;
-  Canvas canvas{
-    .buffer{"../assets/samples/redball_128x128.png"},
-    .viewPort{0, 0, windowSz.x, windowSz.y},
-  };
+                            SDL_WINDOW_RESIZABLE))
+  , renderer(SDL_CreateRenderer(window, -1, 0))
+  , canvas{
+      .buffer{"../assets/samples/redball_128x128.png"},
+      .viewPort{0, 0, windowSz.x, windowSz.y},
+    }
+{
+  if (!window || !renderer) { throw std::runtime_error{SDL_GetError()}; }
   canvas.updatePreview(renderer);
+  setupImGui();
+}
 
-  bool exited = false;
+int
+ViewerApp::run()
+{
   while (!exited) {
     for (SDL_Event ev; SDL_PollEvent(&ev);) {
       ImGui_ImplSDL2_ProcessEvent(&ev);
@@ -92,11 +102,11 @@ main()
     SDL_RenderPresent(renderer);
     SDL_Delay(1);
   }
-  return 0;
+  return EXIT_SUCCESS;
 }
 
-static void
-setupImGui()
+void
+ViewerApp::setupImGui()
 {
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
@@ -116,8 +126,8 @@ setupImGui()
   ImGui_ImplSDLRenderer_Init(renderer);
 }
 
-static void
-showCanvasOptions(pixedit::Canvas& canvas)
+void
+ViewerApp::showCanvasOptions(pixedit::Canvas& canvas)
 {
   if (ImGui::Begin("Canvas options")) {
     ImGui::DragFloat2("offset", &canvas.offset.x, 1.f, -10000, +10000);
@@ -156,4 +166,20 @@ showCanvasOptions(pixedit::Canvas& canvas)
     }
   }
   ImGui::End();
+}
+}
+
+int
+main()
+{
+  try {
+    if (SDL_Init(SDL_INIT_VIDEO)) throw std::runtime_error{SDL_GetError()};
+    pixedit::ViewerApp app{{1024, 768}};
+    return app.run();
+  } catch (std::exception& e) {
+    std::cerr << e.what() << '\n';
+  } catch (...) {
+    std::cerr << "Unknown error\n";
+  }
+  return EXIT_FAILURE;
 }
