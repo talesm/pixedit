@@ -21,6 +21,10 @@ private:
   Canvas canvas;
   bool exited = false;
 
+  void handleWindowEvent(const SDL_WindowEvent& ev);
+  void handleMotionEvent(const SDL_MouseMotionEvent& ev);
+  void handleWheelEvent(const SDL_MouseWheelEvent& ev);
+
   void setupImGui();
 
   void showCanvasOptions(pixedit::Canvas& canvas);
@@ -48,34 +52,19 @@ int
 ViewerApp::run()
 {
   while (!exited) {
+    // Events
     for (SDL_Event ev; SDL_PollEvent(&ev);) {
       ImGui_ImplSDL2_ProcessEvent(&ev);
       switch (ev.type) {
       case SDL_QUIT: exited = true; break;
-      case SDL_WINDOWEVENT:
-        switch (ev.window.event) {
-        case SDL_WINDOWEVENT_SIZE_CHANGED:
-          canvas.viewPort.w = ev.window.data1;
-          canvas.viewPort.h = ev.window.data2;
-          break;
-        default: break;
-        }
-        break;
+      case SDL_WINDOWEVENT: handleWindowEvent(ev.window); break;
       case SDL_MOUSEMOTION:
-        if (ImGui::GetIO().WantCaptureMouse ||
-            !(ev.motion.state & SDL_BUTTON_LMASK)) {
-          break;
-        }
-        canvas.offset.x += ev.motion.xrel;
-        canvas.offset.y += ev.motion.yrel;
+        if (ImGui::GetIO().WantCaptureMouse) break;
+        handleMotionEvent(ev.motion);
         break;
       case SDL_MOUSEWHEEL:
-        if (ImGui::GetIO().WantCaptureMouse) { break; }
-        if (ev.wheel.y < 0) {
-          canvas.scale /= 2;
-        } else if (ev.wheel.y > 0) {
-          canvas.scale *= 2;
-        }
+        if (ImGui::GetIO().WantCaptureMouse) break;
+        handleWheelEvent(ev.wheel);
         break;
       default: break;
       }
@@ -124,6 +113,36 @@ ViewerApp::setupImGui()
   // Setup Platform/Renderer backends
   ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
   ImGui_ImplSDLRenderer_Init(renderer);
+}
+
+void
+ViewerApp::handleWindowEvent(const SDL_WindowEvent& ev)
+{
+  switch (ev.event) {
+  case SDL_WINDOWEVENT_SIZE_CHANGED:
+    canvas.viewPort.w = ev.data1;
+    canvas.viewPort.h = ev.data2;
+    break;
+  default: break;
+  }
+}
+
+void
+ViewerApp::handleMotionEvent(const SDL_MouseMotionEvent& ev)
+{
+  if (!(ev.state & SDL_BUTTON_LMASK)) { return; }
+  canvas.offset.x += ev.xrel;
+  canvas.offset.y += ev.yrel;
+}
+
+void
+ViewerApp::handleWheelEvent(const SDL_MouseWheelEvent& ev)
+{
+  if (ev.y < 0) {
+    canvas.scale /= 2;
+  } else if (ev.y > 0) {
+    canvas.scale *= 2;
+  }
 }
 
 void
