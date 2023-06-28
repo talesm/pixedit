@@ -131,6 +131,28 @@ showCanvasOptions(pixedit::Canvas& canvas)
     if (ImGui::ArrowButton("Increase zoom", ImGuiDir_Right)) {
       canvas.scale *= 2;
     }
+    if (ImGui::CollapsingHeader("Transparency options")) {
+      float color1[3] = {
+        canvas.checkerColors[0].r / 255.f,
+        canvas.checkerColors[0].g / 255.f,
+        canvas.checkerColors[0].b / 255.f,
+      };
+      if (ImGui::ColorEdit3("Color 1", color1)) {
+        canvas.checkerColors[0].r = color1[0] * 255.f;
+        canvas.checkerColors[0].g = color1[1] * 255.f;
+        canvas.checkerColors[0].b = color1[2] * 255.f;
+      }
+      float color2[3] = {
+        canvas.checkerColors[1].r / 255.f,
+        canvas.checkerColors[1].g / 255.f,
+        canvas.checkerColors[1].b / 255.f,
+      };
+      if (ImGui::ColorEdit3("Color 2", color2)) {
+        canvas.checkerColors[1].r = color2[0] * 255.f;
+        canvas.checkerColors[1].g = color2[1] * 255.f;
+        canvas.checkerColors[1].b = color2[2] * 255.f;
+      }
+    }
   }
   ImGui::End();
 }
