@@ -1,11 +1,13 @@
 #include <iostream>
 #include <SDL.h>
+#include "Buffer.hpp"
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_sdlrenderer.h"
 
 SDL_Window* window = nullptr;
 SDL_Renderer* renderer = nullptr;
+SDL_Point windowSz = {1024, 768};
 
 static void
 setupImGui();
@@ -23,12 +25,24 @@ main()
   renderer = SDL_CreateRenderer(window, -1, 0);
   setupImGui();
 
+  using namespace pixedit;
+  Buffer buffer{"../assets/samples/redball_128x128.png"};
+  SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, buffer.surface);
+
   bool exited = false;
   while (!exited) {
     for (SDL_Event ev; SDL_PollEvent(&ev);) {
       ImGui_ImplSDL2_ProcessEvent(&ev);
       switch (ev.type) {
       case SDL_QUIT: exited = true; break;
+      case SDL_WINDOWEVENT:
+        switch (ev.window.event) {
+        case SDL_WINDOWEVENT_SIZE_CHANGED:
+          windowSz = {ev.window.data1, ev.window.data2};
+          break;
+        default: break;
+        }
+        break;
       default: break;
       }
     }
@@ -44,11 +58,14 @@ main()
     SDL_SetRenderDrawColor(renderer, 60, 60, 60, 255);
     SDL_RenderClear(renderer);
 
+    SDL_FRect rect{windowSz.x / 2.f - 64, windowSz.y / 2.f - 64, 128, 128};
+    SDL_RenderCopyF(renderer, texture, nullptr, &rect);
+
     ImGui::Render();
     ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 
     SDL_RenderPresent(renderer);
-    SDL_Delay(0);
+    SDL_Delay(1);
   }
   return 0;
 }
