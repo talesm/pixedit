@@ -7,6 +7,9 @@
 SDL_Window* window = nullptr;
 SDL_Renderer* renderer = nullptr;
 
+static void
+setupImGui();
+
 int
 main()
 {
@@ -18,22 +21,7 @@ main()
                             768,
                             SDL_WINDOW_RESIZABLE);
   renderer = SDL_CreateRenderer(window, -1, 0);
-  IMGUI_CHECKVERSION();
-  ImGui::CreateContext();
-  ImGuiIO& io = ImGui::GetIO();
-  (void)io;
-  io.ConfigFlags |=
-    ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
-  io.ConfigFlags |=
-    ImGuiConfigFlags_NavEnableGamepad; // Enable Gamepad Controls
-
-  // Setup Dear ImGui style
-  // ImGui::StyleColorsDark();
-  // ImGui::StyleColorsLight();
-
-  // Setup Platform/Renderer backends
-  ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
-  ImGui_ImplSDLRenderer_Init(renderer);
+  setupImGui();
 
   bool exited = false;
   while (!exited) {
@@ -63,4 +51,25 @@ main()
     SDL_Delay(0);
   }
   return 0;
+}
+
+static void
+setupImGui()
+{
+  IMGUI_CHECKVERSION();
+  ImGui::CreateContext();
+  ImGuiIO& io = ImGui::GetIO();
+  (void)io;
+  io.ConfigFlags |=
+    ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+  io.ConfigFlags |=
+    ImGuiConfigFlags_NavEnableGamepad; // Enable Gamepad Controls
+
+  // Setup Dear ImGui style
+  // ImGui::StyleColorsDark();
+  // ImGui::StyleColorsLight();
+
+  // Setup Platform/Renderer backends
+  ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
+  ImGui_ImplSDLRenderer_Init(renderer);
 }
