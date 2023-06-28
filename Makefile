@@ -34,8 +34,8 @@ CXXFLAGS := $(CXXFLAGS) -std=gnu++20
 all: $(BUILD_DIR)/$(EXEC_VIEWER)
 
 # The final build step.
-$(BUILD_DIR)/$(EXEC_VIEWER): $(OBJS)
-	$(CXX) $(OBJS) -o $@ $(LDFLAGS)
+$(BUILD_DIR)/$(EXEC_VIEWER): $(OBJS) $(BUILD_DIR)/viewer.cpp.o
+	$(CXX) $^ -o $@ $(LDFLAGS)
 
 # Build step for C source
 $(BUILD_DIR)/%.c.o: %.c
