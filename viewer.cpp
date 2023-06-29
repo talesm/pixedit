@@ -4,6 +4,7 @@
 #include <SDL.h>
 #include "Buffer.hpp"
 #include "Canvas.hpp"
+#include "PngXClip.hpp"
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_sdlrenderer.h"
@@ -204,6 +205,10 @@ ViewerApp::handleKeyboardEvent(const SDL_KeyboardEvent& ev)
                             "Image files",
                             false);
     if (filename) { changeFile(filename); }
+    return;
+  }
+  if (key == std::tuple{SDLK_c, ctrl}) {
+    copyToXClip(canvas.buffer.surface);
     return;
   }
 }
