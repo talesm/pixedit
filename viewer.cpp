@@ -175,7 +175,7 @@ ViewerApp::changeFile(const std::string& filename)
     canvas.offset = {0, 0};
     canvas.scale = 1.f;
   } catch (...) {
-    SDL_Log("Failed to open file: %s", filename);
+    SDL_Log("Failed to open file: %s", filename.c_str());
   }
 }
 
@@ -195,7 +195,7 @@ ViewerApp::handleKeyboardEvent(const SDL_KeyboardEvent& ev)
   if (ev.keysym.mod & KMOD_ALT) mod |= alt;
   std::tuple<SDL_Keycode, int> key{ev.keysym.sym, mod};
   if (key == std::tuple{SDLK_o, ctrl}) {
-    static char* filePatterns[] = {"*.png", "*.jpg", "*.jpeg", "*.bmp"};
+    static const char* filePatterns[] = {"*.png", "*.jpg", "*.jpeg", "*.bmp"};
     auto filename =
       tinyfd_openFileDialog("Select file to open",
                             nullptr,
