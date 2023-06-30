@@ -6,7 +6,7 @@
 
 namespace pixedit {
 
-struct Canvas
+struct BufferView
 {
   Buffer buffer;
   SDL_Rect viewPort;

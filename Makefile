@@ -33,7 +33,7 @@ INC_FLAGS := $(addprefix -I,$(INC_DIRS)) $(shell sdl2-config --cflags)
 # These files will have .d instead of .o as the output.
 CPPFLAGS := $(INC_FLAGS) -g -MMD -MP -Wall
 
-# # Use latest C++ versin
+# # Use latest C++ version
 CXXFLAGS := $(CXXFLAGS) -std=gnu++20
 
 # ALL

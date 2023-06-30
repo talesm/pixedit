@@ -3,7 +3,7 @@
 #include <tuple>
 #include <SDL.h>
 #include "Buffer.hpp"
-#include "Canvas.hpp"
+#include "BufferView.hpp"
 #include "PngXClip.hpp"
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
@@ -28,7 +28,7 @@ public:
 private:
   SDL_Window* window = nullptr;
   SDL_Renderer* renderer = nullptr;
-  Canvas canvas;
+  BufferView canvas;
   bool exited = false;
 
   void handleWindowEvent(const SDL_WindowEvent& ev);
@@ -39,7 +39,7 @@ private:
 
   void setupImGui();
 
-  void showCanvasOptions();
+  void showPictureOptions();
 
   void changeFile(const std::string& filename);
 };
@@ -96,7 +96,7 @@ ViewerApp::run()
     ImGui_ImplSDLRenderer_NewFrame();
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
-    showCanvasOptions();
+    showPictureOptions();
     ImGui::ShowDemoWindow();
 
     /// Render
@@ -214,9 +214,9 @@ ViewerApp::handleKeyboardEvent(const SDL_KeyboardEvent& ev)
 }
 
 void
-ViewerApp::showCanvasOptions()
+ViewerApp::showPictureOptions()
 {
-  if (ImGui::Begin("Canvas options")) {
+  if (ImGui::Begin("Picture options")) {
     auto& filename = canvas.buffer.filename;
     size_t pos = filename.find_last_of('/') + 1;
     if (pos >= std::string::npos) pos = 0;

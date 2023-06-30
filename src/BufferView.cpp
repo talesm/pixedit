@@ -1,9 +1,9 @@
-#include "Canvas.hpp"
+#include "BufferView.hpp"
 
 namespace pixedit {
 
 void
-Canvas::updatePreview(SDL_Renderer* renderer)
+BufferView::updatePreview(SDL_Renderer* renderer)
 {
   SDL_DestroyTexture(preview);
   preview = SDL_CreateTextureFromSurface(renderer, buffer.surface);
@@ -53,7 +53,7 @@ renderCheckerBoard(SDL_Renderer* renderer,
 }
 
 void
-Canvas::render(SDL_Renderer* renderer) const
+BufferView::render(SDL_Renderer* renderer) const
 {
   SDL_FPoint scaledSz = {
     scale * buffer.surface->w,
