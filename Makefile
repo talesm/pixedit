@@ -2,16 +2,18 @@
 # Thanks to Job Vranish (https://spin.atomicobject.com/2016/08/26/makefile-c-projects/)
 EXEC_VIEWER := pixedit_viewer
 
-BUILD_DIR := ./build
-SRC_DIRS := ./src ./external
+BUILD_DIR := build
+SRC_DIRS := src external
 
 # Find all the C and C++ files we want to compile
 # Note the single quotes around the * expressions. The shell will incorrectly expand these otherwise, but we want to send the * directly to the find command.
 SRCS := $(shell find $(SRC_DIRS) -name '*.cpp' -or -name '*.c' -or -name '*.s')
+NON_DEFAULT_SRCS := src/viewer.cpp
 
 # Prepends BUILD_DIR and appends .o to every src file
 # As an example, ./your_dir/hello.cpp turns into ./build/./your_dir/hello.cpp.o
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
+NON_DEFAULT_OBJS := $(NON_DEFAULT_SRCS:%=$(BUILD_DIR)/%.o)
 LDFLAGS := $(LDFLAGS)  $(shell sdl2-config --libs) -lSDL2_image
 
 # String substitution (suffix version without %).
@@ -33,8 +35,11 @@ CXXFLAGS := $(CXXFLAGS) -std=gnu++20
 # ALL
 all: $(BUILD_DIR)/$(EXEC_VIEWER)
 
+# Removing non default objs
+DEFAULT_OBJS := $(filter-out $(NON_DEFAULT_OBJS),$(OBJS))
+
 # The final build step.
-$(BUILD_DIR)/$(EXEC_VIEWER): $(OBJS) $(BUILD_DIR)/viewer.cpp.o
+$(BUILD_DIR)/$(EXEC_VIEWER): $(DEFAULT_OBJS) $(BUILD_DIR)/src/viewer.cpp.o
 	$(CXX) $^ -o $@ $(LDFLAGS)
 
 # Build step for C source
@@ -45,7 +50,7 @@ $(BUILD_DIR)/%.c.o: %.c
 # Build step for C++ source
 $(BUILD_DIR)/%.cpp.o: %.cpp
 	mkdir -p $(dir $@)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@ 
 
 
 .PHONY: clean all
