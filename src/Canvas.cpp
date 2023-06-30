@@ -16,7 +16,7 @@ operator|(Canvas& c, SDL_Point p)
 }
 
 Canvas&
-operator|(Canvas& c, HorizontalLine l)
+operator|(Canvas& c, drawHorizontalLine l)
 {
   return c | SDL_Rect{l.x, l.y, l.length, 1};
 }

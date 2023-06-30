@@ -6,7 +6,7 @@
 
 namespace pixedit {
 
-struct HorizontalLine
+struct drawHorizontalLine
 {
   int x;
   int y;
@@ -35,7 +35,7 @@ public:
   constexpr Uint32 getPrimaryColorRaw() const { return pColor; }
 
   friend Canvas& operator|(Canvas& c, SDL_Point p);
-  friend Canvas& operator|(Canvas& c, HorizontalLine l);
+  friend Canvas& operator|(Canvas& c, drawHorizontalLine l);
   friend Canvas& operator|(Canvas& c, SDL_Rect rect);
 };
 
@@ -116,11 +116,91 @@ fillRectTo(SDL_Point p1, SDL_Point p2)
 }
 /// @}
 
-inline Canvas&
+/// @brief Represents an rect outlined (not filled)
+struct OutlineRect
+{
+  SDL_Rect rect;
+};
+/// @{
+/// @brief Draw rect outline with given position and size
+/// @param rect the rect containing the top left position and size
+/// @param pos the point containing the top left position
+/// @param pos the point containing the size
+/// @param x the leftmost pixel
+/// @param y the topmost pixel
+/// @param w the horizontal size
+/// @param h the vertical size
+/// @return An OutlineRect that you can add to canvas through operator|
+constexpr OutlineRect
+drawRect(SDL_Rect rect)
+{
+  return {rect};
+}
+constexpr auto
+drawRect(int x, int y, int w, int h)
+{
+  return drawRect({x, y, w, h});
+}
+constexpr auto
+drawRect(SDL_Point p, SDL_Point sz)
+{
+  return drawRect(p.x, p.y, sz.x, sz.y);
+}
+/// @}
+
+/// @{
+/// @brief Draw rect outline from (x1,y1) to (x2, y2), inclusive
+/// @param x1 the first x position
+/// @param y1 the first y position
+/// @param x2 the second x position
+/// @param y2 the second y position
+/// @param p1 the first position
+/// @param p2 the second poistion
+/// @return the outline rectangle to draw (to be used on Canvas in combination
+/// with operator|)
+constexpr auto
+drawRectTo(int x1, int y1, int x2, int y2)
+{
+  using std::min, std::abs;
+  return drawRect(min(x1, x2), min(y1, y2), abs(x2 - x1) + 1, abs(y2 - y1) + 1);
+}
+constexpr auto
+drawRectTo(SDL_Point p1, SDL_Point p2)
+{
+  return drawRectTo(p1.x, p1.y, p2.x, p2.y);
+}
+/// @}
+
+struct drawVerticalLine
+{
+  int x;
+  int y;
+  int length;
+};
+
+constexpr Canvas&
 operator|(Canvas& c, Uint32 rawColor)
 {
   c.setPrimaryColorRaw(rawColor);
   return c;
+}
+
+inline Canvas&
+operator|(Canvas& c, drawVerticalLine l)
+{
+  return c | fillRect(l.x, l.y, 1, l.length);
+}
+
+inline Canvas&
+operator|(Canvas& c, OutlineRect outline)
+{
+  if (outline.rect.h <= 2) { return c | fillRect(outline.rect); }
+  int x1 = outline.rect.x, y1 = outline.rect.y;
+  int w = outline.rect.w, h = outline.rect.h;
+  int x2 = x1 + w - 1, y2 = y1 + h - 1;
+  return c | drawHorizontalLine{x1, y1, w} | drawHorizontalLine{x1, y2, w} |
+         drawVerticalLine{x1, y1 + 1, h - 2} |
+         drawVerticalLine{x2, y1 + 1, h - 2};
 }
 
 } // namespace pixedit
