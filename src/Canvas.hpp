@@ -13,39 +13,56 @@ struct drawHorizontalLine
   int length;
 };
 
+struct setColorB;
+
 /**
  * A canvas where you can issue drawing commands to
  */
 class Canvas
 {
   SDL_Surface* surface;
-  Uint32 pColor;
+  Uint32 colorA;
+  Uint32 colorB;
+  Uint64 pattern = 0;
 
 public:
   constexpr Canvas(SDL_Surface* surface = nullptr)
     : surface(surface)
-    , pColor{0}
+    , colorA{0}
   {
   }
 
   void setSurface(SDL_Surface* value);
 
-  constexpr void setPrimaryColorRaw(Uint32 value) { pColor = value; }
+  constexpr Uint32 getRawColorA() const { return colorA; }
+  constexpr Uint32 getRawColorB() const { return colorB; }
 
-  constexpr Uint32 getPrimaryColorRaw() const { return pColor; }
-
+  friend constexpr Canvas& operator|(Canvas& c, Uint32 rawColor);
+  friend constexpr Canvas& operator|(Canvas& c, setColorB rawColor);
+  friend constexpr Canvas& operator|(Canvas& c, Uint64 pattern);
   friend Canvas& operator|(Canvas& c, SDL_Point p);
   friend Canvas& operator|(Canvas& c, drawHorizontalLine l);
   friend Canvas& operator|(Canvas& c, SDL_Rect rect);
 };
 
 /// @brief Sets color
-/// @param color
-/// @return
 constexpr Uint32
 setColor(Uint32 color)
 {
   return {color};
+}
+
+/// @brief Sets secondary color
+struct setColorB
+{
+  Uint32 color;
+};
+
+/// @brief Set pattern
+constexpr Uint64
+setPattern(Uint64 pattern)
+{
+  return pattern;
 }
 
 /// @{
@@ -181,7 +198,21 @@ struct drawVerticalLine
 constexpr Canvas&
 operator|(Canvas& c, Uint32 rawColor)
 {
-  c.setPrimaryColorRaw(rawColor);
+  c.colorA = rawColor;
+  return c;
+}
+
+constexpr Canvas&
+operator|(Canvas& c, setColorB rawColor)
+{
+  c.colorB = rawColor.color;
+  return c;
+}
+
+constexpr Canvas&
+operator|(Canvas& c, Uint64 pattern)
+{
+  c.pattern = pattern;
   return c;
 }
 

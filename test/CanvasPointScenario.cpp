@@ -50,6 +50,36 @@ SCENARIO("Drawing a point", "[canvas]")
           }
         }
       }
+      AND_GIVEN("Checkered pattern of black and white")
+      {
+        Uint32 colorA = 0xFFFF'FFFF, colorB = 0x0000'00FF;
+        canvas | setColor(colorA) | setColorB(colorB) |
+          setPattern(0x55AA55AA'55AA55AA);
+        WHEN("draw top left (0x0) pixel to colorA")
+        {
+          canvas | drawPoint(0, 0);
+          THEN("The pixel is changed to colorA")
+          {
+            REQUIRE(pixels[0] == colorA);
+          }
+        }
+        WHEN("draw (1x0) pixel to colorB")
+        {
+          canvas | drawPoint(1, 0);
+          THEN("The pixel is changed to colorB")
+          {
+            REQUIRE(pixels[1] == colorB);
+          }
+        }
+        WHEN("draw (0x1) pixel to colorB")
+        {
+          canvas | drawPoint(0, 1);
+          THEN("The pixel is changed to colorB")
+          {
+            REQUIRE(pixels[8] == colorB);
+          }
+        }
+      }
     }
   }
 }
