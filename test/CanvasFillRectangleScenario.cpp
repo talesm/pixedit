@@ -52,7 +52,7 @@ SCENARIO("Drawing a filled rectangle", "[canvas]")
       {
         Uint32 colorA = 0xFFFF'FFFF, colorB = 0x0000'00FF;
         canvas | setColor(colorA) | setColorB(colorB) |
-          setPattern(0x55AA55AA'55AA55AA);
+          setPattern(patterns::CHECKERED);
         WHEN("fill rect from top left (0x0) to (2x0) to color")
         {
           canvas | fillRectTo(0, 0, 2, 1);

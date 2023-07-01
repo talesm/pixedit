@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 #include <SDL.h>
+#include "Pattern.hpp"
 
 namespace pixedit {
 
@@ -39,7 +40,7 @@ public:
 
   friend constexpr Canvas& operator|(Canvas& c, Uint32 rawColor);
   friend constexpr Canvas& operator|(Canvas& c, setColorB rawColor);
-  friend constexpr Canvas& operator|(Canvas& c, Uint64 pattern);
+  friend constexpr Canvas& operator|(Canvas& c, Pattern pattern);
   friend Canvas& operator|(Canvas& c, SDL_Point p);
   friend Canvas& operator|(Canvas& c, drawHorizontalLine l);
   friend Canvas& operator|(Canvas& c, SDL_Rect rect);
@@ -59,8 +60,8 @@ struct setColorB
 };
 
 /// @brief Set pattern
-constexpr Uint64
-setPattern(Uint64 pattern)
+constexpr Pattern
+setPattern(Pattern pattern)
 {
   return pattern;
 }
@@ -210,9 +211,9 @@ operator|(Canvas& c, setColorB rawColor)
 }
 
 constexpr Canvas&
-operator|(Canvas& c, Uint64 pattern)
+operator|(Canvas& c, Pattern pattern)
 {
-  c.pattern = pattern;
+  c.pattern = pattern.data8x8;
   return c;
 }
 
