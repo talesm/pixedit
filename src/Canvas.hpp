@@ -3,8 +3,7 @@
 
 #include <cstdlib>
 #include <SDL.h>
-#include "Pattern.hpp"
-#include "Pen.hpp"
+#include "Brush.hpp"
 
 namespace pixedit {
 
@@ -23,22 +22,18 @@ struct setColorB;
 class Canvas
 {
   SDL_Surface* surface;
-  Uint32 colorA;
-  Uint32 colorB;
-  Uint64 pattern = 0;
-  Pen pen;
+  Brush brush;
 
 public:
   constexpr Canvas(SDL_Surface* surface = nullptr)
     : surface(surface)
-    , colorA{0}
   {
   }
 
   void setSurface(SDL_Surface* value);
 
-  constexpr Uint32 getRawColorA() const { return colorA; }
-  constexpr Uint32 getRawColorB() const { return colorB; }
+  constexpr Uint32 getRawColorA() const { return brush.colorA; }
+  constexpr Uint32 getRawColorB() const { return brush.colorB; }
 
   friend constexpr Canvas& operator|(Canvas& c, Uint32 rawColor);
   friend constexpr Canvas& operator|(Canvas& c, setColorB rawColor);
@@ -202,28 +197,28 @@ struct drawVerticalLine
 constexpr Canvas&
 operator|(Canvas& c, Uint32 rawColor)
 {
-  c.colorA = rawColor;
+  c.brush.colorA = rawColor;
   return c;
 }
 
 constexpr Canvas&
 operator|(Canvas& c, setColorB rawColor)
 {
-  c.colorB = rawColor.color;
+  c.brush.colorB = rawColor.color;
   return c;
 }
 
 constexpr Canvas&
 operator|(Canvas& c, Pattern pattern)
 {
-  c.pattern = pattern.data8x8;
+  c.brush.pattern = pattern;
   return c;
 }
 
 constexpr Canvas&
 operator|(Canvas& c, const Pen& pen)
 {
-  c.pen = pen;
+  c.brush.pen = pen;
   return c;
 }
 
