@@ -49,6 +49,31 @@ SCENARIO("Drawing a point", "[canvas]")
             REQUIRE(pixels[63] == color);
           }
         }
+        AND_GIVEN("Pen is set to rectangle 2x3")
+        {
+          canvas | Pen(2, 3);
+          WHEN("draw point at (1x1) to color")
+          {
+            canvas | drawPoint(1, 1);
+            THEN("The pixel is changed to color")
+            {
+              REQUIRE(pixels[0] != color);
+              REQUIRE(pixels[1] == color);
+              REQUIRE(pixels[2] == color);
+              REQUIRE(pixels[3] != color);
+              REQUIRE(pixels[8] != color);
+              REQUIRE(pixels[9] == color);
+              REQUIRE(pixels[10] == color);
+              REQUIRE(pixels[11] != color);
+              REQUIRE(pixels[16] != color);
+              REQUIRE(pixels[17] == color);
+              REQUIRE(pixels[18] == color);
+              REQUIRE(pixels[19] != color);
+              REQUIRE(pixels[25] != color);
+              REQUIRE(pixels[26] != color);
+            }
+          }
+        }
       }
       AND_GIVEN("Checkered pattern of black and white")
       {

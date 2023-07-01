@@ -13,6 +13,11 @@ Canvas&
 operator|(Canvas& c, SDL_Point p)
 {
   Uint32 color = c.colorA;
+  if (c.pen.type) {
+    int halfW = c.pen.w / 2 + c.pen.w % 2 - 1;
+    int halfH = c.pen.h / 2 + c.pen.h % 2 - 1;
+    return c | SDL_Rect{p.x - halfW, p.y - halfH, c.pen.w, c.pen.h};
+  }
   if (c.pattern) {
     int xx = p.x % 8;
     int yy = p.y % 8;

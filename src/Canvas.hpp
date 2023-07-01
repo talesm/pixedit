@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <SDL.h>
 #include "Pattern.hpp"
+#include "Pen.hpp"
 
 namespace pixedit {
 
@@ -25,6 +26,7 @@ class Canvas
   Uint32 colorA;
   Uint32 colorB;
   Uint64 pattern = 0;
+  Pen pen;
 
 public:
   constexpr Canvas(SDL_Surface* surface = nullptr)
@@ -41,6 +43,7 @@ public:
   friend constexpr Canvas& operator|(Canvas& c, Uint32 rawColor);
   friend constexpr Canvas& operator|(Canvas& c, setColorB rawColor);
   friend constexpr Canvas& operator|(Canvas& c, Pattern pattern);
+  friend constexpr Canvas& operator|(Canvas& c, const Pen& pen);
   friend Canvas& operator|(Canvas& c, SDL_Point p);
   friend Canvas& operator|(Canvas& c, drawHorizontalLine l);
   friend Canvas& operator|(Canvas& c, SDL_Rect rect);
@@ -214,6 +217,13 @@ constexpr Canvas&
 operator|(Canvas& c, Pattern pattern)
 {
   c.pattern = pattern.data8x8;
+  return c;
+}
+
+constexpr Canvas&
+operator|(Canvas& c, const Pen& pen)
+{
+  c.pen = pen;
   return c;
 }
 
