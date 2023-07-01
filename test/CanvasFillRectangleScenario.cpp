@@ -48,6 +48,28 @@ SCENARIO("Drawing a filled rectangle", "[canvas]")
           }
         }
       }
+      AND_GIVEN("Checkered pattern of black and white")
+      {
+        Uint32 colorA = 0xFFFF'FFFF, colorB = 0x0000'00FF;
+        canvas | setColor(colorA) | setColorB(colorB) |
+          setPattern(0x55AA55AA'55AA55AA);
+        WHEN("fill rect from top left (0x0) to (2x0) to color")
+        {
+          canvas | fillRectTo(0, 0, 2, 1);
+          THEN("The pixel is changed to color")
+          {
+            REQUIRE(pixels[0] == colorA);
+            REQUIRE(pixels[1] == colorB);
+            REQUIRE(pixels[2] == colorA);
+            REQUIRE(pixels[3] != colorA);
+            REQUIRE(pixels[3] != colorB);
+            REQUIRE(pixels[8] == colorB);
+            REQUIRE(pixels[10] == colorB);
+            REQUIRE(pixels[16] != colorA);
+            REQUIRE(pixels[16] != colorB);
+          }
+        }
+      }
     }
   }
 }

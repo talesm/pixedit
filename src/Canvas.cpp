@@ -25,13 +25,20 @@ operator|(Canvas& c, SDL_Point p)
 Canvas&
 operator|(Canvas& c, drawHorizontalLine l)
 {
-  return c | SDL_Rect{l.x, l.y, l.length, 1};
+  if (!c.pattern) return c | SDL_Rect{l.x, l.y, l.length, 1};
+  for (int i = 0; i < l.length; ++i, ++l.x) c | SDL_Point{l.x, l.y};
+  return c;
 }
 
 Canvas&
 operator|(Canvas& c, SDL_Rect rect)
 {
-  SDL_FillRect(c.surface, &rect, c.colorA);
+  if (c.pattern) {
+    for (int i = 0; i < rect.h; ++i, ++rect.y)
+      c | drawHorizontalLine(rect.x, rect.y, rect.w);
+  } else {
+    SDL_FillRect(c.surface, &rect, c.colorA);
+  }
   return c;
 }
 
