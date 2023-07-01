@@ -9,21 +9,37 @@ Canvas::setSurface(SDL_Surface* value)
   surface = value;
 }
 
+void
+drawPixel(SDL_Surface* surface,
+          Uint64 pattern,
+          SDL_Point p,
+          Uint32 color,
+          Uint32 colorB)
+{
+  if (pattern) {
+    int xx = p.x % 8;
+    int yy = p.y % 8;
+    if ((pattern >> (yy * 8 + xx)) & 1) { color = colorB; }
+  }
+  setPixelAt(surface, p.x, p.y, color);
+}
+
 Canvas&
 operator|(Canvas& c, SDL_Point p)
 {
-  Uint32 color = c.colorA;
-  if (c.pen.type) {
-    int halfW = c.pen.w / 2 + c.pen.w % 2 - 1;
-    int halfH = c.pen.h / 2 + c.pen.h % 2 - 1;
-    return c | SDL_Rect{p.x - halfW, p.y - halfH, c.pen.w, c.pen.h};
+  if (c.pen.type == Pen::BOX) {
+    int xBeg = p.x - (c.pen.w / 2 + c.pen.w % 2 - 1);
+    int xEnd = xBeg + c.pen.w;
+    int yBeg = p.y - (c.pen.h / 2 + c.pen.h % 2 - 1);
+    int yEnd = yBeg + c.pen.h;
+    for (int i = yBeg; i < yEnd; ++i) {
+      for (int j = xBeg; j < xEnd; ++j) {
+        drawPixel(c.surface, c.pattern, {j, i}, c.colorA, c.colorB);
+      }
+    }
+  } else {
+    drawPixel(c.surface, c.pattern, p, c.colorA, c.colorB);
   }
-  if (c.pattern) {
-    int xx = p.x % 8;
-    int yy = p.y % 8;
-    if ((c.pattern >> (yy * 8 + xx)) & 1) { color = c.colorB; }
-  }
-  setPixelAt(c.surface, p.x, p.y, color);
   return c;
 }
 
