@@ -59,7 +59,7 @@ doHLine(SDL_Surface* surface, const Brush& b, const drawHorizontalLine& l)
 Canvas&
 operator|(Canvas& c, drawHorizontalLine l)
 {
-  if (c.brush.pattern.data8x8) {
+  if (c.brush.pattern.data8x8 || c.brush.pen.type != Pen::DOT) {
     doHLine(c.surface, c.brush, l);
   } else {
     SDL_Rect rect{l.x, l.y, l.length, 1};
@@ -71,7 +71,7 @@ operator|(Canvas& c, drawHorizontalLine l)
 void
 doBox(SDL_Surface* surface, const Brush& b, const SDL_Rect& rect)
 {
-  if (b.pattern.data8x8) {
+  if (b.pattern.data8x8 || b.pen.type != Pen::DOT) {
     drawHorizontalLine l{rect.x, rect.y, rect.w};
     for (int i = 0; i < rect.h; ++i, ++l.y) doHLine(surface, b, l);
   } else {

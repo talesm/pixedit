@@ -10,10 +10,10 @@ namespace pixedit {
 /// @brief The drawing state
 struct Brush
 {
-  Uint32 colorA;
-  Uint32 colorB;
+  Uint32 colorA{};
+  Uint32 colorB{};
   Pen pen;
-  Pattern pattern;
+  Pattern pattern{patterns::SOLID};
 };
 
 } // namespace pixedit
