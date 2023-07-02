@@ -7,11 +7,14 @@
 
 namespace pixedit {
 
+/// @brief Raw color type
+using RawColor = Uint32;
+
 /// @brief The drawing state
 struct Brush
 {
-  Uint32 colorA{};
-  Uint32 colorB{};
+  RawColor colorA{};
+  RawColor colorB{};
   Pen pen;
   Pattern pattern{patterns::SOLID};
 };

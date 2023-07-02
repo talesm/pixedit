@@ -24,10 +24,10 @@ SCENARIO("Drawing a filled rectangle", "[canvas]")
       AND_GIVEN("color is set to white")
       {
         Uint32 color = 0xFFFFFFFF;
-        canvas | setColor(color);
+        canvas | RawColorA(color);
         WHEN("fill rect from top left (0x0) to (2x0) to color")
         {
-          canvas | fillRectTo(0, 0, 2, 1);
+          canvas | FillRectTo(0, 0, 2, 1);
           THEN("The pixel is changed to color")
           {
             REQUIRE(pixels[0] == color);
@@ -41,7 +41,7 @@ SCENARIO("Drawing a filled rectangle", "[canvas]")
         }
         WHEN("fill rect backwards")
         {
-          canvas | fillRectTo(2, 3, 0, 1);
+          canvas | FillRectTo(2, 3, 0, 1);
           THEN("The pixel is changed to color")
           {
             REQUIRE(pixels[8] == color);
@@ -51,11 +51,10 @@ SCENARIO("Drawing a filled rectangle", "[canvas]")
       AND_GIVEN("Checkered pattern of black and white")
       {
         Uint32 colorA = 0xFFFF'FFFF, colorB = 0x0000'00FF;
-        canvas | setColor(colorA) | setColorB(colorB) |
-          setPattern(patterns::CHECKERED);
+        canvas | RawColorA(colorA) | RawColorB(colorB) | patterns::CHECKERED;
         WHEN("fill rect from top left (0x0) to (2x0) to color")
         {
-          canvas | fillRectTo(0, 0, 2, 1);
+          canvas | FillRectTo(0, 0, 2, 1);
           THEN("The pixel is changed to color")
           {
             REQUIRE(pixels[0] == colorA);

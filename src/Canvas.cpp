@@ -50,14 +50,14 @@ operator|(Canvas& c, SDL_Point p)
 }
 
 void
-doHLine(SDL_Surface* surface, const Brush& b, const drawHorizontalLine& l)
+doHLine(SDL_Surface* surface, const Brush& b, const HorizontalLine& l)
 {
   SDL_Point p{l.x, l.y};
   for (int i = 0; i < l.length; ++i, ++p.x) doPoint(surface, b, p);
 }
 
 Canvas&
-operator|(Canvas& c, drawHorizontalLine l)
+operator|(Canvas& c, HorizontalLine l)
 {
   if (c.brush.pattern.data8x8 || c.brush.pen.type != Pen::DOT) {
     doHLine(c.surface, c.brush, l);
@@ -72,7 +72,7 @@ void
 doBox(SDL_Surface* surface, const Brush& b, const SDL_Rect& rect)
 {
   if (b.pattern.data8x8 || b.pen.type != Pen::DOT) {
-    drawHorizontalLine l{rect.x, rect.y, rect.w};
+    HorizontalLine l{rect.x, rect.y, rect.w};
     for (int i = 0; i < rect.h; ++i, ++l.y) doHLine(surface, b, l);
   } else {
     SDL_FillRect(surface, &rect, b.colorA);

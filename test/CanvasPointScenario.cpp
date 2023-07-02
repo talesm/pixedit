@@ -24,10 +24,10 @@ SCENARIO("Drawing a point", "[canvas]")
       AND_GIVEN("color is set to white")
       {
         Uint32 color = 0xFFFFFFFF;
-        canvas | setColor(color);
+        canvas | RawColorA(color);
         WHEN("draw top left (0x0) pixel to color")
         {
-          canvas | drawPoint(0, 0);
+          canvas | Point(0, 0);
           THEN("The pixel is changed to color")
           {
             REQUIRE(pixels[0] == color);
@@ -35,7 +35,7 @@ SCENARIO("Drawing a point", "[canvas]")
         }
         WHEN("draw top right (7x0) pixel to color")
         {
-          canvas | drawPoint(7, 0);
+          canvas | Point(7, 0);
           THEN("The pixel is changed to color")
           {
             REQUIRE(pixels[7] == color);
@@ -43,7 +43,7 @@ SCENARIO("Drawing a point", "[canvas]")
         }
         WHEN("draw bottom right (7x7) pixel to color")
         {
-          canvas | drawPoint(7, 7);
+          canvas | Point(7, 7);
           THEN("The pixel is changed to color")
           {
             REQUIRE(pixels[63] == color);
@@ -54,7 +54,7 @@ SCENARIO("Drawing a point", "[canvas]")
           canvas | Pen(2, 3);
           WHEN("draw point at (1x1) to color")
           {
-            canvas | drawPoint(1, 1);
+            canvas | Point(1, 1);
             THEN("The pixel is changed to color")
             {
               REQUIRE(pixels[0] != color);
@@ -78,11 +78,10 @@ SCENARIO("Drawing a point", "[canvas]")
       AND_GIVEN("Checkered pattern of black and white")
       {
         Uint32 colorA = 0xFFFF'FFFF, colorB = 0x0000'00FF;
-        canvas | setColor(colorA) | setColorB(colorB) |
-          setPattern(patterns::CHECKERED);
+        canvas | RawColorA(colorA) | RawColorB(colorB) | patterns::CHECKERED;
         WHEN("draw top left (0x0) pixel to colorA")
         {
-          canvas | drawPoint(0, 0);
+          canvas | Point(0, 0);
           THEN("The pixel is changed to colorA")
           {
             REQUIRE(pixels[0] == colorA);
@@ -90,7 +89,7 @@ SCENARIO("Drawing a point", "[canvas]")
         }
         WHEN("draw (1x0) pixel to colorB")
         {
-          canvas | drawPoint(1, 0);
+          canvas | Point(1, 0);
           THEN("The pixel is changed to colorB")
           {
             REQUIRE(pixels[1] == colorB);
@@ -98,7 +97,7 @@ SCENARIO("Drawing a point", "[canvas]")
         }
         WHEN("draw (0x1) pixel to colorB")
         {
-          canvas | drawPoint(0, 1);
+          canvas | Point(0, 1);
           THEN("The pixel is changed to colorB")
           {
             REQUIRE(pixels[8] == colorB);
