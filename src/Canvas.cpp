@@ -10,16 +10,13 @@ Canvas::setSurface(SDL_Surface* value)
 }
 
 void
-doPixel(SDL_Surface* surface,
-        Uint64 pattern,
-        SDL_Point p,
-        Uint32 color,
-        Uint32 colorB)
+doPixel(SDL_Surface* surface, const Brush& b, SDL_Point p)
 {
-  if (pattern) {
+  auto color = b.colorA;
+  if (b.pattern.data8x8) {
     int xx = p.x % 8;
     int yy = p.y % 8;
-    if ((pattern >> (yy * 8 + xx)) & 1) { color = colorB; }
+    if ((b.pattern.data8x8 >> (yy * 8 + xx)) & 1) { color = b.colorB; }
   }
   setPixelAt(surface, p.x, p.y, color);
 }
@@ -33,12 +30,10 @@ doPoint(SDL_Surface* surface, const Brush& b, SDL_Point p)
     int yBeg = p.y - (b.pen.h / 2 + b.pen.h % 2 - 1);
     int yEnd = yBeg + b.pen.h;
     for (int i = yBeg; i < yEnd; ++i) {
-      for (int j = xBeg; j < xEnd; ++j) {
-        doPixel(surface, b.pattern.data8x8, {j, i}, b.colorA, b.colorB);
-      }
+      for (int j = xBeg; j < xEnd; ++j) { doPixel(surface, b, {j, i}); }
     }
   } else {
-    doPixel(surface, b.pattern.data8x8, p, b.colorA, b.colorB);
+    doPixel(surface, b, p);
   }
 }
 
