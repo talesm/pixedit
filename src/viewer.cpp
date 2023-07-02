@@ -32,8 +32,6 @@ private:
   bool exited = false;
 
   void handleWindowEvent(const SDL_WindowEvent& ev);
-  void handleMotionEvent(const SDL_MouseMotionEvent& ev);
-  void handleWheelEvent(const SDL_MouseWheelEvent& ev);
   void handleDropEvent(const SDL_DropEvent& ev);
   void handleKeyboardEvent(const SDL_KeyboardEvent& ev);
 
@@ -73,12 +71,9 @@ ViewerApp::run()
       case SDL_QUIT: exited = true; break;
       case SDL_WINDOWEVENT: handleWindowEvent(ev.window); break;
       case SDL_MOUSEMOTION:
-        if (ImGui::GetIO().WantCaptureMouse) break;
-        handleMotionEvent(ev.motion);
-        break;
       case SDL_MOUSEWHEEL:
         if (ImGui::GetIO().WantCaptureMouse) break;
-        handleWheelEvent(ev.wheel);
+        canvas.event(ev);
         break;
       case SDL_DROPFILE:
         if (ImGui::GetIO().WantCaptureMouse) break;
@@ -146,26 +141,6 @@ ViewerApp::handleWindowEvent(const SDL_WindowEvent& ev)
     canvas.viewPort.h = ev.data2;
     break;
   default: break;
-  }
-}
-
-void
-ViewerApp::handleMotionEvent(const SDL_MouseMotionEvent& ev)
-{
-  if (!(ev.state & SDL_BUTTON_LMASK) && !(ev.state & SDL_BUTTON_MMASK)) {
-    return;
-  }
-  canvas.offset.x += ev.xrel;
-  canvas.offset.y += ev.yrel;
-}
-
-void
-ViewerApp::handleWheelEvent(const SDL_MouseWheelEvent& ev)
-{
-  if (ev.y < 0) {
-    canvas.scale /= 2;
-  } else if (ev.y > 0) {
-    canvas.scale *= 2;
   }
 }
 

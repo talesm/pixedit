@@ -70,4 +70,28 @@ BufferView::render(SDL_Renderer* renderer) const
   SDL_RenderCopyF(renderer, preview, nullptr, &rect);
 }
 
+void
+BufferView::event(const SDL_Event& ev)
+{
+  switch (ev.type) {
+  case SDL_MOUSEMOTION:
+    if (!(ev.motion.state & SDL_BUTTON_LMASK) &&
+        !(ev.motion.state & SDL_BUTTON_MMASK))
+      break;
+    offset.x += ev.motion.xrel;
+    offset.y += ev.motion.yrel;
+    break;
+
+  case SDL_MOUSEWHEEL:
+    if (ev.wheel.y < 0) {
+      scale /= 2;
+    } else if (ev.wheel.y > 0) {
+      scale *= 2;
+    }
+    break;
+
+  default: break;
+  }
+}
+
 } // namespace pixedit

@@ -20,6 +20,8 @@ struct BufferView
   void updatePreview(SDL_Renderer* renderer);
 
   void render(SDL_Renderer* renderer) const;
+
+  void event(const SDL_Event& ev);
 };
 
 } // namespace pixedit
