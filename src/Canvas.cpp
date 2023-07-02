@@ -1,4 +1,5 @@
 #include "Canvas.hpp"
+#include "algorithms/rasterLine.hpp"
 #include "algorithms/surface.hpp"
 
 namespace pixedit {
@@ -60,6 +61,24 @@ operator|(Canvas& c, HorizontalLine l)
     SDL_Rect rect{l.x, l.y, l.length, 1};
     SDL_FillRect(c.surface, &rect, c.brush.colorA);
   }
+  return c;
+}
+
+Canvas&
+operator|(Canvas& c, LineTo l)
+{
+  rasterLine(l.x1, l.y1, l.x2, l.y2, [&](int x, int y) {
+    doPoint(c.surface, c.brush, {x, y});
+  });
+  return c;
+}
+
+Canvas&
+operator|(Canvas& c, OpenLineTo l)
+{
+  rasterLineOpen(l.x1, l.y1, l.x2, l.y2, [&](int x, int y) {
+    doPoint(c.surface, c.brush, {x, y});
+  });
   return c;
 }
 

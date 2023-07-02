@@ -14,6 +14,27 @@ struct HorizontalLine
   int length;
 };
 
+struct LineTo
+{
+  int x1, y1, x2, y2;
+  LineTo(int x1, int y1, int x2, int y2)
+    : x1(x1)
+    , y1(y1)
+    , x2(x2)
+    , y2(y2)
+  {
+  }
+  LineTo(const SDL_Point& p1, const SDL_Point& p2)
+    : LineTo(p1.x, p1.y, p2.x, p2.y)
+  {
+  }
+};
+
+struct OpenLineTo : LineTo
+{
+  using LineTo::LineTo;
+};
+
 /// @brief Sets color
 using RawColorA = RawColor;
 
@@ -48,6 +69,8 @@ public:
   friend constexpr Canvas& operator|(Canvas& c, const Pen& pen);
   friend Canvas& operator|(Canvas& c, SDL_Point p);
   friend Canvas& operator|(Canvas& c, HorizontalLine l);
+  friend Canvas& operator|(Canvas& c, LineTo l);
+  friend Canvas& operator|(Canvas& c, OpenLineTo l);
   friend Canvas& operator|(Canvas& c, SDL_Rect rect);
 };
 
