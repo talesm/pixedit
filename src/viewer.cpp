@@ -152,7 +152,9 @@ ViewerApp::handleWindowEvent(const SDL_WindowEvent& ev)
 void
 ViewerApp::handleMotionEvent(const SDL_MouseMotionEvent& ev)
 {
-  if (!(ev.state & SDL_BUTTON_LMASK)) { return; }
+  if (!(ev.state & SDL_BUTTON_LMASK) && !(ev.state & SDL_BUTTON_MMASK)) {
+    return;
+  }
   canvas.offset.x += ev.xrel;
   canvas.offset.y += ev.yrel;
 }
@@ -222,6 +224,11 @@ ViewerApp::showPictureOptions()
     if (pos >= std::string::npos) pos = 0;
     ImGui::InputText(
       "File", filename.data() + pos, filename.size() - pos + 1, 0);
+    ImGui::RadioButton("Pan", true);
+    ImGui::BeginDisabled();
+    ImGui::RadioButton("Zoom", false);
+    ImGui::RadioButton("Selection", false);
+    ImGui::EndDisabled();
     ImGui::DragFloat2("offset", &canvas.offset.x, 1.f, -10000, +10000);
     if (ImGui::Button("Reset offset")) { canvas.offset = {0}; }
     if (ImGui::ArrowButton("Decrease zoom", ImGuiDir_Left)) {
