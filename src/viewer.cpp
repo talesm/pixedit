@@ -70,25 +70,6 @@ ViewerApp::run()
       switch (ev.type) {
       case SDL_QUIT: exited = true; break;
       case SDL_WINDOWEVENT: handleWindowEvent(ev.window); break;
-      case SDL_MOUSEBUTTONDOWN:
-      case SDL_MOUSEBUTTONUP: {
-        if (ImGui::GetIO().WantCaptureMouse) break;
-        bool down = ev.button.state == SDL_PRESSED;
-        if (ev.button.button == SDL_BUTTON_LEFT)
-          canvas.state.left = down;
-        else if (ev.button.button == SDL_BUTTON_MIDDLE)
-          canvas.state.middle = down;
-        else if (ev.button.button == SDL_BUTTON_MIDDLE)
-          canvas.state.right = down;
-        canvas.state.x = ev.button.x;
-        canvas.state.y = ev.button.y;
-        break;
-      }
-      case SDL_MOUSEMOTION:
-        if (ImGui::GetIO().WantCaptureMouse) break;
-        canvas.state.x = ev.motion.x;
-        canvas.state.y = ev.motion.y;
-        break;
       case SDL_MOUSEWHEEL:
         if (ImGui::GetIO().WantCaptureMouse) break;
         canvas.state.wheelX += ev.wheel.x;
@@ -113,6 +94,12 @@ ViewerApp::run()
     showPictureOptions();
     ImGui::ShowDemoWindow();
 
+    if (!ImGui::GetIO().WantCaptureMouse && SDL_GetMouseFocus() == window) {
+      auto buttonState = SDL_GetMouseState(&canvas.state.x, &canvas.state.y);
+      canvas.state.left = buttonState & SDL_BUTTON_LMASK;
+      canvas.state.middle = buttonState & SDL_BUTTON_MMASK;
+      canvas.state.right = buttonState & SDL_BUTTON_RMASK;
+    };
     canvas.update(renderer);
 
     /// Render
