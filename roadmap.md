@@ -14,13 +14,13 @@ To do
 -----
 
 - [ ] View image
-  - [ ] Load from drop
-  - [ ] Load C^o
+  - [x] Load from drop
+  - [x] Load C^o
   - [ ] Save C^s C^S
-  - [ ] Close C^w
+  - [x] Close C^w
   - [ ] Muliple files
-  - [ ] Zoom (C^wheel)
-  - [ ] Pan (C^click)
+  - [x] Zoom (C^wheel)
+  - [x] Pan (C^click)
 - [ ] File menu
   - [ ] Load / save / Save as / Close / Edit
   - [ ] Last files
@@ -30,7 +30,7 @@ To do
   - [ ] Paste as new
 - [ ] Tools
   - [ ] Zoom
-  - [ ] Pan
+  - [x] Pan
   - [ ] Free form
   - [ ] Lines
   - [ ] Rectangle
@@ -47,7 +47,7 @@ To do
   - [ ] Tile
 - [ ] Copy & paste
   - [ ] Internal
-  - [ ] OS support
+  - [x] X based support
 
 Wishlist
 --------
