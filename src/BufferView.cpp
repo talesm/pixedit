@@ -7,6 +7,7 @@ BufferView::updatePreview(SDL_Renderer* renderer)
 {
   SDL_DestroyTexture(preview);
   preview = SDL_CreateTextureFromSurface(renderer, buffer.surface);
+  movingMode = false;
 }
 
 static void
@@ -71,27 +72,23 @@ BufferView::render(SDL_Renderer* renderer) const
 }
 
 void
-BufferView::event(const SDL_Event& ev)
+BufferView::update(SDL_Renderer* renderer)
 {
-  switch (ev.type) {
-  case SDL_MOUSEMOTION:
-    if (!(ev.motion.state & SDL_BUTTON_LMASK) &&
-        !(ev.motion.state & SDL_BUTTON_MMASK))
-      break;
-    offset.x += ev.motion.xrel;
-    offset.y += ev.motion.yrel;
-    break;
-
-  case SDL_MOUSEWHEEL:
-    if (ev.wheel.y < 0) {
-      scale /= 2;
-    } else if (ev.wheel.y > 0) {
-      scale *= 2;
-    }
-    break;
-
-  default: break;
+  if ((state.left && !oldState.left) || (state.middle && !oldState.middle)) {
+    movingMode = true;
+  } else if ((!state.left && oldState.left) ||
+             (!state.middle && oldState.middle)) {
+    movingMode = false;
+  } else if (movingMode) {
+    offset.x += state.x - oldState.x;
+    offset.y += state.y - oldState.y;
   }
-}
+  if (state.wheelY < 0) {
+    scale /= 2;
+  } else if (state.wheelY > 0) {
+    scale *= 2;
+  }
 
+  oldState = state;
+}
 } // namespace pixedit

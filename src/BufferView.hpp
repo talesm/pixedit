@@ -3,6 +3,7 @@
 
 #include <SDL.h>
 #include "Buffer.hpp"
+#include "MouseState.hpp"
 
 namespace pixedit {
 
@@ -12,6 +13,8 @@ struct BufferView
   SDL_Rect viewPort;
   SDL_FPoint offset{0};
   float scale{1.f};
+  MouseState state{}, oldState{};
+  bool movingMode = false;
 
   SDL_Texture* preview = nullptr;
   SDL_Color checkerColors[2] = {{200, 200, 200, 255}, {150, 150, 150, 255}};
@@ -19,9 +22,9 @@ struct BufferView
 
   void updatePreview(SDL_Renderer* renderer);
 
-  void render(SDL_Renderer* renderer) const;
+  void update(SDL_Renderer* renderer);
 
-  void event(const SDL_Event& ev);
+  void render(SDL_Renderer* renderer) const;
 };
 
 } // namespace pixedit

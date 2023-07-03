@@ -70,10 +70,29 @@ ViewerApp::run()
       switch (ev.type) {
       case SDL_QUIT: exited = true; break;
       case SDL_WINDOWEVENT: handleWindowEvent(ev.window); break;
+      case SDL_MOUSEBUTTONDOWN:
+      case SDL_MOUSEBUTTONUP: {
+        if (ImGui::GetIO().WantCaptureMouse) break;
+        bool down = ev.button.state == SDL_PRESSED;
+        if (ev.button.button == SDL_BUTTON_LEFT)
+          canvas.state.left = down;
+        else if (ev.button.button == SDL_BUTTON_MIDDLE)
+          canvas.state.middle = down;
+        else if (ev.button.button == SDL_BUTTON_MIDDLE)
+          canvas.state.right = down;
+        canvas.state.x = ev.button.x;
+        canvas.state.y = ev.button.y;
+        break;
+      }
       case SDL_MOUSEMOTION:
+        if (ImGui::GetIO().WantCaptureMouse) break;
+        canvas.state.x = ev.motion.x;
+        canvas.state.y = ev.motion.y;
+        break;
       case SDL_MOUSEWHEEL:
         if (ImGui::GetIO().WantCaptureMouse) break;
-        canvas.event(ev);
+        canvas.state.wheelX = ev.wheel.x;
+        canvas.state.wheelY = ev.wheel.y;
         break;
       case SDL_DROPFILE:
         if (ImGui::GetIO().WantCaptureMouse) break;
@@ -93,6 +112,9 @@ ViewerApp::run()
     ImGui::NewFrame();
     showPictureOptions();
     ImGui::ShowDemoWindow();
+
+    canvas.update(renderer);
+    canvas.state.wheelX = canvas.state.wheelY = 0;
 
     /// Render
     SDL_SetRenderDrawColor(renderer, 60, 60, 60, 255);
