@@ -29,7 +29,7 @@ To do
   - [ ] Paste
   - [ ] Paste as new
 - [ ] Tools
-  - [ ] Zoom
+  - [x] Zoom
   - [x] Pan
   - [ ] Free form
   - [ ] Lines
