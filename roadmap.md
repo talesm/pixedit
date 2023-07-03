@@ -15,12 +15,12 @@ To do
 
 - [ ] View image
   - [x] Load from drop
-  - [x] Load C^o
-  - [ ] Save C^S
-  - [x] Close C^w
+  - [x] Load C+o
+  - [x] Save C+S | C+s
+  - [x] Close C+w
   - [x] Muliple files
-  - [x] Zoom (C^wheel)
-  - [x] Pan (C^click)
+  - [x] Zoom (C+wheel)
+  - [x] Pan (C+click)
 - [ ] File menu
   - [ ] Load / save / Save as / Close / Edit
   - [ ] ~~Last files~~
