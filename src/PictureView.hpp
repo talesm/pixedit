@@ -4,6 +4,7 @@
 #include <SDL.h>
 #include "MouseState.hpp"
 #include "PictureBuffer.hpp"
+#include "PictureTool.hpp"
 
 namespace pixedit {
 
@@ -16,6 +17,7 @@ struct PictureView
   MouseState state{}, oldState{};
   bool movingMode = false;
 
+  PictureTool* tool = nullptr;
   SDL_Texture* preview = nullptr;
   SDL_Color checkerColors[2] = {{200, 200, 200, 255}, {150, 150, 150, 255}};
   int checkerSize = 16;

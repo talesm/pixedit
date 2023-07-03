@@ -74,12 +74,44 @@ PictureView::render(SDL_Renderer* renderer) const
 void
 PictureView::update(SDL_Renderer* renderer)
 {
-  if ((state.left && !oldState.left) || (state.middle && !oldState.middle)) {
+  auto event = PictureEvent::NONE;
+  if (state.left) {
+    if (!oldState.left) {
+      if (!oldState.right) {
+        event = PictureEvent::LEFT;
+      } else {
+        event = PictureEvent::CANCEL;
+      }
+    } else if (oldState.right) {
+      state.right = true; // To mark both clicked
+    } else if (state.right) {
+      event = PictureEvent::CANCEL;
+    }
+  } else if (state.right) {
+    if (!oldState.right) {
+      if (!oldState.left) {
+        event = PictureEvent::RIGHT;
+      } else {
+        event = PictureEvent::CANCEL;
+      }
+    } else if (oldState.left) {
+      state.left = true;
+    }
+  } else if (oldState.left != oldState.right) {
+    event = PictureEvent::OK;
+  }
+  if (state.middle) {
     movingMode = true;
-  } else if ((!state.left && oldState.left) ||
-             (!state.middle && oldState.middle)) {
+  } else if (oldState.middle) {
     movingMode = false;
-  } else if (movingMode) {
+  } else if (tool != nullptr) {
+    tool->update(*this, renderer, event);
+  } else if (event == PictureEvent::LEFT) {
+    movingMode = true;
+  } else if (event != PictureEvent::NONE) {
+    movingMode = false;
+  }
+  if (movingMode) {
     offset.x += state.x - oldState.x;
     offset.y += state.y - oldState.y;
   }
