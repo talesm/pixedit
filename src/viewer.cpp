@@ -1,3 +1,4 @@
+#include <functional>
 #include <iostream>
 #include <stdexcept>
 #include <tuple>
@@ -5,6 +6,7 @@
 #include "PictureBuffer.hpp"
 #include "PictureView.hpp"
 #include "PngXClip.hpp"
+#include "ZoomTool.hpp"
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_sdlrenderer.h"
@@ -18,6 +20,16 @@ struct InitSettings
   SDL_Point windowSz{1024, 768};
 };
 
+struct ToolDescription
+{
+  const char* name;
+  std::function<PictureTool*()> build;
+};
+
+ToolDescription tools[2] = {
+  {"Pan", [] { return nullptr; }},
+  {"Zoom", [] { return new ZoomTool{}; }},
+};
 class ViewerApp
 {
 public:
@@ -30,6 +42,7 @@ private:
   SDL_Renderer* renderer = nullptr;
   PictureView canvas;
   bool exited = false;
+  int toolIndex = 0;
 
   void handleWindowEvent(const SDL_WindowEvent& ev);
   void handleDropEvent(const SDL_DropEvent& ev);
@@ -207,11 +220,13 @@ ViewerApp::showPictureOptions()
     if (pos >= std::string::npos) pos = 0;
     ImGui::InputText(
       "File", filename.data() + pos, filename.size() - pos + 1, 0);
-    ImGui::RadioButton("Pan", true);
-    ImGui::BeginDisabled();
-    ImGui::RadioButton("Zoom", false);
-    ImGui::RadioButton("Selection", false);
-    ImGui::EndDisabled();
+    int currIndex = toolIndex;
+    for (auto& tool : tools) {
+      if (ImGui::RadioButton(tool.name, currIndex-- == 0)) {
+        delete canvas.tool;
+        canvas.tool = tool.build();
+      }
+    }
     ImGui::DragFloat2("offset", &canvas.offset.x, 1.f, -10000, +10000);
     if (ImGui::Button("Reset offset")) { canvas.offset = {0}; }
     if (ImGui::ArrowButton("Decrease zoom", ImGuiDir_Left)) {

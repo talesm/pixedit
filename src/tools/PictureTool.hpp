@@ -23,6 +23,8 @@ struct PictureTool
   virtual void update(PictureView& view,
                       SDL_Renderer* renderer,
                       PictureEvent event) = 0;
+
+  virtual ~PictureTool() = default;
 };
 
 } // namespace pixedit
