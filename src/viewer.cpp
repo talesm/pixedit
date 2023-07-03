@@ -40,7 +40,7 @@ public:
 private:
   SDL_Window* window = nullptr;
   SDL_Renderer* renderer = nullptr;
-  PictureView canvas;
+  PictureView view;
   bool exited = false;
   int toolIndex = 0;
 
@@ -63,13 +63,13 @@ ViewerApp::ViewerApp(InitSettings settings)
                             settings.windowSz.y,
                             SDL_WINDOW_RESIZABLE))
   , renderer(SDL_CreateRenderer(window, -1, 0))
-  , canvas{
+  , view{
       .buffer{std::move(settings.filename)},
       .viewPort{0, 0, settings.windowSz.x, settings.windowSz.y},
     }
 {
   if (!window || !renderer) { throw std::runtime_error{SDL_GetError()}; }
-  canvas.updatePreview(renderer);
+  view.updatePreview(renderer);
   setupImGui();
 }
 
@@ -85,8 +85,8 @@ ViewerApp::run()
       case SDL_WINDOWEVENT: handleWindowEvent(ev.window); break;
       case SDL_MOUSEWHEEL:
         if (ImGui::GetIO().WantCaptureMouse) break;
-        canvas.state.wheelX += ev.wheel.x;
-        canvas.state.wheelY += ev.wheel.y;
+        view.state.wheelX += ev.wheel.x;
+        view.state.wheelY += ev.wheel.y;
         break;
       case SDL_DROPFILE:
         if (ImGui::GetIO().WantCaptureMouse) break;
@@ -108,18 +108,18 @@ ViewerApp::run()
     ImGui::ShowDemoWindow();
 
     if (!ImGui::GetIO().WantCaptureMouse && SDL_GetMouseFocus() == window) {
-      auto buttonState = SDL_GetMouseState(&canvas.state.x, &canvas.state.y);
-      canvas.state.left = buttonState & SDL_BUTTON_LMASK;
-      canvas.state.middle = buttonState & SDL_BUTTON_MMASK;
-      canvas.state.right = buttonState & SDL_BUTTON_RMASK;
+      auto buttonState = SDL_GetMouseState(&view.state.x, &view.state.y);
+      view.state.left = buttonState & SDL_BUTTON_LMASK;
+      view.state.middle = buttonState & SDL_BUTTON_MMASK;
+      view.state.right = buttonState & SDL_BUTTON_RMASK;
     };
-    canvas.update(renderer);
+    view.update(renderer);
 
     /// Render
     SDL_SetRenderDrawColor(renderer, 60, 60, 60, 255);
     SDL_RenderClear(renderer);
 
-    canvas.render(renderer);
+    view.render(renderer);
 
     ImGui::Render();
     ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
@@ -158,8 +158,8 @@ ViewerApp::handleWindowEvent(const SDL_WindowEvent& ev)
 {
   switch (ev.event) {
   case SDL_WINDOWEVENT_SIZE_CHANGED:
-    canvas.viewPort.w = ev.data1;
-    canvas.viewPort.h = ev.data2;
+    view.viewPort.w = ev.data1;
+    view.viewPort.h = ev.data2;
     break;
   default: break;
   }
@@ -169,10 +169,10 @@ void
 ViewerApp::changeFile(const std::string& filename)
 {
   try {
-    canvas.buffer = PictureBuffer{filename};
-    canvas.updatePreview(renderer);
-    canvas.offset = {0, 0};
-    canvas.scale = 1.f;
+    view.buffer = PictureBuffer{filename};
+    view.updatePreview(renderer);
+    view.offset = {0, 0};
+    view.scale = 1.f;
   } catch (...) {
     SDL_Log("Failed to open file: %s", filename.c_str());
   }
@@ -206,7 +206,7 @@ ViewerApp::handleKeyboardEvent(const SDL_KeyboardEvent& ev)
     return;
   }
   if (key == std::tuple{SDLK_c, ctrl}) {
-    copyToXClip(canvas.buffer.surface);
+    copyToXClip(view.buffer.surface);
     return;
   }
 }
@@ -215,7 +215,7 @@ void
 ViewerApp::showPictureOptions()
 {
   if (ImGui::Begin("Picture options")) {
-    auto& filename = canvas.buffer.filename;
+    auto& filename = view.buffer.filename;
     size_t pos = filename.find_last_of('/') + 1;
     if (pos >= std::string::npos) pos = 0;
     ImGui::InputText(
@@ -223,43 +223,41 @@ ViewerApp::showPictureOptions()
     int currIndex = toolIndex;
     for (auto& tool : tools) {
       if (ImGui::RadioButton(tool.name, currIndex-- == 0)) {
-        delete canvas.tool;
-        canvas.tool = tool.build();
+        delete view.tool;
+        view.tool = tool.build();
       }
     }
-    ImGui::DragFloat2("offset", &canvas.offset.x, 1.f, -10000, +10000);
-    if (ImGui::Button("Reset offset")) { canvas.offset = {0}; }
-    if (ImGui::ArrowButton("Decrease zoom", ImGuiDir_Left)) {
-      canvas.scale /= 2;
-    }
+    ImGui::DragFloat2("offset", &view.offset.x, 1.f, -10000, +10000);
+    if (ImGui::Button("Reset offset")) { view.offset = {0}; }
+    if (ImGui::ArrowButton("Decrease zoom", ImGuiDir_Left)) { view.scale /= 2; }
     ImGui::SameLine();
-    ImGui::Text("%g%%", canvas.scale * 100);
+    ImGui::Text("%g%%", view.scale * 100);
     ImGui::SameLine();
     if (ImGui::ArrowButton("Increase zoom", ImGuiDir_Right)) {
-      canvas.scale *= 2;
+      view.scale *= 2;
     }
     if (ImGui::CollapsingHeader("Transparency options")) {
       float color1[3] = {
-        canvas.checkerColors[0].r / 255.f,
-        canvas.checkerColors[0].g / 255.f,
-        canvas.checkerColors[0].b / 255.f,
+        view.checkerColors[0].r / 255.f,
+        view.checkerColors[0].g / 255.f,
+        view.checkerColors[0].b / 255.f,
       };
       if (ImGui::ColorEdit3("Color 1", color1)) {
-        canvas.checkerColors[0].r = color1[0] * 255.f;
-        canvas.checkerColors[0].g = color1[1] * 255.f;
-        canvas.checkerColors[0].b = color1[2] * 255.f;
+        view.checkerColors[0].r = color1[0] * 255.f;
+        view.checkerColors[0].g = color1[1] * 255.f;
+        view.checkerColors[0].b = color1[2] * 255.f;
       }
       float color2[3] = {
-        canvas.checkerColors[1].r / 255.f,
-        canvas.checkerColors[1].g / 255.f,
-        canvas.checkerColors[1].b / 255.f,
+        view.checkerColors[1].r / 255.f,
+        view.checkerColors[1].g / 255.f,
+        view.checkerColors[1].b / 255.f,
       };
       if (ImGui::ColorEdit3("Color 2", color2)) {
-        canvas.checkerColors[1].r = color2[0] * 255.f;
-        canvas.checkerColors[1].g = color2[1] * 255.f;
-        canvas.checkerColors[1].b = color2[2] * 255.f;
+        view.checkerColors[1].r = color2[0] * 255.f;
+        view.checkerColors[1].g = color2[1] * 255.f;
+        view.checkerColors[1].b = color2[2] * 255.f;
       }
-      ImGui::DragInt("Square size", &canvas.checkerSize, 1, 1, 1024);
+      ImGui::DragInt("Square size", &view.checkerSize, 1, 1, 1024);
     }
   }
   ImGui::End();
