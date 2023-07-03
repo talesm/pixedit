@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <tuple>
 #include <SDL.h>
+#include <SDL_image.h>
 #include "PictureBuffer.hpp"
 #include "PictureView.hpp"
 #include "PngXClip.hpp"
@@ -220,7 +221,7 @@ ViewerApp::handleKeyboardEvent(const SDL_KeyboardEvent& ev)
       exited = true;
     } else {
       buffers.erase(buffers.begin() + bufferIndex);
-      if (bufferIndex >= buffers.size()) { bufferIndex -= 1; }
+      if (bufferIndex >= int(buffers.size())) { bufferIndex -= 1; }
       if (bufferIndex < 0) {
         view.buffer.reset();
       } else {
@@ -228,6 +229,19 @@ ViewerApp::handleKeyboardEvent(const SDL_KeyboardEvent& ev)
         view.updatePreview(renderer);
       }
     }
+    return;
+  }
+  if (key == std::tuple{SDLK_s, ctrl} ||
+      key == std::tuple{SDLK_s, ctrl | shift}) {
+    if (buffers.empty() || bufferIndex < 0) return;
+    static const char* filePatterns[] = {"*.png"};
+    auto filename =
+      tinyfd_saveFileDialog("Save as",
+                            view.buffer->filename.c_str(),
+                            sizeof(filePatterns) / sizeof(filePatterns[0]),
+                            filePatterns,
+                            "Image files");
+    if (filename) { IMG_SavePNG(view.buffer->surface, filename); }
     return;
   }
 }
