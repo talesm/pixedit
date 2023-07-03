@@ -91,8 +91,8 @@ ViewerApp::run()
         break;
       case SDL_MOUSEWHEEL:
         if (ImGui::GetIO().WantCaptureMouse) break;
-        canvas.state.wheelX = ev.wheel.x;
-        canvas.state.wheelY = ev.wheel.y;
+        canvas.state.wheelX += ev.wheel.x;
+        canvas.state.wheelY += ev.wheel.y;
         break;
       case SDL_DROPFILE:
         if (ImGui::GetIO().WantCaptureMouse) break;
@@ -114,7 +114,6 @@ ViewerApp::run()
     ImGui::ShowDemoWindow();
 
     canvas.update(renderer);
-    canvas.state.wheelX = canvas.state.wheelY = 0;
 
     /// Render
     SDL_SetRenderDrawColor(renderer, 60, 60, 60, 255);

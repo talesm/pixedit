@@ -83,9 +83,10 @@ BufferView::update(SDL_Renderer* renderer)
     offset.x += state.x - oldState.x;
     offset.y += state.y - oldState.y;
   }
-  if (state.wheelY < 0) {
+  int wheelY = state.wheelY - oldState.wheelY;
+  if (wheelY < 0) {
     scale /= 2;
-  } else if (state.wheelY > 0) {
+  } else if (wheelY > 0) {
     scale *= 2;
   }
 
