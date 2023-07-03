@@ -27,6 +27,7 @@ PictureView::updatePreview(SDL_Renderer* renderer)
   SDL_Rect dstRect{0, 0, buffer->surface->w, buffer->surface->h};
   SDL_Surface* previewSurface;
   SDL_LockTextureToSurface(preview, &dstRect, &previewSurface);
+  SDL_FillRect(previewSurface, nullptr, 0);
   SDL_BlitSurface(buffer->surface, nullptr, previewSurface, &dstRect);
   SDL_UnlockTexture(preview);
   movingMode = false;
