@@ -41,6 +41,8 @@ private:
   SDL_Window* window = nullptr;
   SDL_Renderer* renderer = nullptr;
   PictureView view;
+  std::vector<std::shared_ptr<PictureBuffer>> buffers;
+  int bufferIndex = -1;
   bool exited = false;
   int toolIndex = 0;
 
@@ -66,7 +68,10 @@ ViewerApp::ViewerApp(InitSettings settings)
   , view{{0, 0, settings.windowSz.x, settings.windowSz.y}}
 {
   if (!window || !renderer) { throw std::runtime_error{SDL_GetError()}; }
-  view.buffer = std::make_shared<PictureBuffer>(std::move(settings.filename));
+  auto buffer = std::make_shared<PictureBuffer>(std::move(settings.filename));
+  view.buffer = buffer;
+  buffers.emplace_back(buffer);
+  bufferIndex = buffers.size() - 1;
   view.updatePreview(renderer);
   setupImGui();
 }
@@ -167,10 +172,13 @@ void
 ViewerApp::changeFile(const std::string& filename)
 {
   try {
-    view.buffer = std::make_shared<PictureBuffer>(filename);
+    auto buffer = std::make_shared<PictureBuffer>(filename);
+    view.buffer = buffer;
     view.updatePreview(renderer);
     view.offset = {0, 0};
     view.scale = 1.f;
+    buffers.emplace_back(buffer);
+    bufferIndex = buffers.size() - 1;
   } catch (...) {
     SDL_Log("Failed to open file: %s", filename.c_str());
   }
@@ -213,15 +221,21 @@ void
 ViewerApp::showPictureOptions()
 {
   if (ImGui::Begin("Picture options")) {
-    if (view.buffer && !view.buffer->filename.empty()) {
-      auto& filename = view.buffer->filename;
-      size_t pos = filename.find_last_of('/') + 1;
-      if (pos >= std::string::npos) pos = 0;
-      ImGui::InputText(
-        "File", filename.data() + pos, filename.size() - pos + 1, 0);
-    } else {
-      char name[] = "New Image";
-      ImGui::InputText("File", name, sizeof(name), 0);
+    if (ImGui::BeginCombo(
+          "File",
+          bufferIndex < 0 ? "None" : buffers[bufferIndex]->filename.c_str())) {
+      int i = 0;
+      for (auto& b : buffers) {
+        bool selected = bufferIndex == i;
+        if (ImGui::Selectable(b->filename.c_str(), selected)) {
+          bufferIndex = i;
+          view.buffer = buffers[bufferIndex];
+          view.updatePreview(renderer);
+        }
+        if (selected) { ImGui::SetItemDefaultFocus(); }
+        ++i;
+      }
+      ImGui::EndCombo();
     }
     int currIndex = toolIndex;
     for (auto& tool : tools) {
