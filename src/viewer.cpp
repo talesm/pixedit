@@ -66,7 +66,7 @@ ViewerApp::ViewerApp(InitSettings settings)
   , view{{0, 0, settings.windowSz.x, settings.windowSz.y}}
 {
   if (!window || !renderer) { throw std::runtime_error{SDL_GetError()}; }
-  view.buffer = std::move(settings.filename);
+  view.buffer = std::make_shared<PictureBuffer>(std::move(settings.filename));
   view.updatePreview(renderer);
   setupImGui();
 }
@@ -167,7 +167,7 @@ void
 ViewerApp::changeFile(const std::string& filename)
 {
   try {
-    view.buffer = PictureBuffer{filename};
+    view.buffer = std::make_shared<PictureBuffer>(filename);
     view.updatePreview(renderer);
     view.offset = {0, 0};
     view.scale = 1.f;
@@ -204,7 +204,7 @@ ViewerApp::handleKeyboardEvent(const SDL_KeyboardEvent& ev)
     return;
   }
   if (key == std::tuple{SDLK_c, ctrl}) {
-    copyToXClip(view.buffer.surface);
+    if (view.buffer) copyToXClip(view.buffer->surface);
     return;
   }
 }
@@ -213,11 +213,16 @@ void
 ViewerApp::showPictureOptions()
 {
   if (ImGui::Begin("Picture options")) {
-    auto& filename = view.buffer.filename;
-    size_t pos = filename.find_last_of('/') + 1;
-    if (pos >= std::string::npos) pos = 0;
-    ImGui::InputText(
-      "File", filename.data() + pos, filename.size() - pos + 1, 0);
+    if (view.buffer && !view.buffer->filename.empty()) {
+      auto& filename = view.buffer->filename;
+      size_t pos = filename.find_last_of('/') + 1;
+      if (pos >= std::string::npos) pos = 0;
+      ImGui::InputText(
+        "File", filename.data() + pos, filename.size() - pos + 1, 0);
+    } else {
+      char name[] = "New Image";
+      ImGui::InputText("File", name, sizeof(name), 0);
+    }
     int currIndex = toolIndex;
     for (auto& tool : tools) {
       if (ImGui::RadioButton(tool.name, currIndex-- == 0)) {

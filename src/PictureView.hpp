@@ -1,6 +1,7 @@
 #ifndef PIXEDIT_SRC_PICTURE_VIEW_INCLUDED
 #define PIXEDIT_SRC_PICTURE_VIEW_INCLUDED
 
+#include <memory>
 #include <SDL.h>
 #include "MouseState.hpp"
 #include "PictureBuffer.hpp"
@@ -11,7 +12,7 @@ namespace pixedit {
 struct PictureView
 {
   SDL_Rect viewPort;
-  PictureBuffer buffer;
+  std::shared_ptr<PictureBuffer> buffer;
   SDL_FPoint offset{0};
   float scale{1.f};
   MouseState state{}, oldState{};

@@ -6,7 +6,11 @@ void
 PictureView::updatePreview(SDL_Renderer* renderer)
 {
   SDL_DestroyTexture(preview);
-  preview = SDL_CreateTextureFromSurface(renderer, buffer.surface);
+  if (buffer) {
+    preview = SDL_CreateTextureFromSurface(renderer, buffer->surface);
+  } else {
+    preview = nullptr;
+  }
   movingMode = false;
 }
 
@@ -56,9 +60,10 @@ renderCheckerBoard(SDL_Renderer* renderer,
 void
 PictureView::render(SDL_Renderer* renderer) const
 {
+  if (!buffer) return;
   SDL_FPoint scaledSz = {
-    scale * buffer.surface->w,
-    scale * buffer.surface->h,
+    scale * buffer->surface->w,
+    scale * buffer->surface->h,
   };
   SDL_FRect rect{
     viewPort.x + offset.x + (viewPort.w - scaledSz.x) / 2.f,
