@@ -215,6 +215,21 @@ ViewerApp::handleKeyboardEvent(const SDL_KeyboardEvent& ev)
     if (view.buffer) copyToXClip(view.buffer->surface);
     return;
   }
+  if (key == std::tuple{SDLK_w, ctrl} || key == std::tuple{SDLK_F4, ctrl}) {
+    if (buffers.empty()) {
+      exited = true;
+    } else {
+      buffers.erase(buffers.begin() + bufferIndex);
+      if (bufferIndex >= buffers.size()) { bufferIndex -= 1; }
+      if (bufferIndex < 0) {
+        view.buffer.reset();
+      } else {
+        view.buffer = buffers[bufferIndex];
+        view.updatePreview(renderer);
+      }
+    }
+    return;
+  }
 }
 
 void
