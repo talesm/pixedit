@@ -17,8 +17,8 @@ To do
   - [x] Load from drop
   - [x] Load C^o
   - [ ] Save C^s C^S
-  - [x] Close C^w
-  - [ ] Muliple files
+  - [ ] Close C^w
+  - [x] Muliple files
   - [x] Zoom (C^wheel)
   - [x] Pan (C^click)
 - [ ] File menu
