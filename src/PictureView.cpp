@@ -5,12 +5,30 @@ namespace pixedit {
 void
 PictureView::updatePreview(SDL_Renderer* renderer)
 {
-  SDL_DestroyTexture(preview);
-  if (buffer) {
-    preview = SDL_CreateTextureFromSurface(renderer, buffer->surface);
+  if (!buffer || !buffer->surface) return;
+  auto createPreview =
+    [renderer, w = buffer->surface->w, h = buffer->surface->h] {
+      auto t = SDL_CreateTexture(
+        renderer, SDL_PIXELFORMAT_ABGR32, SDL_TEXTUREACCESS_STREAMING, w, h);
+      SDL_SetTextureBlendMode(t, SDL_BLENDMODE_BLEND);
+      return t;
+    };
+  if (preview) {
+    int w, h;
+    SDL_QueryTexture(preview, nullptr, nullptr, &w, &h);
+    if (w < buffer->surface->w || h < buffer->surface->h) {
+      SDL_DestroyTexture(preview);
+      preview = createPreview();
+    }
   } else {
-    preview = nullptr;
+    SDL_DestroyTexture(preview);
+    preview = createPreview();
   }
+  SDL_Rect dstRect{0, 0, buffer->surface->w, buffer->surface->h};
+  SDL_Surface* previewSurface;
+  SDL_LockTextureToSurface(preview, &dstRect, &previewSurface);
+  SDL_BlitSurface(buffer->surface, nullptr, previewSurface, &dstRect);
+  SDL_UnlockTexture(preview);
   movingMode = false;
 }
 
@@ -60,20 +78,21 @@ renderCheckerBoard(SDL_Renderer* renderer,
 void
 PictureView::render(SDL_Renderer* renderer) const
 {
-  if (!buffer) return;
+  if (!buffer || !buffer->surface) return;
   SDL_FPoint scaledSz = {
     scale * buffer->surface->w,
     scale * buffer->surface->h,
   };
-  SDL_FRect rect{
+  SDL_Rect srcRect{0, 0, buffer->surface->w, buffer->surface->h};
+  SDL_FRect dstRect{
     viewPort.x + offset.x + (viewPort.w - scaledSz.x) / 2.f,
     viewPort.y + offset.y + (viewPort.h - scaledSz.y) / 2.f,
     scaledSz.x,
     scaledSz.y,
   };
   renderCheckerBoard(
-    renderer, rect, checkerSize, checkerColors[0], checkerColors[1]);
-  SDL_RenderCopyF(renderer, preview, nullptr, &rect);
+    renderer, dstRect, checkerSize, checkerColors[0], checkerColors[1]);
+  SDL_RenderCopyF(renderer, preview, &srcRect, &dstRect);
 }
 
 void
