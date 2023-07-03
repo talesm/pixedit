@@ -10,8 +10,8 @@ namespace pixedit {
 
 struct PictureView
 {
-  PictureBuffer buffer;
   SDL_Rect viewPort;
+  PictureBuffer buffer;
   SDL_FPoint offset{0};
   float scale{1.f};
   MouseState state{}, oldState{};
@@ -21,6 +21,11 @@ struct PictureView
   SDL_Texture* preview = nullptr;
   SDL_Color checkerColors[2] = {{200, 200, 200, 255}, {150, 150, 150, 255}};
   int checkerSize = 16;
+
+  PictureView(const SDL_Rect& viewPort)
+    : viewPort(viewPort)
+  {
+  }
 
   void updatePreview(SDL_Renderer* renderer);
 

@@ -63,12 +63,10 @@ ViewerApp::ViewerApp(InitSettings settings)
                             settings.windowSz.y,
                             SDL_WINDOW_RESIZABLE))
   , renderer(SDL_CreateRenderer(window, -1, 0))
-  , view{
-      .buffer{std::move(settings.filename)},
-      .viewPort{0, 0, settings.windowSz.x, settings.windowSz.y},
-    }
+  , view{{0, 0, settings.windowSz.x, settings.windowSz.y}}
 {
   if (!window || !renderer) { throw std::runtime_error{SDL_GetError()}; }
+  view.buffer = std::move(settings.filename);
   view.updatePreview(renderer);
   setupImGui();
 }
