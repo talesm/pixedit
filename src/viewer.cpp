@@ -2,8 +2,8 @@
 #include <stdexcept>
 #include <tuple>
 #include <SDL.h>
-#include "Buffer.hpp"
-#include "BufferView.hpp"
+#include "PictureBuffer.hpp"
+#include "PictureView.hpp"
 #include "PngXClip.hpp"
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
@@ -28,7 +28,7 @@ public:
 private:
   SDL_Window* window = nullptr;
   SDL_Renderer* renderer = nullptr;
-  BufferView canvas;
+  PictureView canvas;
   bool exited = false;
 
   void handleWindowEvent(const SDL_WindowEvent& ev);
@@ -169,7 +169,7 @@ void
 ViewerApp::changeFile(const std::string& filename)
 {
   try {
-    canvas.buffer = Buffer{filename};
+    canvas.buffer = PictureBuffer{filename};
     canvas.updatePreview(renderer);
     canvas.offset = {0, 0};
     canvas.scale = 1.f;

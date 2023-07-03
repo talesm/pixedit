@@ -1,9 +1,9 @@
-#include "BufferView.hpp"
+#include "PictureView.hpp"
 
 namespace pixedit {
 
 void
-BufferView::updatePreview(SDL_Renderer* renderer)
+PictureView::updatePreview(SDL_Renderer* renderer)
 {
   SDL_DestroyTexture(preview);
   preview = SDL_CreateTextureFromSurface(renderer, buffer.surface);
@@ -54,7 +54,7 @@ renderCheckerBoard(SDL_Renderer* renderer,
 }
 
 void
-BufferView::render(SDL_Renderer* renderer) const
+PictureView::render(SDL_Renderer* renderer) const
 {
   SDL_FPoint scaledSz = {
     scale * buffer.surface->w,
@@ -72,7 +72,7 @@ BufferView::render(SDL_Renderer* renderer) const
 }
 
 void
-BufferView::update(SDL_Renderer* renderer)
+PictureView::update(SDL_Renderer* renderer)
 {
   if ((state.left && !oldState.left) || (state.middle && !oldState.middle)) {
     movingMode = true;

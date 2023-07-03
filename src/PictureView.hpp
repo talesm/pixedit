@@ -1,15 +1,15 @@
-#ifndef PIXEDIT_SRC_CANVAS_HPP_INCLUDED
-#define PIXEDIT_SRC_CANVAS_HPP_INCLUDED
+#ifndef PIXEDIT_SRC_PICTURE_VIEW_INCLUDED
+#define PIXEDIT_SRC_PICTURE_VIEW_INCLUDED
 
 #include <SDL.h>
-#include "Buffer.hpp"
 #include "MouseState.hpp"
+#include "PictureBuffer.hpp"
 
 namespace pixedit {
 
-struct BufferView
+struct PictureView
 {
-  Buffer buffer;
+  PictureBuffer buffer;
   SDL_Rect viewPort;
   SDL_FPoint offset{0};
   float scale{1.f};
@@ -29,4 +29,4 @@ struct BufferView
 
 } // namespace pixedit
 
-#endif /* PIXEDIT_SRC_CANVAS_HPP_INCLUDED */
+#endif /* PIXEDIT_SRC_PICTURE_VIEW_INCLUDED */
