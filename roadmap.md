@@ -16,8 +16,8 @@ To do
 - [ ] View image
   - [x] Load from drop
   - [x] Load C^o
-  - [ ] Save C^s C^S
-  - [ ] Close C^w
+  - [ ] Save C^S
+  - [x] Close C^w
   - [x] Muliple files
   - [x] Zoom (C^wheel)
   - [x] Pan (C^click)
