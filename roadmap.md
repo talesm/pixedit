@@ -23,7 +23,7 @@ To do
   - [x] Pan (C^click)
 - [ ] File menu
   - [ ] Load / save / Save as / Close / Edit
-  - [ ] Last files
+  - [ ] ~~Last files~~
 - [ ] Edit menu
   - [ ] Copy
   - [ ] Paste
@@ -58,4 +58,9 @@ Wishlist
 - Custom file support
 - 8bit pallete mode
 - 8bit grayscale/color scale mode
-- Stamp
+- Stamp (Colored tiles)
+- File history
+- Proper configuration support
+- Rich file dialogs
+- File browser
+- Text support
