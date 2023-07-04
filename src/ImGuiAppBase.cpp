@@ -1,66 +1,11 @@
-#include <functional>
-#include <iostream>
-#include <stdexcept>
-#include <tuple>
-#include <SDL.h>
-#include <SDL_image.h>
-#include "PictureBuffer.hpp"
-#include "PictureView.hpp"
-#include "PngXClip.hpp"
-#include "ShortcutManager.hpp"
-#include "ZoomTool.hpp"
+#include "ImGuiAppBase.hpp"
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_sdlrenderer.h"
-#include "tinyfiledialogs.h"
 
 namespace pixedit {
 
-struct InitSettings
-{
-  std::string filename{"../assets/samples/redball_128x128.png"};
-  SDL_Point windowSz{1024, 768};
-};
-
-struct ToolDescription
-{
-  const char* name;
-  std::function<PictureTool*()> build;
-};
-
-ToolDescription tools[2] = {
-  {"Pan", [] { return nullptr; }},
-  {"Zoom", [] { return new ZoomTool{}; }},
-};
-class ViewerApp
-{
-public:
-  ViewerApp(InitSettings settings = {});
-
-  int run();
-
-private:
-  SDL_Window* window = nullptr;
-  SDL_Renderer* renderer = nullptr;
-  PictureView view;
-  std::vector<std::shared_ptr<PictureBuffer>> buffers;
-  ShortcutManager shortcuts;
-  int bufferIndex = -1;
-  bool exited = false;
-  int toolIndex = 0;
-
-  void handleWindowEvent(const SDL_WindowEvent& ev);
-  void handleDropEvent(const SDL_DropEvent& ev);
-
-  void setupShortcuts();
-  void setupImGui();
-
-  void showPictureOptions();
-
-  void changeFile(const std::string& filename);
-};
-
-ViewerApp::ViewerApp(InitSettings settings)
+ImGuiAppBase::ImGuiAppBase(const InitSettings& settings)
   : window(SDL_CreateWindow("Pixedit viewer",
                             SDL_WINDOWPOS_UNDEFINED,
                             SDL_WINDOWPOS_UNDEFINED,
@@ -71,17 +16,17 @@ ViewerApp::ViewerApp(InitSettings settings)
   , view{{0, 0, settings.windowSz.x, settings.windowSz.y}}
 {
   if (!window || !renderer) { throw std::runtime_error{SDL_GetError()}; }
+
   auto buffer = std::make_shared<PictureBuffer>(std::move(settings.filename));
   view.buffer = buffer;
   buffers.emplace_back(buffer);
   bufferIndex = buffers.size() - 1;
   view.updatePreview(renderer);
   setupImGui();
-  setupShortcuts();
 }
 
 int
-ViewerApp::run()
+ImGuiAppBase::run()
 {
   while (!exited) {
     // Events
@@ -89,7 +34,15 @@ ViewerApp::run()
       ImGui_ImplSDL2_ProcessEvent(&ev);
       switch (ev.type) {
       case SDL_QUIT: exited = true; break;
-      case SDL_WINDOWEVENT: handleWindowEvent(ev.window); break;
+      case SDL_WINDOWEVENT:
+        switch (ev.window.event) {
+        case SDL_WINDOWEVENT_SIZE_CHANGED:
+          view.viewPort.w = ev.window.data1;
+          view.viewPort.h = ev.window.data2;
+          break;
+        default: break;
+        }
+        break;
       case SDL_MOUSEWHEEL:
         if (ImGui::GetIO().WantCaptureMouse) break;
         view.state.wheelX += ev.wheel.x;
@@ -97,7 +50,7 @@ ViewerApp::run()
         break;
       case SDL_DROPFILE:
         if (ImGui::GetIO().WantCaptureMouse) break;
-        handleDropEvent(ev.drop);
+        loadFile(ev.drop.file);
         break;
       case SDL_KEYDOWN: {
         if (ImGui::GetIO().WantCaptureKeyboard) break;
@@ -145,7 +98,7 @@ ViewerApp::run()
 }
 
 void
-ViewerApp::setupImGui()
+ImGuiAppBase::setupImGui()
 {
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
@@ -166,19 +119,7 @@ ViewerApp::setupImGui()
 }
 
 void
-ViewerApp::handleWindowEvent(const SDL_WindowEvent& ev)
-{
-  switch (ev.event) {
-  case SDL_WINDOWEVENT_SIZE_CHANGED:
-    view.viewPort.w = ev.data1;
-    view.viewPort.h = ev.data2;
-    break;
-  default: break;
-  }
-}
-
-void
-ViewerApp::changeFile(const std::string& filename)
+ImGuiAppBase::loadFile(const std::string& filename)
 {
   try {
     auto buffer = std::make_shared<PictureBuffer>(filename);
@@ -194,61 +135,7 @@ ViewerApp::changeFile(const std::string& filename)
 }
 
 void
-ViewerApp::handleDropEvent(const SDL_DropEvent& ev)
-{
-  changeFile(ev.file);
-}
-
-void
-ViewerApp::setupShortcuts()
-{
-  shortcuts.set({.key = SDLK_o, .ctrl = true}, [&] {
-    static const char* filePatterns[] = {"*.png", "*.jpg", "*.jpeg", "*.bmp"};
-    auto filename =
-      tinyfd_openFileDialog("Select file to open",
-                            nullptr,
-                            sizeof(filePatterns) / sizeof(filePatterns[0]),
-                            filePatterns,
-                            "Image files",
-                            false);
-    if (filename) { changeFile(filename); }
-  });
-  shortcuts.set({.key = SDLK_c, .ctrl = true}, [&] {
-    if (view.buffer) copyToXClip(view.buffer->surface);
-  });
-  auto closeFile = [&] {
-    if (buffers.empty()) {
-      exited = true;
-    } else {
-      buffers.erase(buffers.begin() + bufferIndex);
-      if (bufferIndex >= int(buffers.size())) { bufferIndex -= 1; }
-      if (bufferIndex < 0) {
-        view.buffer.reset();
-      } else {
-        view.buffer = buffers[bufferIndex];
-        view.updatePreview(renderer);
-      }
-    }
-  };
-  shortcuts.set({.key = SDLK_w, .ctrl = true}, closeFile);
-  shortcuts.set({.key = SDLK_F4, .ctrl = true}, closeFile);
-  auto funcSaveAs = [&] {
-    if (buffers.empty() || bufferIndex < 0) return;
-    static const char* filePatterns[] = {"*.png"};
-    auto filename =
-      tinyfd_saveFileDialog("Save as",
-                            view.buffer->filename.c_str(),
-                            sizeof(filePatterns) / sizeof(filePatterns[0]),
-                            filePatterns,
-                            "Image files");
-    if (filename) { IMG_SavePNG(view.buffer->surface, filename); }
-  };
-  shortcuts.set({.key = SDLK_s, .ctrl = true}, funcSaveAs);
-  shortcuts.set({.key = SDLK_s, .ctrl = true, .shift = true}, funcSaveAs);
-}
-
-void
-ViewerApp::showPictureOptions()
+ImGuiAppBase::showPictureOptions()
 {
   if (ImGui::Begin("Picture options")) {
     if (ImGui::BeginCombo(
@@ -269,7 +156,7 @@ ViewerApp::showPictureOptions()
     }
     int currIndex = toolIndex;
     for (auto& tool : tools) {
-      if (ImGui::RadioButton(tool.name, currIndex-- == 0)) {
+      if (ImGui::RadioButton(tool.name.c_str(), currIndex-- == 0)) {
         delete view.tool;
         view.tool = tool.build();
       }
@@ -309,22 +196,5 @@ ViewerApp::showPictureOptions()
   }
   ImGui::End();
 }
-}
 
-int
-main(int argc, char** argv)
-{
-  try {
-    if (SDL_Init(SDL_INIT_VIDEO)) throw std::runtime_error{SDL_GetError()};
-    pixedit::InitSettings settings;
-    if (argc > 1) { settings.filename = argv[argc - 1]; }
-
-    pixedit::ViewerApp app{settings};
-    return app.run();
-  } catch (std::exception& e) {
-    std::cerr << e.what() << '\n';
-  } catch (...) {
-    std::cerr << "Unknown error\n";
-  }
-  return EXIT_FAILURE;
-}
+} // namespace pixedit

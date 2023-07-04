@@ -1,5 +1,6 @@
 # Based upon https://makefiletutorial.com/#makefile-cookbook
 # Thanks to Job Vranish (https://spin.atomicobject.com/2016/08/26/makefile-c-projects/)
+EXEC_EDITOR := pixedit_editor
 EXEC_VIEWER := pixedit_viewer
 UNIT_TEST := pixedit_tests
 
@@ -10,7 +11,7 @@ TEST_DIRS := test
 # Find all the C and C++ files we want to compile
 # Note the single quotes around the * expressions. The shell will incorrectly expand these otherwise, but we want to send the * directly to the find command.
 SRCS := $(shell find $(SRC_DIRS) -name '*.cpp' -or -name '*.c' -or -name '*.s')
-NON_DEFAULT_SRCS := src/viewer.cpp
+NON_DEFAULT_SRCS := src/ViewerApp.cpp src/EditorApp.cpp
 TEST_SRCS := $(shell find $(TEST_DIRS) -name '*.cpp' -or -name '*.c' -or -name '*.s')
 
 # Prepends BUILD_DIR and appends .o to every src file
@@ -37,13 +38,17 @@ CPPFLAGS := $(INC_FLAGS) -g -MMD -MP -Wall
 CXXFLAGS := $(CXXFLAGS) -std=gnu++20
 
 # ALL
-all: $(BUILD_DIR)/$(EXEC_VIEWER) $(BUILD_DIR)/$(UNIT_TEST)
+all: $(BUILD_DIR)/$(EXEC_EDITOR) $(BUILD_DIR)/$(EXEC_VIEWER) $(BUILD_DIR)/$(UNIT_TEST)
 
 # Removing non default objs
 DEFAULT_OBJS := $(filter-out $(NON_DEFAULT_OBJS),$(OBJS))
 
+# The final build step for our editor app.
+$(BUILD_DIR)/$(EXEC_EDITOR): $(DEFAULT_OBJS) $(BUILD_DIR)/src/EditorApp.cpp.o
+	$(CXX) $^ -o $@ $(LDFLAGS)
+
 # The final build step for our viewer app.
-$(BUILD_DIR)/$(EXEC_VIEWER): $(DEFAULT_OBJS) $(BUILD_DIR)/src/viewer.cpp.o
+$(BUILD_DIR)/$(EXEC_VIEWER): $(DEFAULT_OBJS) $(BUILD_DIR)/src/ViewerApp.cpp.o
 	$(CXX) $^ -o $@ $(LDFLAGS)
 
 $(BUILD_DIR)/$(UNIT_TEST): $(DEFAULT_OBJS) $(TEST_OBJS)
