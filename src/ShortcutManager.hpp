@@ -21,7 +21,7 @@ operator<(const Shortcut& lhs, const Shortcut& rhs)
   if (lhs.key != rhs.key) return lhs.key < rhs.key;
   if (lhs.ctrl != rhs.ctrl) return rhs.ctrl;
   if (lhs.alt != rhs.alt) return rhs.alt;
-  return rhs.shift;
+  return !lhs.shift && rhs.shift;
 }
 
 inline std::ostream&

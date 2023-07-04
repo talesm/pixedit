@@ -53,12 +53,18 @@ EditorApp::setupShortcuts()
   };
   shortcuts.set({.key = SDLK_w, .ctrl = true}, closeFile);
   shortcuts.set({.key = SDLK_F4, .ctrl = true}, closeFile);
-  auto funcSaveAs = [&] {
+  shortcuts.set({.key = SDLK_s, .ctrl = true}, [&] {
+    if (buffers.empty() || bufferIndex < 0) return;
+    if (view.buffer->filename.empty()) {
+      saveWithFileDialog(view.buffer->filename.c_str(), *view.buffer);
+    } else {
+      view.buffer->save();
+    }
+  });
+  shortcuts.set({.key = SDLK_s, .ctrl = true, .shift = true}, [&] {
     if (buffers.empty() || bufferIndex < 0) return;
     saveWithFileDialog(view.buffer->filename.c_str(), *view.buffer);
-  };
-  shortcuts.set({.key = SDLK_s, .ctrl = true}, funcSaveAs);
-  shortcuts.set({.key = SDLK_s, .ctrl = true, .shift = true}, funcSaveAs);
+  });
 }
 }
 
