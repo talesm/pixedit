@@ -1,10 +1,10 @@
 #include <iostream>
 #include <SDL.h>
 #include <SDL_image.h>
+#include "FileDialogTinyfd.hpp"
 #include "ImGuiAppBase.hpp"
 #include "PngXClip.hpp"
 #include "ZoomTool.hpp"
-#include "tinyfiledialogs.h"
 
 namespace pixedit {
 
@@ -31,15 +31,8 @@ void
 EditorApp::setupShortcuts()
 {
   shortcuts.set({.key = SDLK_o, .ctrl = true}, [&] {
-    static const char* filePatterns[] = {"*.png", "*.jpg", "*.jpeg", "*.bmp"};
-    auto filename =
-      tinyfd_openFileDialog("Select file to open",
-                            nullptr,
-                            sizeof(filePatterns) / sizeof(filePatterns[0]),
-                            filePatterns,
-                            "Image files",
-                            false);
-    if (filename) { loadFile(filename); }
+    auto buffer = loadFromFileDialog("./");
+    if (buffer) { appendFile(buffer); };
   });
   shortcuts.set({.key = SDLK_c, .ctrl = true}, [&] {
     if (view.buffer) copyToXClip(view.buffer->surface);
@@ -62,14 +55,7 @@ EditorApp::setupShortcuts()
   shortcuts.set({.key = SDLK_F4, .ctrl = true}, closeFile);
   auto funcSaveAs = [&] {
     if (buffers.empty() || bufferIndex < 0) return;
-    static const char* filePatterns[] = {"*.png"};
-    auto filename =
-      tinyfd_saveFileDialog("Save as",
-                            view.buffer->filename.c_str(),
-                            sizeof(filePatterns) / sizeof(filePatterns[0]),
-                            filePatterns,
-                            "Image files");
-    if (filename) { IMG_SavePNG(view.buffer->surface, filename); }
+    saveWithFileDialog(view.buffer->filename.c_str(), *view.buffer);
   };
   shortcuts.set({.key = SDLK_s, .ctrl = true}, funcSaveAs);
   shortcuts.set({.key = SDLK_s, .ctrl = true, .shift = true}, funcSaveAs);

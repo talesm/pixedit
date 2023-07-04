@@ -45,7 +45,7 @@ struct ImGuiAppBase
   void setupImGui();
   void showPictureOptions();
 
-  void loadFile(const std::string& filename);
+  void appendFile(std::shared_ptr<PictureBuffer> buffer);
 };
 } // namespace pixedit
 

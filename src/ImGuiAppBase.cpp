@@ -50,7 +50,7 @@ ImGuiAppBase::run()
         break;
       case SDL_DROPFILE:
         if (ImGui::GetIO().WantCaptureMouse) break;
-        loadFile(ev.drop.file);
+        appendFile(std::make_shared<PictureBuffer>(ev.drop.file));
         break;
       case SDL_KEYDOWN: {
         if (ImGui::GetIO().WantCaptureKeyboard) break;
@@ -119,19 +119,14 @@ ImGuiAppBase::setupImGui()
 }
 
 void
-ImGuiAppBase::loadFile(const std::string& filename)
+ImGuiAppBase::appendFile(std::shared_ptr<PictureBuffer> buffer)
 {
-  try {
-    auto buffer = std::make_shared<PictureBuffer>(filename);
-    view.buffer = buffer;
-    view.updatePreview(renderer);
-    view.offset = {0, 0};
-    view.scale = 1.f;
-    buffers.emplace_back(buffer);
-    bufferIndex = buffers.size() - 1;
-  } catch (...) {
-    SDL_Log("Failed to open file: %s", filename.c_str());
-  }
+  view.buffer = buffer;
+  view.updatePreview(renderer);
+  view.offset = {0, 0};
+  view.scale = 1.f;
+  buffers.emplace_back(buffer);
+  bufferIndex = buffers.size() - 1;
 }
 
 void
