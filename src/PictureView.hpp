@@ -34,9 +34,17 @@ struct PictureView
 
   void render(SDL_Renderer* renderer) const;
 
+  float effectiveScale() const;
+
   SDL_FPoint effectiveSize() const;
 
   SDL_FPoint effectiveOffset() const;
+
+  float setScale(float value)
+  {
+    scale = value;
+    return scale = effectiveScale();
+  }
 };
 
 } // namespace pixedit

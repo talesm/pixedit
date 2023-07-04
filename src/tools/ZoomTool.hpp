@@ -12,8 +12,8 @@ struct ZoomTool : PictureTool
               SDL_Renderer* renderer,
               PictureEvent event) final
   {
-    if (event == PictureEvent::LEFT) { view.scale *= 2; }
-    if (event == PictureEvent::RIGHT) { view.scale /= 2; }
+    if (event == PictureEvent::LEFT) { view.setScale(view.scale * 2); }
+    if (event == PictureEvent::RIGHT) { view.setScale(view.scale / 2); }
   }
 };
 

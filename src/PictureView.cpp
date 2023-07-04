@@ -76,10 +76,18 @@ renderCheckerBoard(SDL_Renderer* renderer,
     }
   }
 }
+
+float
+PictureView::effectiveScale() const
+{
+  return std::clamp(scale, 1 / 256.f, 256.f);
+}
+
 SDL_FPoint
 PictureView::effectiveSize() const
 {
   if (!buffer || !buffer->surface) { return {0}; }
+  float scale = effectiveScale();
   return {
     scale * buffer->surface->w,
     scale * buffer->surface->h,
@@ -109,6 +117,7 @@ void
 PictureView::render(SDL_Renderer* renderer) const
 {
   if (!buffer || !buffer->surface) return;
+  float scale = effectiveScale();
   SDL_FPoint scaledSz = {
     scale * buffer->surface->w,
     scale * buffer->surface->h,
@@ -174,10 +183,13 @@ PictureView::update(SDL_Renderer* renderer)
   int wheelY = state.wheelY - oldState.wheelY;
   if (wheelY < 0) {
     scale /= 2;
+    scale = effectiveScale();
   } else if (wheelY > 0) {
     scale *= 2;
+    scale = effectiveScale();
   }
 
   oldState = state;
 }
+
 } // namespace pixedit
