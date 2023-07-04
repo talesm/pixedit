@@ -8,4 +8,10 @@ PictureBuffer::PictureBuffer(std::string filename)
 {
 }
 
+bool
+PictureBuffer::save()
+{
+  return IMG_SavePNG(surface, filename.c_str()) == 0;
+}
+
 } // namespace pixedit

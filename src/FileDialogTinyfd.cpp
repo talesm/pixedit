@@ -1,5 +1,4 @@
 #include "FileDialogTinyfd.hpp"
-#include <SDL_image.h>
 #include "tinyfiledialogs.h"
 
 namespace pixedit {
@@ -31,9 +30,11 @@ saveWithFileDialog(const std::string& initialPath, PictureBuffer& buffer)
                           filePatterns,
                           "Image files");
   if (!filename) return false;
-  if (IMG_SavePNG(buffer.surface, filename) < 0) return false;
+  auto previousFilename = buffer.filename;
   buffer.filename = filename;
-  return true;
+  if (buffer.save()) return true;
+  buffer.filename = previousFilename;
+  return false;
 }
 
 } // namespace pixedit

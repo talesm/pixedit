@@ -36,6 +36,8 @@ struct PictureBuffer
     std::swap(surface, rhs.surface);
     return *this;
   }
+
+  bool save();
 };
 
 } // namespace pixedit
