@@ -168,29 +168,6 @@ ImGuiAppBase::showPictureOptions()
   ImGui::Text("%g%%", view.scale * 100);
   ImGui::SameLine();
   if (ImGui::ArrowButton("Increase zoom", ImGuiDir_Right)) { view.scale *= 2; }
-  if (ImGui::CollapsingHeader("Transparency options")) {
-    float color1[3] = {
-      view.checkerColors[0].r / 255.f,
-      view.checkerColors[0].g / 255.f,
-      view.checkerColors[0].b / 255.f,
-    };
-    if (ImGui::ColorEdit3("Color 1", color1)) {
-      view.checkerColors[0].r = color1[0] * 255.f;
-      view.checkerColors[0].g = color1[1] * 255.f;
-      view.checkerColors[0].b = color1[2] * 255.f;
-    }
-    float color2[3] = {
-      view.checkerColors[1].r / 255.f,
-      view.checkerColors[1].g / 255.f,
-      view.checkerColors[1].b / 255.f,
-    };
-    if (ImGui::ColorEdit3("Color 2", color2)) {
-      view.checkerColors[1].r = color2[0] * 255.f;
-      view.checkerColors[1].g = color2[1] * 255.f;
-      view.checkerColors[1].b = color2[2] * 255.f;
-    }
-    ImGui::DragInt("Square size", &view.checkerSize, 1, 1, 1024);
-  }
 }
 
 } // namespace pixedit
