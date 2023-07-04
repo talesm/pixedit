@@ -1,4 +1,5 @@
 #include "PictureView.hpp"
+#include <cmath>
 
 namespace pixedit {
 
@@ -36,7 +37,7 @@ PictureView::updatePreview(SDL_Renderer* renderer)
 static void
 renderCheckerBoard(SDL_Renderer* renderer,
                    const SDL_FRect& rect,
-                   int squareSize,
+                   float squareSize,
                    SDL_Color color1,
                    SDL_Color color2)
 {
@@ -75,6 +76,34 @@ renderCheckerBoard(SDL_Renderer* renderer,
     }
   }
 }
+SDL_FPoint
+PictureView::effectiveSize() const
+{
+  if (!buffer || !buffer->surface) { return {0}; }
+  return {
+    scale * buffer->surface->w,
+    scale * buffer->surface->h,
+  };
+}
+
+SDL_FPoint
+PictureView::effectiveOffset() const
+{
+  SDL_FPoint effectiveOffset{0, 0};
+
+  SDL_FPoint viewSize{float(viewPort.w), float(viewPort.h)};
+  SDL_FPoint bufferSize = effectiveSize();
+  if (viewSize.x < bufferSize.x) {
+    float delta = (bufferSize.x - viewSize.x) / 2;
+    effectiveOffset.x = std::clamp(offset.x, -delta, delta);
+  }
+  if (viewSize.y < bufferSize.y) {
+    float delta = (bufferSize.y - viewSize.y) / 2;
+    effectiveOffset.y = std::clamp(offset.y, -delta, delta);
+  }
+
+  return effectiveOffset;
+}
 
 void
 PictureView::render(SDL_Renderer* renderer) const
@@ -84,6 +113,7 @@ PictureView::render(SDL_Renderer* renderer) const
     scale * buffer->surface->w,
     scale * buffer->surface->h,
   };
+  auto offset = effectiveOffset();
   SDL_Rect srcRect{0, 0, buffer->surface->w, buffer->surface->h};
   SDL_FRect dstRect{
     viewPort.x + offset.x + (viewPort.w - scaledSz.x) / 2.f,
@@ -139,6 +169,7 @@ PictureView::update(SDL_Renderer* renderer)
   if (movingMode) {
     offset.x += state.x - oldState.x;
     offset.y += state.y - oldState.y;
+    offset = effectiveOffset();
   }
   int wheelY = state.wheelY - oldState.wheelY;
   if (wheelY < 0) {

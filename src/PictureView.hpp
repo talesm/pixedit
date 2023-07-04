@@ -33,6 +33,10 @@ struct PictureView
   void update(SDL_Renderer* renderer);
 
   void render(SDL_Renderer* renderer) const;
+
+  SDL_FPoint effectiveSize() const;
+
+  SDL_FPoint effectiveOffset() const;
 };
 
 } // namespace pixedit
