@@ -7,6 +7,7 @@ void
 PictureView::updatePreview(SDL_Renderer* renderer)
 {
   if (!buffer || !buffer->surface) return;
+  canvas.setSurface(buffer->surface);
   auto createPreview =
     [renderer, w = buffer->surface->w, h = buffer->surface->h] {
       auto t = SDL_CreateTexture(
@@ -190,6 +191,22 @@ PictureView::update(SDL_Renderer* renderer)
   }
 
   oldState = state;
+}
+
+SDL_Point
+PictureView::effectivePos() const
+{
+
+  auto offset = effectiveOffset();
+  auto scale = effectiveScale();
+  auto size = effectiveSize();
+
+  float xx = (state.x - viewPort.w / 2 - offset.x + size.x / 2.f) / scale;
+  float yy = (state.y - viewPort.h / 2 - offset.y + size.y / 2.f) / scale;
+  return {
+    int(xx),
+    int(yy),
+  };
 }
 
 } // namespace pixedit

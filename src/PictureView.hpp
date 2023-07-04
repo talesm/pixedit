@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <SDL.h>
+#include "Canvas.hpp"
 #include "MouseState.hpp"
 #include "PictureBuffer.hpp"
 #include "PictureTool.hpp"
@@ -18,6 +19,7 @@ struct PictureView
   MouseState state{}, oldState{};
   bool movingMode = false;
 
+  Canvas canvas;
   PictureTool* tool = nullptr;
   SDL_Texture* preview = nullptr;
   SDL_Color checkerColors[2] = {{200, 200, 200, 255}, {150, 150, 150, 255}};
@@ -45,6 +47,8 @@ struct PictureView
     scale = value;
     return scale = effectiveScale();
   }
+
+  SDL_Point effectivePos() const;
 };
 
 } // namespace pixedit

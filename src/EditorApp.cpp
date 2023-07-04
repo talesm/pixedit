@@ -4,7 +4,8 @@
 #include "FileDialogTinyfd.hpp"
 #include "ImGuiAppBase.hpp"
 #include "PngXClip.hpp"
-#include "ZoomTool.hpp"
+#include "tools/FreeHandTool.hpp"
+#include "tools/ZoomTool.hpp"
 
 namespace pixedit {
 
@@ -25,6 +26,7 @@ EditorApp::EditorApp(InitSettings settings)
 
   tools.emplace_back("Pan", [] { return nullptr; });
   tools.emplace_back("Zoom", [] { return new ZoomTool{}; });
+  tools.emplace_back("Free hand", [] { return new FreeHandTool{}; });
 }
 
 void
