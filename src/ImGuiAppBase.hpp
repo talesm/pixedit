@@ -43,7 +43,7 @@ struct ImGuiAppBase
   int run();
 
   void setupImGui();
-  void showPictureOptions();
+  virtual void showPictureOptions();
 
   void appendFile(std::shared_ptr<PictureBuffer> buffer);
 };

@@ -69,7 +69,9 @@ ImGuiAppBase::run()
     ImGui_ImplSDLRenderer_NewFrame();
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
-    showPictureOptions();
+    if (ImGui::Begin("Picture options")) { showPictureOptions(); }
+    ImGui::End();
+
     ImGui::ShowDemoWindow();
 
     if (!ImGui::GetIO().WantCaptureMouse && SDL_GetMouseFocus() == window) {
@@ -132,68 +134,63 @@ ImGuiAppBase::appendFile(std::shared_ptr<PictureBuffer> buffer)
 void
 ImGuiAppBase::showPictureOptions()
 {
-  if (ImGui::Begin("Picture options")) {
-    if (ImGui::BeginCombo(
-          "File",
-          bufferIndex < 0 ? "None" : buffers[bufferIndex]->filename.c_str())) {
-      int i = 0;
-      for (auto& b : buffers) {
-        bool selected = bufferIndex == i;
-        if (ImGui::Selectable(b->filename.c_str(), selected)) {
-          bufferIndex = i;
-          view.buffer = buffers[bufferIndex];
-          view.updatePreview(renderer);
-        }
-        if (selected) { ImGui::SetItemDefaultFocus(); }
-        ++i;
+  if (ImGui::BeginCombo(
+        "File",
+        bufferIndex < 0 ? "None" : buffers[bufferIndex]->filename.c_str())) {
+    int i = 0;
+    for (auto& b : buffers) {
+      bool selected = bufferIndex == i;
+      if (ImGui::Selectable(b->filename.c_str(), selected)) {
+        bufferIndex = i;
+        view.buffer = buffers[bufferIndex];
+        view.updatePreview(renderer);
       }
-      ImGui::EndCombo();
+      if (selected) { ImGui::SetItemDefaultFocus(); }
+      ++i;
     }
-    if (ImGui::CollapsingHeader("Tools")) {
-      int i = 0;
-      for (auto& tool : tools) {
-        if (ImGui::RadioButton(tool.name.c_str(), i == toolIndex)) {
-          delete view.tool;
-          view.tool = tool.build();
-          toolIndex = i;
-        }
-        ++i;
+    ImGui::EndCombo();
+  }
+  if (ImGui::CollapsingHeader("Tools")) {
+    int i = 0;
+    for (auto& tool : tools) {
+      if (ImGui::RadioButton(tool.name.c_str(), i == toolIndex)) {
+        delete view.tool;
+        view.tool = tool.build();
+        toolIndex = i;
       }
-    }
-    ImGui::DragFloat2("offset", &view.offset.x, 1.f, -10000, +10000);
-    if (ImGui::Button("Reset offset")) { view.offset = {0}; }
-    if (ImGui::ArrowButton("Decrease zoom", ImGuiDir_Left)) { view.scale /= 2; }
-    ImGui::SameLine();
-    ImGui::Text("%g%%", view.scale * 100);
-    ImGui::SameLine();
-    if (ImGui::ArrowButton("Increase zoom", ImGuiDir_Right)) {
-      view.scale *= 2;
-    }
-    if (ImGui::CollapsingHeader("Transparency options")) {
-      float color1[3] = {
-        view.checkerColors[0].r / 255.f,
-        view.checkerColors[0].g / 255.f,
-        view.checkerColors[0].b / 255.f,
-      };
-      if (ImGui::ColorEdit3("Color 1", color1)) {
-        view.checkerColors[0].r = color1[0] * 255.f;
-        view.checkerColors[0].g = color1[1] * 255.f;
-        view.checkerColors[0].b = color1[2] * 255.f;
-      }
-      float color2[3] = {
-        view.checkerColors[1].r / 255.f,
-        view.checkerColors[1].g / 255.f,
-        view.checkerColors[1].b / 255.f,
-      };
-      if (ImGui::ColorEdit3("Color 2", color2)) {
-        view.checkerColors[1].r = color2[0] * 255.f;
-        view.checkerColors[1].g = color2[1] * 255.f;
-        view.checkerColors[1].b = color2[2] * 255.f;
-      }
-      ImGui::DragInt("Square size", &view.checkerSize, 1, 1, 1024);
+      ++i;
     }
   }
-  ImGui::End();
+  ImGui::DragFloat2("offset", &view.offset.x, 1.f, -10000, +10000);
+  if (ImGui::Button("Reset offset")) { view.offset = {0}; }
+  if (ImGui::ArrowButton("Decrease zoom", ImGuiDir_Left)) { view.scale /= 2; }
+  ImGui::SameLine();
+  ImGui::Text("%g%%", view.scale * 100);
+  ImGui::SameLine();
+  if (ImGui::ArrowButton("Increase zoom", ImGuiDir_Right)) { view.scale *= 2; }
+  if (ImGui::CollapsingHeader("Transparency options")) {
+    float color1[3] = {
+      view.checkerColors[0].r / 255.f,
+      view.checkerColors[0].g / 255.f,
+      view.checkerColors[0].b / 255.f,
+    };
+    if (ImGui::ColorEdit3("Color 1", color1)) {
+      view.checkerColors[0].r = color1[0] * 255.f;
+      view.checkerColors[0].g = color1[1] * 255.f;
+      view.checkerColors[0].b = color1[2] * 255.f;
+    }
+    float color2[3] = {
+      view.checkerColors[1].r / 255.f,
+      view.checkerColors[1].g / 255.f,
+      view.checkerColors[1].b / 255.f,
+    };
+    if (ImGui::ColorEdit3("Color 2", color2)) {
+      view.checkerColors[1].r = color2[0] * 255.f;
+      view.checkerColors[1].g = color2[1] * 255.f;
+      view.checkerColors[1].b = color2[2] * 255.f;
+    }
+    ImGui::DragInt("Square size", &view.checkerSize, 1, 1, 1024);
+  }
 }
 
 } // namespace pixedit
