@@ -7,6 +7,7 @@
 #include "PictureBuffer.hpp"
 #include "PictureView.hpp"
 #include "PngXClip.hpp"
+#include "ShortcutManager.hpp"
 #include "ZoomTool.hpp"
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
@@ -43,14 +44,15 @@ private:
   SDL_Renderer* renderer = nullptr;
   PictureView view;
   std::vector<std::shared_ptr<PictureBuffer>> buffers;
+  ShortcutManager shortcuts;
   int bufferIndex = -1;
   bool exited = false;
   int toolIndex = 0;
 
   void handleWindowEvent(const SDL_WindowEvent& ev);
   void handleDropEvent(const SDL_DropEvent& ev);
-  void handleKeyboardEvent(const SDL_KeyboardEvent& ev);
 
+  void setupShortcuts();
   void setupImGui();
 
   void showPictureOptions();
@@ -75,6 +77,7 @@ ViewerApp::ViewerApp(InitSettings settings)
   bufferIndex = buffers.size() - 1;
   view.updatePreview(renderer);
   setupImGui();
+  setupShortcuts();
 }
 
 int
@@ -96,10 +99,15 @@ ViewerApp::run()
         if (ImGui::GetIO().WantCaptureMouse) break;
         handleDropEvent(ev.drop);
         break;
-      case SDL_KEYDOWN:
+      case SDL_KEYDOWN: {
         if (ImGui::GetIO().WantCaptureKeyboard) break;
-        handleKeyboardEvent(ev.key);
+        auto mod = ev.key.keysym.mod;
+        shortcuts.exec({.key = ev.key.keysym.sym,
+                        .ctrl = (mod & KMOD_CTRL) != 0,
+                        .alt = (mod & KMOD_ALT) != 0,
+                        .shift = (mod & KMOD_SHIFT) != 0});
         break;
+      }
       default: break;
       }
     }
@@ -192,15 +200,9 @@ ViewerApp::handleDropEvent(const SDL_DropEvent& ev)
 }
 
 void
-ViewerApp::handleKeyboardEvent(const SDL_KeyboardEvent& ev)
+ViewerApp::setupShortcuts()
 {
-  constexpr int shift = 1, ctrl = 2, alt = 4;
-  int mod = 0;
-  if (ev.keysym.mod & KMOD_SHIFT) mod |= shift;
-  if (ev.keysym.mod & KMOD_CTRL) mod |= ctrl;
-  if (ev.keysym.mod & KMOD_ALT) mod |= alt;
-  std::tuple<SDL_Keycode, int> key{ev.keysym.sym, mod};
-  if (key == std::tuple{SDLK_o, ctrl}) {
+  shortcuts.set({.key = SDLK_o, .ctrl = true}, [&] {
     static const char* filePatterns[] = {"*.png", "*.jpg", "*.jpeg", "*.bmp"};
     auto filename =
       tinyfd_openFileDialog("Select file to open",
@@ -210,13 +212,11 @@ ViewerApp::handleKeyboardEvent(const SDL_KeyboardEvent& ev)
                             "Image files",
                             false);
     if (filename) { changeFile(filename); }
-    return;
-  }
-  if (key == std::tuple{SDLK_c, ctrl}) {
+  });
+  shortcuts.set({.key = SDLK_c, .ctrl = true}, [&] {
     if (view.buffer) copyToXClip(view.buffer->surface);
-    return;
-  }
-  if (key == std::tuple{SDLK_w, ctrl} || key == std::tuple{SDLK_F4, ctrl}) {
+  });
+  auto closeFile = [&] {
     if (buffers.empty()) {
       exited = true;
     } else {
@@ -229,10 +229,10 @@ ViewerApp::handleKeyboardEvent(const SDL_KeyboardEvent& ev)
         view.updatePreview(renderer);
       }
     }
-    return;
-  }
-  if (key == std::tuple{SDLK_s, ctrl} ||
-      key == std::tuple{SDLK_s, ctrl | shift}) {
+  };
+  shortcuts.set({.key = SDLK_w, .ctrl = true}, closeFile);
+  shortcuts.set({.key = SDLK_F4, .ctrl = true}, closeFile);
+  auto funcSaveAs = [&] {
     if (buffers.empty() || bufferIndex < 0) return;
     static const char* filePatterns[] = {"*.png"};
     auto filename =
@@ -242,8 +242,9 @@ ViewerApp::handleKeyboardEvent(const SDL_KeyboardEvent& ev)
                             filePatterns,
                             "Image files");
     if (filename) { IMG_SavePNG(view.buffer->surface, filename); }
-    return;
-  }
+  };
+  shortcuts.set({.key = SDLK_s, .ctrl = true}, funcSaveAs);
+  shortcuts.set({.key = SDLK_s, .ctrl = true, .shift = true}, funcSaveAs);
 }
 
 void
