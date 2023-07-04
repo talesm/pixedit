@@ -161,8 +161,9 @@ ImGuiAppBase::showPictureOptions()
       ++i;
     }
   }
-  ImGui::DragFloat2("offset", &view.offset.x, 1.f, -10000, +10000);
-  if (ImGui::Button("Reset offset")) { view.offset = {0}; }
+  ImGui::DragFloat2("##offset", &view.offset.x, 1.f, -10000, +10000);
+  ImGui::SameLine();
+  if (ImGui::Button("Reset##offset")) { view.offset = {0}; }
   if (ImGui::ArrowButton("Decrease zoom", ImGuiDir_Left)) { view.scale /= 2; }
   ImGui::SameLine();
   ImGui::Text("%g%%", view.scale * 100);
