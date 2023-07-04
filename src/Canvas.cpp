@@ -10,6 +10,21 @@ Canvas::setSurface(SDL_Surface* value)
   surface = value;
 }
 
+Canvas&
+operator|(Canvas& c, Color color)
+{
+  c.brush.colorA =
+    componentToRaw(color, c.surface ? c.surface->format : nullptr);
+  return c;
+}
+Canvas&
+operator|(Canvas& c, ColorB color)
+{
+  c.brush.colorB =
+    componentToRaw(color, c.surface ? c.surface->format : nullptr);
+  return c;
+}
+
 void
 doPixel(SDL_Surface* surface, const Brush& b, SDL_Point p)
 {

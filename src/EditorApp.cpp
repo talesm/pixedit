@@ -1,6 +1,7 @@
 #include <iostream>
 #include <SDL.h>
 #include <SDL_image.h>
+#include <imgui.h>
 #include "FileDialogTinyfd.hpp"
 #include "ImGuiAppBase.hpp"
 #include "PngXClip.hpp"
@@ -17,6 +18,25 @@ public:
 
 private:
   void setupShortcuts();
+
+  void showPictureOptions() final
+  {
+    ImGuiAppBase::showPictureOptions();
+    auto colorA = view.canvas.getColorANormalized();
+    if (ImGui::ColorEdit4(
+          "Color A", colorA.data(), ImGuiColorEditFlags_NoInputs)) {
+      view.canvas |
+        ColorA{
+          colorA[0] * 255, colorA[1] * 255, colorA[2] * 255, colorA[3] * 255};
+    }
+    auto colorB = view.canvas.getColorBNormalized();
+    if (ImGui::ColorEdit4(
+          "Color B", colorB.data(), ImGuiColorEditFlags_NoInputs)) {
+      view.canvas |
+        ColorB{
+          colorB[0] * 255, colorB[1] * 255, colorB[2] * 255, colorB[3] * 255};
+    }
+  }
 };
 
 EditorApp::EditorApp(InitSettings settings)
@@ -27,6 +47,9 @@ EditorApp::EditorApp(InitSettings settings)
   tools.emplace_back("Pan", [] { return nullptr; });
   tools.emplace_back("Zoom", [] { return new ZoomTool{}; });
   tools.emplace_back("Free hand", [] { return new FreeHandTool{}; });
+
+  view.canvas | ColorA{0, 0, 0, 255};
+  view.canvas | ColorB{255, 255, 255, 255};
 }
 
 void

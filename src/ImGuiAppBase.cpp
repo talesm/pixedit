@@ -150,7 +150,7 @@ ImGuiAppBase::showPictureOptions()
     }
     ImGui::EndCombo();
   }
-  if (ImGui::CollapsingHeader("Tools")) {
+  if (ImGui::CollapsingHeader("Tools", ImGuiTreeNodeFlags_DefaultOpen)) {
     int i = 0;
     for (auto& tool : tools) {
       if (ImGui::RadioButton(tool.name.c_str(), i == toolIndex)) {

@@ -1,6 +1,7 @@
 #ifndef PIXEDIT_SRC_CANVAS_INCLUDED
 #define PIXEDIT_SRC_CANVAS_INCLUDED
 
+#include <array>
 #include <cstdlib>
 #include <SDL.h>
 #include "Brush.hpp"
@@ -30,6 +31,11 @@ struct LineTo
   }
 };
 
+using Color = SDL_Color;
+
+// Forward decl
+struct ColorB;
+
 struct OpenLineTo : LineTo
 {
   using LineTo::LineTo;
@@ -43,6 +49,35 @@ struct RawColorB
 {
   RawColor color;
 };
+
+/// Color conversion utilities
+/// @{
+constexpr SDL_Color
+rawToComponent(RawColor color, const SDL_PixelFormat* format)
+{
+  if (format == nullptr) {
+    return {
+      Uint8(color >> 24), Uint8(color >> 16), Uint8(color >> 8), Uint8(color)};
+  }
+  SDL_Color c;
+  SDL_GetRGBA(color, format, &c.r, &c.g, &c.b, &c.a);
+  return c;
+}
+
+constexpr std::array<float, 4>
+rawToNormalized(RawColor color, const SDL_PixelFormat* format)
+{
+  SDL_Color c = rawToComponent(color, format);
+  return {c.r / 255.f, c.g / 255.f, c.b / 255.f, c.a / 255.f};
+}
+
+constexpr RawColor
+componentToRaw(SDL_Color color, const SDL_PixelFormat* format)
+{
+  if (format == nullptr) { return {}; }
+  return SDL_MapRGBA(format, color.r, color.g, color.b, color.a);
+}
+///}
 
 /**
  * A canvas where you can issue drawing commands to
@@ -63,8 +98,19 @@ public:
   constexpr RawColor getRawColorA() const { return brush.colorA; }
   constexpr RawColor getRawColorB() const { return brush.colorB; }
 
+  constexpr std::array<float, 4> getColorANormalized() const
+  {
+    return rawToNormalized(brush.colorA, surface ? surface->format : nullptr);
+  }
+  constexpr std::array<float, 4> getColorBNormalized() const
+  {
+    return rawToNormalized(brush.colorB, surface ? surface->format : nullptr);
+  }
+
   friend constexpr Canvas& operator|(Canvas& c, RawColor rawColor);
   friend constexpr Canvas& operator|(Canvas& c, RawColorB rawColor);
+  friend Canvas& operator|(Canvas& c, Color color);
+  friend Canvas& operator|(Canvas& c, ColorB color);
   friend constexpr Canvas& operator|(Canvas& c, Pattern pattern);
   friend constexpr Canvas& operator|(Canvas& c, const Pen& pen);
   friend Canvas& operator|(Canvas& c, SDL_Point p);
@@ -247,6 +293,23 @@ operator|(Canvas& c, OutlineRect outline)
          drawVerticalLine{x1, y1 + 1, h - 2} |
          drawVerticalLine{x2, y1 + 1, h - 2};
 }
+
+struct ColorA : SDL_Color
+{
+  ColorA(SDL_Color c)
+    : SDL_Color(c)
+  {
+  }
+  ColorA(Uint8 r, Uint8 g, Uint8 b, Uint8 a = 255)
+    : SDL_Color{r, g, b, a}
+  {
+  }
+};
+
+struct ColorB : ColorA
+{
+  using ColorA::ColorA;
+};
 
 } // namespace pixedit
 
