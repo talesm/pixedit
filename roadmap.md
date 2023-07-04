@@ -28,6 +28,7 @@ To do
   - [ ] Copy
   - [ ] Paste
   - [ ] Paste as new
+  - [ ] Undo/redo
 - [ ] Tools
   - [x] Zoom
   - [x] Pan
