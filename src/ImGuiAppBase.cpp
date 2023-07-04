@@ -149,11 +149,15 @@ ImGuiAppBase::showPictureOptions()
       }
       ImGui::EndCombo();
     }
-    int currIndex = toolIndex;
-    for (auto& tool : tools) {
-      if (ImGui::RadioButton(tool.name.c_str(), currIndex-- == 0)) {
-        delete view.tool;
-        view.tool = tool.build();
+    if (ImGui::CollapsingHeader("Tools")) {
+      int i = 0;
+      for (auto& tool : tools) {
+        if (ImGui::RadioButton(tool.name.c_str(), i == toolIndex)) {
+          delete view.tool;
+          view.tool = tool.build();
+          toolIndex = i;
+        }
+        ++i;
       }
     }
     ImGui::DragFloat2("offset", &view.offset.x, 1.f, -10000, +10000);
