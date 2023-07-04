@@ -90,7 +90,7 @@ ImGuiAppBase::run()
     ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 
     SDL_RenderPresent(renderer);
-    SDL_Delay(1);
+    SDL_Delay(10);
   }
   ImGui::DestroyContext(nullptr);
   SDL_Quit();
