@@ -42,15 +42,22 @@ PictureBuffer::makeSnapshot()
   historyPoint = history.emplace(history.end(), surface);
 }
 
+void
+PictureBuffer::refresh()
+{
+  if (!surface || history.empty() || historyPoint == history.end()) return;
+  SDL_FreeSurface(surface);
+  surface = historyPoint->recover();
+}
+
 bool
 PictureBuffer::undo()
 {
   if (!surface || history.empty() || historyPoint == history.begin()) {
     return false;
   }
-  SDL_FreeSurface(surface);
   --historyPoint;
-  surface = historyPoint->recover();
+  refresh();
   return true;
 }
 
@@ -63,8 +70,7 @@ PictureBuffer::redo()
     --historyPoint;
     return false;
   }
-  SDL_FreeSurface(surface);
-  surface = historyPoint->recover();
+  refresh();
   return false;
 }
 

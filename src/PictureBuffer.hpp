@@ -56,6 +56,8 @@ public:
 
   void makeSnapshot();
 
+  void refresh();
+
   bool undo();
 
   bool redo();
