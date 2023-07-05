@@ -1,18 +1,26 @@
 #ifndef PIXEDIT_SRC_PICTURE_BUFFER_INCLUDED
 #define PIXEDIT_SRC_PICTURE_BUFFER_INCLUDED
 
+#include <list>
 #include <string>
 #include <SDL.h>
+#include "TempSurface.hpp"
 
 namespace pixedit {
 /**
  * The editing target
  */
-struct PictureBuffer
+class PictureBuffer
 {
+public: // TODO Make this private too
   std::string filename;
   SDL_Surface* surface = nullptr;
 
+private:
+  std::list<TempSurface> history;
+  std::list<TempSurface>::iterator historyPoint = history.end();
+
+public:
   PictureBuffer() = default;
   PictureBuffer(std::string filename);
   PictureBuffer(std::string filename, SDL_Surface* surface, bool owner = false)
@@ -38,6 +46,12 @@ struct PictureBuffer
   }
 
   bool save();
+
+  void makeSnapshot();
+
+  bool undo();
+
+  bool redo();
 };
 
 } // namespace pixedit

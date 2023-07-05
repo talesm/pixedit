@@ -12,14 +12,16 @@ safeGetFormat(SDL_Surface* surface)
 }
 
 void
-Canvas::setSurface(SDL_Surface* value)
+Canvas::setSurface(SDL_Surface* value, bool owning)
 {
   if (surface == value) return;
   brush.colorA = componentToRaw(
     rawToComponent(brush.colorA, safeGetFormat(surface)), safeGetFormat(value));
   brush.colorB = componentToRaw(
     rawToComponent(brush.colorB, safeGetFormat(surface)), safeGetFormat(value));
+  SDL_FreeSurface(surface);
   surface = value;
+  if (surface && !owning) { surface->refcount++; }
 }
 
 Canvas&

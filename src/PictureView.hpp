@@ -17,6 +17,7 @@ class PictureView
   MouseState oldState{};
   SDL_Texture* preview = nullptr;
   bool changed = false;
+  bool editing = false;
 
 public:
   SDL_FPoint offset{0};
@@ -36,7 +37,37 @@ public:
 
   void previewChange() { changed = true; }
 
-  void persistChange() { previewChange(); }
+  void beginChange()
+  {
+    if (!buffer) return;
+    editing = true;
+  }
+
+  constexpr bool isEditing() const { return editing; }
+
+  void endChange()
+  {
+    if (!buffer) return;
+    buffer->makeSnapshot();
+    previewChange();
+    editing = false;
+  }
+
+  bool undo()
+  {
+    if (!buffer) return false;
+    previewChange();
+    editing = false;
+    return buffer->undo();
+  }
+
+  bool redo()
+  {
+    if (!buffer) return false;
+    previewChange();
+    editing = false;
+    return buffer->redo();
+  }
 
   void update(SDL_Renderer* renderer);
 

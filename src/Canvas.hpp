@@ -89,12 +89,16 @@ class Canvas
   Brush brush;
 
 public:
-  constexpr Canvas(SDL_Surface* surface = nullptr)
+  constexpr Canvas(SDL_Surface* surface = nullptr, bool owning = false)
     : surface(surface)
   {
+    if (surface && !owning) { surface->refcount++; }
   }
+  Canvas(const Canvas&) = delete;
+  ~Canvas() { SDL_FreeSurface(surface); }
+  Canvas& operator=(const Canvas&) = delete;
 
-  void setSurface(SDL_Surface* value);
+  void setSurface(SDL_Surface* value, bool owning = false);
 
   constexpr RawColor getRawColorA() const { return brush.colorA; }
   constexpr RawColor getRawColorB() const { return brush.colorB; }

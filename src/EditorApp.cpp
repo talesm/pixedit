@@ -95,6 +95,9 @@ EditorApp::setupShortcuts()
     if (buffers.empty() || bufferIndex < 0) return;
     saveWithFileDialog(view.getBuffer()->filename.c_str(), *view.getBuffer());
   });
+  shortcuts.set({.key = SDLK_z, .ctrl = true}, [&] { view.undo(); });
+  shortcuts.set({.key = SDLK_z, .ctrl = true, .shift = true},
+                [&] { view.redo(); });
 }
 }
 

@@ -28,8 +28,15 @@ struct FreeHandTool : PictureTool
         auto currPoint = view.effectivePos();
         if (currPoint.x == lastPoint.x && currPoint.y == lastPoint.y) break;
         view.canvas | LineTo(currPoint, lastPoint);
-        view.persistChange();
+        view.previewChange();
         lastPoint = currPoint;
+      }
+      break;
+
+    case PictureEvent::OK:
+      if (pressed) {
+        view.endChange();
+        pressed = false;
       }
       break;
 
