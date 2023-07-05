@@ -1,8 +1,6 @@
 #include "PngXClip.hpp"
 #include <cstdlib>
-#include <sstream>
-#include <string>
-#include <SDL_image.h>
+#include "TempSurface.hpp"
 
 namespace pixedit {
 
@@ -10,14 +8,10 @@ bool
 copyToXClip(SDL_Surface* surface)
 {
   if (surface == nullptr) { return false; }
-  std::string filename = "temp.png";
-  std::stringstream ss;
-  ss << "xclip -selection clipboard -t image/png  -in " << filename;
-  if (IMG_SavePNG(surface, filename.c_str()) != 0) return false;
-  if (std::system(ss.str().c_str()) != 0) { return false; }
-  ss.clear();
-  ss << "rm " << filename;
-  std::system(ss.str().c_str());
+  TempSurface temp{surface};
+  std::string toClipboard =
+    "xclip -selection clipboard -t image/png  -in " + temp.getFilename();
+  if (std::system(toClipboard.c_str()) != 0) { return false; }
   return true;
 }
 } // namespace pixedit
