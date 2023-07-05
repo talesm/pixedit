@@ -18,7 +18,7 @@ ImGuiAppBase::ImGuiAppBase(const InitSettings& settings)
   if (!window || !renderer) { throw std::runtime_error{SDL_GetError()}; }
 
   auto buffer = std::make_shared<PictureBuffer>(std::move(settings.filename));
-  view.buffer = buffer;
+  view.setBuffer(buffer);
   buffers.emplace_back(buffer);
   bufferIndex = buffers.size() - 1;
   view.updatePreview(renderer);
@@ -37,8 +37,7 @@ ImGuiAppBase::run()
       case SDL_WINDOWEVENT:
         switch (ev.window.event) {
         case SDL_WINDOWEVENT_SIZE_CHANGED:
-          view.viewPort.w = ev.window.data1;
-          view.viewPort.h = ev.window.data2;
+          view.setViewport({0, 0, ev.window.data1, ev.window.data2});
           break;
         default: break;
         }
@@ -123,7 +122,7 @@ ImGuiAppBase::setupImGui()
 void
 ImGuiAppBase::appendFile(std::shared_ptr<PictureBuffer> buffer)
 {
-  view.buffer = buffer;
+  view.setBuffer(buffer);
   view.updatePreview(renderer);
   view.offset = {0, 0};
   view.scale = 1.f;
@@ -142,7 +141,7 @@ ImGuiAppBase::showPictureOptions()
       bool selected = bufferIndex == i;
       if (ImGui::Selectable(b->filename.c_str(), selected)) {
         bufferIndex = i;
-        view.buffer = buffers[bufferIndex];
+        view.setBuffer(buffers[bufferIndex]);
         view.updatePreview(renderer);
       }
       if (selected) { ImGui::SetItemDefaultFocus(); }

@@ -35,7 +35,7 @@ ViewerApp::setupShortcuts()
     if (buffer) { appendFile(buffer); };
   });
   shortcuts.set({.key = SDLK_c, .ctrl = true}, [&] {
-    if (view.buffer) copyToXClip(view.buffer->surface);
+    if (view.getBuffer()) copyToXClip(view.getBuffer()->surface);
   });
   auto closeFile = [&] {
     if (buffers.empty()) {
@@ -44,9 +44,9 @@ ViewerApp::setupShortcuts()
       buffers.erase(buffers.begin() + bufferIndex);
       if (bufferIndex >= int(buffers.size())) { bufferIndex -= 1; }
       if (bufferIndex < 0) {
-        view.buffer.reset();
+        view.setBuffer(nullptr);
       } else {
-        view.buffer = buffers[bufferIndex];
+        view.setBuffer(buffers[bufferIndex]);
         view.updatePreview(renderer);
       }
     }
@@ -55,7 +55,7 @@ ViewerApp::setupShortcuts()
   shortcuts.set({.key = SDLK_F4, .ctrl = true}, closeFile);
   auto funcSaveAs = [&] {
     if (buffers.empty() || bufferIndex < 0) return;
-    saveWithFileDialog(view.buffer->filename.c_str(), *view.buffer);
+    saveWithFileDialog(view.getBuffer()->filename.c_str(), *view.getBuffer());
   };
   shortcuts.set({.key = SDLK_s, .ctrl = true}, funcSaveAs);
   shortcuts.set({.key = SDLK_s, .ctrl = true, .shift = true}, funcSaveAs);

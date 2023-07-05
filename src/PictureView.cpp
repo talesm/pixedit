@@ -100,7 +100,7 @@ PictureView::effectiveOffset() const
 {
   SDL_FPoint effectiveOffset{0, 0};
 
-  SDL_FPoint viewSize{float(viewPort.w), float(viewPort.h)};
+  SDL_FPoint viewSize{float(viewport.w), float(viewport.h)};
   SDL_FPoint bufferSize = effectiveSize();
   if (viewSize.x < bufferSize.x) {
     float delta = (bufferSize.x - viewSize.x) / 2;
@@ -126,8 +126,8 @@ PictureView::render(SDL_Renderer* renderer) const
   auto offset = effectiveOffset();
   SDL_Rect srcRect{0, 0, buffer->surface->w, buffer->surface->h};
   SDL_FRect dstRect{
-    viewPort.x + offset.x + (viewPort.w - scaledSz.x) / 2.f,
-    viewPort.y + offset.y + (viewPort.h - scaledSz.y) / 2.f,
+    viewport.x + offset.x + (viewport.w - scaledSz.x) / 2.f,
+    viewport.y + offset.y + (viewport.h - scaledSz.y) / 2.f,
     scaledSz.x,
     scaledSz.y,
   };
@@ -201,8 +201,8 @@ PictureView::effectivePos() const
   auto scale = effectiveScale();
   auto size = effectiveSize();
 
-  float xx = (state.x - viewPort.w / 2 - offset.x + size.x / 2.f) / scale;
-  float yy = (state.y - viewPort.h / 2 - offset.y + size.y / 2.f) / scale;
+  float xx = (state.x - viewport.w / 2 - offset.x + size.x / 2.f) / scale;
+  float yy = (state.y - viewport.h / 2 - offset.y + size.y / 2.f) / scale;
   return {
     int(xx),
     int(yy),

@@ -10,23 +10,26 @@
 
 namespace pixedit {
 
-struct PictureView
+class PictureView
 {
-  SDL_Rect viewPort;
+  SDL_Rect viewport;
   std::shared_ptr<PictureBuffer> buffer;
+  MouseState oldState{};
+  SDL_Texture* preview = nullptr;
+
+public:
   SDL_FPoint offset{0};
   float scale{1.f};
-  MouseState state{}, oldState{};
+  MouseState state{};
   bool movingMode = false;
 
   Canvas canvas;
   PictureTool* tool = nullptr;
-  SDL_Texture* preview = nullptr;
   SDL_Color checkerColors[2] = {{200, 200, 200, 255}, {150, 150, 150, 255}};
   int checkerSize = 16;
 
-  PictureView(const SDL_Rect& viewPort)
-    : viewPort(viewPort)
+  PictureView(const SDL_Rect& viewport)
+    : viewport(viewport)
   {
   }
 
@@ -49,6 +52,21 @@ struct PictureView
   }
 
   SDL_Point effectivePos() const;
+
+  constexpr const SDL_Rect& getViewport() { return viewport; }
+
+  void setViewport(const SDL_Rect& value) { viewport = value; }
+
+  const std::shared_ptr<PictureBuffer>& getBuffer() const { return buffer; }
+
+  void setBuffer(const std::shared_ptr<PictureBuffer>& value)
+  {
+    if (buffer == value) return;
+    buffer = value;
+  }
+
+  constexpr const MouseState& getState() const { return state; }
+  constexpr const MouseState& getOldState() const { return oldState; }
 };
 
 } // namespace pixedit
