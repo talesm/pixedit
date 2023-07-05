@@ -25,16 +25,22 @@ private:
     auto colorA = view.canvas.getColorANormalized();
     if (ImGui::ColorEdit4(
           "Color A", colorA.data(), ImGuiColorEditFlags_NoInputs)) {
-      view.canvas |
-        ColorA{
-          colorA[0] * 255, colorA[1] * 255, colorA[2] * 255, colorA[3] * 255};
+      view.canvas | ColorA{
+                      Uint8(colorA[0] * 255),
+                      Uint8(colorA[1] * 255),
+                      Uint8(colorA[2] * 255),
+                      Uint8(colorA[3] * 255),
+                    };
     }
     auto colorB = view.canvas.getColorBNormalized();
     if (ImGui::ColorEdit4(
           "Color B", colorB.data(), ImGuiColorEditFlags_NoInputs)) {
-      view.canvas |
-        ColorB{
-          colorB[0] * 255, colorB[1] * 255, colorB[2] * 255, colorB[3] * 255};
+      view.canvas | ColorB{
+                      Uint8(colorB[0] * 255),
+                      Uint8(colorB[1] * 255),
+                      Uint8(colorB[2] * 255),
+                      Uint8(colorB[3] * 255),
+                    };
     }
   }
 };
