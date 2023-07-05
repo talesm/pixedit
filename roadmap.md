@@ -52,7 +52,7 @@ To do
 - [ ] Options
   - [ ] ~~Color pallete (not pallete image, just reference)~~
   - [x] Color selector/Wheel
-  - [ ] Swap color
+  - [x] Swap color
   - [ ] Mask
   - [ ] Tile
 - [ ] File menu
