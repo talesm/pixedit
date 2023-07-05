@@ -21,7 +21,6 @@ ImGuiAppBase::ImGuiAppBase(const InitSettings& settings)
   view.setBuffer(buffer);
   buffers.emplace_back(buffer);
   bufferIndex = buffers.size() - 1;
-  view.updatePreview(renderer);
   setupImGui();
 }
 
@@ -123,7 +122,6 @@ void
 ImGuiAppBase::appendFile(std::shared_ptr<PictureBuffer> buffer)
 {
   view.setBuffer(buffer);
-  view.updatePreview(renderer);
   view.offset = {0, 0};
   view.scale = 1.f;
   buffers.emplace_back(buffer);
@@ -142,7 +140,6 @@ ImGuiAppBase::showPictureOptions()
       if (ImGui::Selectable(b->filename.c_str(), selected)) {
         bufferIndex = i;
         view.setBuffer(buffers[bufferIndex]);
-        view.updatePreview(renderer);
       }
       if (selected) { ImGui::SetItemDefaultFocus(); }
       ++i;

@@ -6,6 +6,7 @@ namespace pixedit {
 void
 PictureView::updatePreview(SDL_Renderer* renderer)
 {
+  if (buffer != oldBuffer) { oldBuffer = buffer; }
   if (!buffer || !buffer->surface) return;
   canvas.setSurface(buffer->surface);
   auto createPreview =
@@ -139,6 +140,13 @@ PictureView::render(SDL_Renderer* renderer) const
 void
 PictureView::update(SDL_Renderer* renderer)
 {
+  if (buffer != oldBuffer) {
+    changed = true;
+    state.left = state.middle = state.right = false; // Clear everything
+    state.wheelX = oldState.wheelX;
+    state.wheelY = oldState.wheelY;
+  }
+  if (!buffer || !buffer->surface) return;
   auto event = PictureEvent::NONE;
   if (state.left) {
     if (!oldState.left) {
@@ -191,6 +199,7 @@ PictureView::update(SDL_Renderer* renderer)
   }
 
   oldState = state;
+  if (changed) { updatePreview(renderer); }
 }
 
 SDL_Point

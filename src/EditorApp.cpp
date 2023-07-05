@@ -78,7 +78,6 @@ EditorApp::setupShortcuts()
         view.setBuffer(nullptr);
       } else {
         view.setBuffer(buffers[bufferIndex]);
-        view.updatePreview(renderer);
       }
     }
   };

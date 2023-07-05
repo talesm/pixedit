@@ -74,7 +74,8 @@ rawToNormalized(RawColor color, const SDL_PixelFormat* format)
 constexpr RawColor
 componentToRaw(SDL_Color color, const SDL_PixelFormat* format)
 {
-  if (format == nullptr) { return {}; }
+  if (format == nullptr)
+    return color.r << 24 | color.g << 16 | color.b << 8 | color.a;
   return SDL_MapRGBA(format, color.r, color.g, color.b, color.a);
 }
 ///}

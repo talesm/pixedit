@@ -13,9 +13,10 @@ namespace pixedit {
 class PictureView
 {
   SDL_Rect viewport;
-  std::shared_ptr<PictureBuffer> buffer;
+  std::shared_ptr<PictureBuffer> oldBuffer, buffer;
   MouseState oldState{};
   SDL_Texture* preview = nullptr;
+  bool changed = false;
 
 public:
   SDL_FPoint offset{0};
@@ -33,7 +34,9 @@ public:
   {
   }
 
-  void updatePreview(SDL_Renderer* renderer);
+  void previewChange() { changed = true; }
+
+  void persistChange() { previewChange(); }
 
   void update(SDL_Renderer* renderer);
 
@@ -62,11 +65,15 @@ public:
   void setBuffer(const std::shared_ptr<PictureBuffer>& value)
   {
     if (buffer == value) return;
+    oldBuffer = buffer;
     buffer = value;
   }
 
   constexpr const MouseState& getState() const { return state; }
   constexpr const MouseState& getOldState() const { return oldState; }
+
+private:
+  void updatePreview(SDL_Renderer* renderer);
 };
 
 } // namespace pixedit

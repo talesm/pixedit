@@ -20,7 +20,7 @@ struct FreeHandTool : PictureTool
       pressed = true;
       lastPoint = view.effectivePos();
       view.canvas | lastPoint;
-      view.updatePreview(renderer);
+      view.previewChange();
       break;
 
     case PictureEvent::NONE:
@@ -28,7 +28,7 @@ struct FreeHandTool : PictureTool
         auto currPoint = view.effectivePos();
         if (currPoint.x == lastPoint.x && currPoint.y == lastPoint.y) break;
         view.canvas | LineTo(currPoint, lastPoint);
-        view.updatePreview(renderer);
+        view.persistChange();
         lastPoint = currPoint;
       }
       break;

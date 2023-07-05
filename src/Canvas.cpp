@@ -4,9 +4,21 @@
 
 namespace pixedit {
 
+constexpr SDL_PixelFormat*
+safeGetFormat(SDL_Surface* surface)
+{
+  if (!surface) return nullptr;
+  return surface->format;
+}
+
 void
 Canvas::setSurface(SDL_Surface* value)
 {
+  if (surface == value) return;
+  brush.colorA = componentToRaw(
+    rawToComponent(brush.colorA, safeGetFormat(surface)), safeGetFormat(value));
+  brush.colorB = componentToRaw(
+    rawToComponent(brush.colorB, safeGetFormat(surface)), safeGetFormat(value));
   surface = value;
 }
 
