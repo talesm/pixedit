@@ -131,13 +131,14 @@ ImGuiAppBase::appendFile(std::shared_ptr<PictureBuffer> buffer)
 void
 ImGuiAppBase::showPictureOptions()
 {
-  if (ImGui::BeginCombo(
-        "File",
-        bufferIndex < 0 ? "None" : buffers[bufferIndex]->filename.c_str())) {
+  if (ImGui::BeginCombo("File",
+                        bufferIndex < 0
+                          ? "None"
+                          : buffers[bufferIndex]->getFilename().c_str())) {
     int i = 0;
     for (auto& b : buffers) {
       bool selected = bufferIndex == i;
-      if (ImGui::Selectable(b->filename.c_str(), selected)) {
+      if (ImGui::Selectable(b->getFilename().c_str(), selected)) {
         bufferIndex = i;
         view.setBuffer(buffers[bufferIndex]);
       }

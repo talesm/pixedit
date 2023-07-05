@@ -9,7 +9,7 @@ loadFromFileDialog(const std::string& initialPath)
   static const char* filePatterns[] = {"*.png", "*.jpg", "*.jpeg", "*.bmp"};
   auto filename =
     tinyfd_openFileDialog("Select file to open",
-                          nullptr,
+                          initialPath.c_str(),
                           sizeof(filePatterns) / sizeof(filePatterns[0]),
                           filePatterns,
                           "Image files",
@@ -19,22 +19,18 @@ loadFromFileDialog(const std::string& initialPath)
 }
 
 bool
-saveWithFileDialog(const std::string& initialPath, PictureBuffer& buffer)
+saveWithFileDialog(PictureBuffer& buffer)
 {
   if (!buffer.surface) { return false; }
   static const char* filePatterns[] = {"*.png"};
   auto filename =
     tinyfd_saveFileDialog("Save as",
-                          buffer.filename.c_str(),
+                          buffer.getFilename().c_str(),
                           sizeof(filePatterns) / sizeof(filePatterns[0]),
                           filePatterns,
                           "Image files");
   if (!filename) return false;
-  auto previousFilename = buffer.filename;
-  buffer.filename = filename;
-  if (buffer.save()) return true;
-  buffer.filename = previousFilename;
-  return false;
+  return buffer.saveAs(filename);
 }
 
 } // namespace pixedit

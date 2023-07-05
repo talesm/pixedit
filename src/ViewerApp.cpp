@@ -54,7 +54,7 @@ ViewerApp::setupShortcuts()
   shortcuts.set({.key = SDLK_F4, .ctrl = true}, closeFile);
   auto funcSaveAs = [&] {
     if (buffers.empty() || bufferIndex < 0) return;
-    saveWithFileDialog(view.getBuffer()->filename.c_str(), *view.getBuffer());
+    saveWithFileDialog(*view.getBuffer());
   };
   shortcuts.set({.key = SDLK_s, .ctrl = true}, funcSaveAs);
   shortcuts.set({.key = SDLK_s, .ctrl = true, .shift = true}, funcSaveAs);

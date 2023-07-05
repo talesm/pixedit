@@ -12,13 +12,15 @@ namespace pixedit {
  */
 class PictureBuffer
 {
-public: // TODO Make this private too
   std::string filename;
+
+public: // TODO Make this private too
   SDL_Surface* surface = nullptr;
 
 private:
   std::list<TempSurface> history;
   std::list<TempSurface>::iterator historyPoint = history.end();
+  std::list<TempSurface>::iterator lastSave = history.end();
 
 public:
   PictureBuffer() = default;
@@ -28,6 +30,7 @@ public:
     , surface(surface)
   {
     if (!owner) surface->refcount++;
+    if (surface) { makeSnapshot(); }
   }
 
   ~PictureBuffer() { SDL_FreeSurface(surface); }
@@ -45,13 +48,22 @@ public:
     return *this;
   }
 
-  bool save();
+  /// @brief True if this needs saving
+  bool isDirty() const { return lastSave == historyPoint; }
+
+  bool save(bool force = false);
+
+  bool saveAs(const std::string& filename);
+
+  bool saveCopy(const std::string& filename);
 
   void makeSnapshot();
 
   bool undo();
 
   bool redo();
+
+  constexpr const std::string& getFilename() const { return filename; }
 };
 
 } // namespace pixedit

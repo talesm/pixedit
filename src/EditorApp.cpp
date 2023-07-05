@@ -85,15 +85,15 @@ EditorApp::setupShortcuts()
   shortcuts.set({.key = SDLK_F4, .ctrl = true}, closeFile);
   shortcuts.set({.key = SDLK_s, .ctrl = true}, [&] {
     if (buffers.empty() || bufferIndex < 0) return;
-    if (view.getBuffer()->filename.empty()) {
-      saveWithFileDialog(view.getBuffer()->filename.c_str(), *view.getBuffer());
+    if (view.getBuffer()->getFilename().empty()) {
+      saveWithFileDialog(*view.getBuffer());
     } else {
       view.getBuffer()->save();
     }
   });
   shortcuts.set({.key = SDLK_s, .ctrl = true, .shift = true}, [&] {
     if (buffers.empty() || bufferIndex < 0) return;
-    saveWithFileDialog(view.getBuffer()->filename.c_str(), *view.getBuffer());
+    saveWithFileDialog(*view.getBuffer());
   });
   shortcuts.set({.key = SDLK_z, .ctrl = true}, [&] { view.undo(); });
   shortcuts.set({.key = SDLK_z, .ctrl = true, .shift = true},

@@ -8,10 +8,10 @@
 namespace pixedit {
 
 std::shared_ptr<PictureBuffer>
-loadFromFileDialog(const std::string& initialPath);
+loadFromFileDialog(const std::string& initialPath = "");
 
 bool
-saveWithFileDialog(const std::string& initialPath, PictureBuffer& buffer);
+saveWithFileDialog(PictureBuffer& buffer);
 
 } // namespace pixedit
 
