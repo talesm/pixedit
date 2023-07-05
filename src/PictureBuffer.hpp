@@ -12,12 +12,9 @@ namespace pixedit {
  */
 class PictureBuffer
 {
-  std::string filename;
-
-public: // TODO Make this private too
-  SDL_Surface* surface = nullptr;
-
 private:
+  std::string filename;
+  SDL_Surface* surface = nullptr;
   std::list<TempSurface> history;
   std::list<TempSurface>::iterator historyPoint = history.end();
   std::list<TempSurface>::iterator lastSave = history.end();
@@ -64,6 +61,12 @@ public:
   bool redo();
 
   constexpr const std::string& getFilename() const { return filename; }
+
+  constexpr SDL_Surface* getSurface() const { return surface; }
+
+  constexpr int getW() const { return surface ? surface->w : 0; }
+
+  constexpr int getH() const { return surface ? surface->h : 0; }
 };
 
 } // namespace pixedit

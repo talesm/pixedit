@@ -66,7 +66,7 @@ EditorApp::setupShortcuts()
     if (buffer) { appendFile(buffer); };
   });
   shortcuts.set({.key = SDLK_c, .ctrl = true}, [&] {
-    if (view.getBuffer()) copyToXClip(view.getBuffer()->surface);
+    if (view.getBuffer()) copyToXClip(view.getBuffer()->getSurface());
   });
   auto closeFile = [&] {
     if (buffers.empty()) {

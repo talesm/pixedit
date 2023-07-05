@@ -7,19 +7,18 @@ void
 PictureView::updatePreview(SDL_Renderer* renderer)
 {
   if (buffer != oldBuffer) { oldBuffer = buffer; }
-  if (!buffer || !buffer->surface) return;
-  canvas.setSurface(buffer->surface);
-  auto createPreview =
-    [renderer, w = buffer->surface->w, h = buffer->surface->h] {
-      auto t = SDL_CreateTexture(
-        renderer, SDL_PIXELFORMAT_ABGR32, SDL_TEXTUREACCESS_STREAMING, w, h);
-      SDL_SetTextureBlendMode(t, SDL_BLENDMODE_BLEND);
-      return t;
-    };
+  if (!buffer || !buffer->getSurface()) return;
+  canvas.setSurface(buffer->getSurface());
+  auto createPreview = [renderer, w = buffer->getW(), h = buffer->getH()] {
+    auto t = SDL_CreateTexture(
+      renderer, SDL_PIXELFORMAT_ABGR32, SDL_TEXTUREACCESS_STREAMING, w, h);
+    SDL_SetTextureBlendMode(t, SDL_BLENDMODE_BLEND);
+    return t;
+  };
   if (preview) {
     int w, h;
     SDL_QueryTexture(preview, nullptr, nullptr, &w, &h);
-    if (w < buffer->surface->w || h < buffer->surface->h) {
+    if (w < buffer->getW() || h < buffer->getH()) {
       SDL_DestroyTexture(preview);
       preview = createPreview();
     }
@@ -27,11 +26,11 @@ PictureView::updatePreview(SDL_Renderer* renderer)
     SDL_DestroyTexture(preview);
     preview = createPreview();
   }
-  SDL_Rect dstRect{0, 0, buffer->surface->w, buffer->surface->h};
+  SDL_Rect dstRect{0, 0, buffer->getW(), buffer->getH()};
   SDL_Surface* previewSurface;
   SDL_LockTextureToSurface(preview, &dstRect, &previewSurface);
   SDL_FillRect(previewSurface, nullptr, 0);
-  SDL_BlitSurface(buffer->surface, nullptr, previewSurface, &dstRect);
+  SDL_BlitSurface(buffer->getSurface(), nullptr, previewSurface, &dstRect);
   SDL_UnlockTexture(preview);
   movingMode = false;
 }
@@ -88,11 +87,11 @@ PictureView::effectiveScale() const
 SDL_FPoint
 PictureView::effectiveSize() const
 {
-  if (!buffer || !buffer->surface) { return {0}; }
+  if (!buffer || !buffer->getSurface()) { return {0}; }
   float scale = effectiveScale();
   return {
-    scale * buffer->surface->w,
-    scale * buffer->surface->h,
+    scale * buffer->getW(),
+    scale * buffer->getH(),
   };
 }
 
@@ -118,14 +117,14 @@ PictureView::effectiveOffset() const
 void
 PictureView::render(SDL_Renderer* renderer) const
 {
-  if (!buffer || !buffer->surface) return;
+  if (!buffer || !buffer->getSurface()) return;
   float scale = effectiveScale();
   SDL_FPoint scaledSz = {
-    scale * buffer->surface->w,
-    scale * buffer->surface->h,
+    scale * buffer->getW(),
+    scale * buffer->getH(),
   };
   auto offset = effectiveOffset();
-  SDL_Rect srcRect{0, 0, buffer->surface->w, buffer->surface->h};
+  SDL_Rect srcRect{0, 0, buffer->getW(), buffer->getH()};
   SDL_FRect dstRect{
     viewport.x + offset.x + (viewport.w - scaledSz.x) / 2.f,
     viewport.y + offset.y + (viewport.h - scaledSz.y) / 2.f,
@@ -146,7 +145,7 @@ PictureView::update(SDL_Renderer* renderer)
     state.wheelX = oldState.wheelX;
     state.wheelY = oldState.wheelY;
   }
-  if (!buffer || !buffer->surface) return;
+  if (!buffer || !buffer->getSurface()) return;
   auto event = PictureEvent::NONE;
   if (state.left) {
     if (!oldState.left) {

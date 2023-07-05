@@ -21,7 +21,7 @@ loadFromFileDialog(const std::string& initialPath)
 bool
 saveWithFileDialog(PictureBuffer& buffer)
 {
-  if (!buffer.surface) { return false; }
+  if (!buffer.getSurface()) { return false; }
   static const char* filePatterns[] = {"*.png"};
   auto filename =
     tinyfd_saveFileDialog("Save as",
