@@ -42,6 +42,8 @@ struct ImGuiAppBase
 
   int run();
 
+  virtual void update();
+
   void setupImGui();
   virtual void showPictureOptions();
 

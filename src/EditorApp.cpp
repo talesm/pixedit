@@ -23,6 +23,23 @@ private:
 
   void showPictureOptions() final
   {
+    if (ImGui::BeginCombo("File",
+                          bufferIndex < 0
+                            ? "None"
+                            : buffers[bufferIndex]->getFilename().c_str())) {
+      int i = 0;
+      for (auto& b : buffers) {
+        bool selected = bufferIndex == i;
+        if (ImGui::Selectable(b->getFilename().c_str(), selected)) {
+          bufferIndex = i;
+          view.setBuffer(buffers[bufferIndex]);
+        }
+        if (selected) { ImGui::SetItemDefaultFocus(); }
+        ++i;
+      }
+      ImGui::EndCombo();
+    }
+
     ImGuiAppBase::showPictureOptions();
 
     if (ImGui::Button(

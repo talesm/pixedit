@@ -67,9 +67,7 @@ ImGuiAppBase::run()
     ImGui_ImplSDLRenderer_NewFrame();
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
-    if (ImGui::Begin("Picture options")) { showPictureOptions(); }
-    ImGui::End();
-
+    update();
     ImGui::ShowDemoWindow();
 
     if (!ImGui::GetIO().WantCaptureMouse && SDL_GetMouseFocus() == window) {
@@ -129,24 +127,15 @@ ImGuiAppBase::appendFile(std::shared_ptr<PictureBuffer> buffer)
 }
 
 void
+ImGuiAppBase::update()
+{
+  if (ImGui::Begin("Picture options")) { showPictureOptions(); }
+  ImGui::End();
+}
+
+void
 ImGuiAppBase::showPictureOptions()
 {
-  if (ImGui::BeginCombo("File",
-                        bufferIndex < 0
-                          ? "None"
-                          : buffers[bufferIndex]->getFilename().c_str())) {
-    int i = 0;
-    for (auto& b : buffers) {
-      bool selected = bufferIndex == i;
-      if (ImGui::Selectable(b->getFilename().c_str(), selected)) {
-        bufferIndex = i;
-        view.setBuffer(buffers[bufferIndex]);
-      }
-      if (selected) { ImGui::SetItemDefaultFocus(); }
-      ++i;
-    }
-    ImGui::EndCombo();
-  }
   if (ImGui::CollapsingHeader("Tools", ImGuiTreeNodeFlags_DefaultOpen)) {
     int i = 0;
     for (auto& tool : tools) {
