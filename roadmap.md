@@ -37,7 +37,7 @@ To do
   - [x] Pan
   - [x] Free hand
   - [x] Lines
-  - [ ] Rectangle
+  - [x] Rectangle
   - [ ] Elipsis*
   - [ ] Polygon*
   - [ ] Pick color
