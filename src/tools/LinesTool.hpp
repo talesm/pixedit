@@ -9,6 +9,7 @@ namespace pixedit {
 struct LinesTool : PictureTool
 {
   SDL_Point lastPoint;
+  bool multiline = false;
 
   void update(PictureView& view,
               SDL_Renderer* renderer,
@@ -16,7 +17,9 @@ struct LinesTool : PictureTool
   {
     switch (event) {
     case PictureEvent::LEFT:
+      if (view.isEditing()) { break; }
       view.beginEdit();
+      multiline = false;
       lastPoint = view.effectivePos();
       view.canvas | lastPoint;
       view.previewEdit();
@@ -31,14 +34,31 @@ struct LinesTool : PictureTool
         view.previewEdit();
       }
       break;
+
     case PictureEvent::OK:
       if (view.isEditing()) {
+        if (!view.isScratchEnabled()) multiline = !multiline;
         auto currPoint = view.effectivePos();
         view.enableScratch(false);
-        view.canvas | LineTo(currPoint, lastPoint);
-        view.endEdit();
+        view.canvas | OpenLineTo(currPoint, lastPoint);
+        if (multiline) {
+          lastPoint = currPoint;
+          view.previewEdit();
+        } else {
+          view.endEdit();
+        }
       };
       break;
+
+    case PictureEvent::RIGHT:
+      if (view.isEditing() && multiline) {
+        auto currPoint = view.effectivePos();
+        view.enableScratch(false);
+        view.canvas | OpenLineTo(currPoint, lastPoint);
+        view.endEdit();
+      }
+      break;
+
     default: view.cancelEdit(); break;
     }
   }
