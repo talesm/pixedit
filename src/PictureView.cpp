@@ -6,7 +6,7 @@ namespace pixedit {
 void
 PictureView::updatePreview(SDL_Renderer* renderer)
 {
-  if (buffer != oldBuffer) { oldBuffer = buffer; }
+  if (buffer != newBuffer) { buffer = newBuffer; }
   if (!buffer || !buffer->getSurface()) return;
   canvas.setSurface(buffer->getSurface());
   auto createPreview = [renderer, w = buffer->getW(), h = buffer->getH()] {
@@ -139,8 +139,14 @@ PictureView::render(SDL_Renderer* renderer) const
 void
 PictureView::update(SDL_Renderer* renderer)
 {
-  if (buffer != oldBuffer) {
+  if (buffer != newBuffer) {
+    if (!buffer) {
+      buffer = newBuffer;
+      updatePreview(renderer);
+      return;
+    }
     changed = true;
+    if (editing && tool) { cancelEdit(); }
     state.left = state.middle = state.right = false; // Clear everything
     state.wheelX = oldState.wheelX;
     state.wheelY = oldState.wheelY;

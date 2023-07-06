@@ -13,7 +13,7 @@ namespace pixedit {
 class PictureView
 {
   SDL_Rect viewport;
-  std::shared_ptr<PictureBuffer> oldBuffer, buffer;
+  std::shared_ptr<PictureBuffer> buffer, newBuffer;
   MouseState oldState{};
   SDL_Texture* preview = nullptr;
   bool changed = false;
@@ -35,9 +35,9 @@ public:
   {
   }
 
-  void previewChange() { changed = true; }
+  void previewEdit() { changed = true; }
 
-  void beginChange()
+  void beginEdit()
   {
     if (!buffer) return;
     editing = true;
@@ -45,18 +45,27 @@ public:
 
   constexpr bool isEditing() const { return editing; }
 
-  void endChange()
+  void endEdit()
   {
     if (!buffer) return;
     buffer->makeSnapshot();
-    previewChange();
+    previewEdit();
     editing = false;
+  }
+
+  void cancelEdit()
+  {
+    editing = false;
+    if (!buffer) return;
+    oldState.left = oldState.right = (oldState.left || oldState.right);
+    buffer->refresh();
+    previewEdit();
   }
 
   bool undo()
   {
     if (!buffer) return false;
-    previewChange();
+    previewEdit();
     editing = false;
     return buffer->undo();
   }
@@ -64,7 +73,7 @@ public:
   bool redo()
   {
     if (!buffer) return false;
-    previewChange();
+    previewEdit();
     editing = false;
     return buffer->redo();
   }
@@ -93,12 +102,7 @@ public:
 
   const std::shared_ptr<PictureBuffer>& getBuffer() const { return buffer; }
 
-  void setBuffer(const std::shared_ptr<PictureBuffer>& value)
-  {
-    if (buffer == value) return;
-    oldBuffer = buffer;
-    buffer = value;
-  }
+  void setBuffer(std::shared_ptr<PictureBuffer> value) { newBuffer = value; }
 
   constexpr const MouseState& getState() const { return state; }
   constexpr const MouseState& getOldState() const { return oldState; }
