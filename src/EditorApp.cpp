@@ -6,6 +6,7 @@
 #include "ImGuiAppBase.hpp"
 #include "PngXClip.hpp"
 #include "tools/FreeHandTool.hpp"
+#include "tools/LinesTool.hpp"
 #include "tools/ZoomTool.hpp"
 
 namespace pixedit {
@@ -66,6 +67,7 @@ EditorApp::EditorApp(InitSettings settings)
   tools.emplace_back("Pan", [] { return nullptr; });
   tools.emplace_back("Zoom", [] { return new ZoomTool{}; });
   tools.emplace_back("Free hand", [] { return new FreeHandTool{}; });
+  tools.emplace_back("Lines", [] { return new LinesTool{}; });
 
   view.canvas | ColorA{0, 0, 0, 255};
   view.canvas | ColorB{255, 255, 255, 255};

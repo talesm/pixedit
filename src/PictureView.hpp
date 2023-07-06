@@ -16,6 +16,8 @@ class PictureView
   std::shared_ptr<PictureBuffer> buffer, newBuffer;
   MouseState oldState{};
   SDL_Texture* preview = nullptr;
+  SDL_Surface* scratch = nullptr;
+  bool scratchEnabled = false;
   bool changed = false;
   bool editing = false;
 
@@ -47,7 +49,8 @@ public:
 
   void endEdit()
   {
-    if (!buffer) return;
+    enableScratch(false);
+    if (!buffer || !editing) return;
     buffer->makeSnapshot();
     previewEdit();
     editing = false;
@@ -55,8 +58,9 @@ public:
 
   void cancelEdit()
   {
+    enableScratch(false);
+    if (!buffer || !editing) return;
     editing = false;
-    if (!buffer) return;
     oldState.left = oldState.right = (oldState.left || oldState.right);
     buffer->refresh();
     previewEdit();
@@ -65,18 +69,20 @@ public:
   bool undo()
   {
     if (!buffer) return false;
-    previewEdit();
-    editing = false;
+    cancelEdit();
     return buffer->undo();
   }
 
   bool redo()
   {
     if (!buffer) return false;
-    previewEdit();
-    editing = false;
+    cancelEdit();
     return buffer->redo();
   }
+
+  constexpr bool isScratchEnabled() const { return scratchEnabled; }
+
+  void enableScratch(bool enable = true);
 
   void update(SDL_Renderer* renderer);
 

@@ -8,7 +8,7 @@ PictureView::updatePreview(SDL_Renderer* renderer)
 {
   if (buffer != newBuffer) { buffer = newBuffer; }
   if (!buffer || !buffer->getSurface()) return;
-  canvas.setSurface(buffer->getSurface());
+  if (!scratchEnabled) canvas.setSurface(buffer->getSurface());
   auto createPreview = [renderer, w = buffer->getW(), h = buffer->getH()] {
     auto t = SDL_CreateTexture(
       renderer, SDL_PIXELFORMAT_ABGR32, SDL_TEXTUREACCESS_STREAMING, w, h);
@@ -30,7 +30,10 @@ PictureView::updatePreview(SDL_Renderer* renderer)
   SDL_Surface* previewSurface;
   SDL_LockTextureToSurface(preview, &dstRect, &previewSurface);
   SDL_FillRect(previewSurface, nullptr, 0);
-  SDL_BlitSurface(buffer->getSurface(), nullptr, previewSurface, &dstRect);
+  SDL_BlitSurface(buffer->getSurface(), &dstRect, previewSurface, &dstRect);
+  if (scratchEnabled) {
+    SDL_BlitSurface(scratch, &dstRect, previewSurface, &dstRect);
+  }
   SDL_UnlockTexture(preview);
   movingMode = false;
 }
@@ -134,6 +137,31 @@ PictureView::render(SDL_Renderer* renderer) const
   renderCheckerBoard(
     renderer, dstRect, checkerSize, checkerColors[0], checkerColors[1]);
   SDL_RenderCopyF(renderer, preview, &srcRect, &dstRect);
+}
+
+void
+PictureView::enableScratch(bool enable)
+{
+  if (!buffer) {
+    scratchEnabled = false;
+    return;
+  }
+  scratchEnabled = enable;
+  changed = true;
+  if (!enable) {
+    canvas.setSurface(buffer->getSurface());
+    scratch = nullptr;
+  } else if (scratch != nullptr && scratch->w >= buffer->getW() &&
+             scratch->h >= buffer->getH()) {
+    SDL_Rect r{0, 0, buffer->getW(), buffer->getH()};
+    SDL_FillRect(scratch, &r, 0);
+    canvas.setSurface(scratch, true);
+  } else {
+    scratch = SDL_CreateRGBSurfaceWithFormat(
+      0, buffer->getW(), buffer->getH(), 32, SDL_PIXELFORMAT_ABGR32);
+    SDL_assert(scratch);
+    canvas.setSurface(scratch, true);
+  }
 }
 
 void
