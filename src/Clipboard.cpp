@@ -1,5 +1,5 @@
 #include "Clipboard.hpp"
-#include "PngXClip.hpp"
+#include "clipboards/PngXClip.hpp"
 
 namespace pixedit {
 
