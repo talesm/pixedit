@@ -36,7 +36,7 @@ To do
   - [x] Zoom
   - [x] Pan
   - [x] Free hand
-  - [ ] Lines
+  - [x] Lines
   - [ ] Rectangle
   - [ ] Elipsis*
   - [ ] Polygon*
