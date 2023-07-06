@@ -1,7 +1,7 @@
 # Based upon https://makefiletutorial.com/#makefile-cookbook
 # Thanks to Job Vranish (https://spin.atomicobject.com/2016/08/26/makefile-c-projects/)
-EXEC_EDITOR := pixedit_editor
-EXEC_VIEWER := pixedit_viewer
+EXEC_EDITOR := pixedit
+EXEC_VIEWER := pixview
 UNIT_TEST := pixedit_tests
 
 BUILD_DIR := build
