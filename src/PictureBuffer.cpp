@@ -36,6 +36,7 @@ void
 PictureBuffer::makeSnapshot()
 {
   if (!surface) return;
+  if (selectionSurface) clearSelection();
   if (historyPoint != history.end()) {
     history.erase(++historyPoint, history.end());
   }
@@ -47,6 +48,7 @@ PictureBuffer::refresh()
 {
   if (!surface || history.empty() || historyPoint == history.end()) return;
   SDL_FreeSurface(surface);
+  if (selectionSurface) clearSelection();
   surface = historyPoint->recover();
 }
 

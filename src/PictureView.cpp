@@ -289,10 +289,20 @@ PictureView::setSelection(SDL_Surface* surface)
   if (!buffer) return;
   if (surface) {
     buffer->setSelection(surface, {0, 0, surface->w, surface->h});
-    changed = true;
   } else {
     buffer->clearSelection();
   }
+  changed = true;
+}
+
+void
+PictureView::persistSelection()
+{
+  if (!buffer) return;
+  cancelEdit();
+  changed = true;
+  buffer->persistSelection();
+  buffer->makeSnapshot();
 }
 
 } // namespace pixedit

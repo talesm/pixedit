@@ -27,30 +27,34 @@ renderSelection(Canvas& canvas, SDL_Rect rect)
 struct SelectionHandTool : PictureTool
 {
   SDL_Point lastPoint;
+  bool moving = false;
 
   void update(PictureView& view,
               SDL_Renderer* renderer,
               PictureEvent event) final
   {
-    if (!view.getBuffer()->hasSelection()) { return; }
-    auto& rect = view.getBuffer()->getSelectionRect();
+    auto& buffer = *view.getBuffer();
+    if (!buffer.hasSelection()) {
+      moving = false;
+      return;
+    }
+    auto& rect = buffer.getSelectionRect();
     switch (event) {
     case PictureEvent::LEFT:
       lastPoint = view.effectivePos();
       if (SDL_PointInRect(&lastPoint, &rect)) {
-        view.beginEdit();
+        moving = true;
         renderSelection(view.getGlassCanvas(), rect);
       } else {
-        view.cancelEdit();
-        view.setSelection(nullptr);
+        view.persistSelection();
       }
       break;
 
     case PictureEvent::NONE:
-      if (view.isEditing()) {
+      if (moving) {
         auto currPoint = view.effectivePos();
         if (currPoint.x == lastPoint.x && currPoint.y == lastPoint.y) break;
-        auto& rect = view.getBuffer()->getSelectionRect();
+        auto& rect = buffer.getSelectionRect();
         rect.x += currPoint.x - lastPoint.x;
         rect.y += currPoint.y - lastPoint.y;
         lastPoint = currPoint;
@@ -59,17 +63,15 @@ struct SelectionHandTool : PictureTool
         renderSelection(view.getGlassCanvas(), rect);
       }
       break;
+
     case PictureEvent::OK:
-      if (view.isEditing()) {
-        view.cancelEdit();
-        auto& rect = view.getBuffer()->getSelectionRect();
-        renderSelection(view.getGlassCanvas(), rect);
+      if (moving) {
+        renderSelection(view.getGlassCanvas(), buffer.getSelectionRect());
+        moving = false;
       }
       break;
-    default:
-      view.cancelEdit();
-      view.setSelection(nullptr);
-      break;
+
+    default: view.persistSelection(); break;
     }
   }
 

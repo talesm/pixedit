@@ -89,6 +89,12 @@ public:
     selectionSurface = surface;
     selectionRect = rect;
   }
+
+  void persistSelection()
+  {
+    SDL_BlitSurface(selectionSurface, nullptr, surface, &selectionRect);
+    clearSelection();
+  }
 };
 
 } // namespace pixedit
