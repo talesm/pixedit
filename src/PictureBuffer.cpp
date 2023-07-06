@@ -3,6 +3,10 @@
 
 namespace pixedit {
 
+namespace defaults {
+extern const unsigned HISTORY_MAX;
+} // namespace defaults
+
 PictureBuffer::PictureBuffer(std::string filename)
   : PictureBuffer(std::move(filename), IMG_Load(filename.c_str()), true)
 {
@@ -41,6 +45,7 @@ PictureBuffer::makeSnapshot()
     history.erase(++historyPoint, history.end());
   }
   historyPoint = history.emplace(history.end(), surface);
+  if (history.size() > defaults::HISTORY_MAX) history.pop_front();
 }
 
 void
