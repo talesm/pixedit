@@ -17,6 +17,7 @@ private:
   std::string filename;
 
 public:
+  TempSurface();
   TempSurface(SDL_Surface* surface);
   TempSurface(const TempSurface&) = delete;
   TempSurface(TempSurface&& rhs) { std::swap(filename, rhs.filename); }

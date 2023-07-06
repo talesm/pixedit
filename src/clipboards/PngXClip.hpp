@@ -14,6 +14,15 @@ namespace pixedit {
  */
 bool
 copyToXClip(SDL_Surface* surface);
+
+/**
+ * Copy surface from clipboard
+ *
+ * @return the surface to be copied
+ */
+SDL_Surface*
+copyFromXClip();
+
 } // namespace pixedit
 
 #endif /* PIXEDIT_SRC_CLIPBOARDS_PNG_XCLIP_INCLUDED */

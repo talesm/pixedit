@@ -16,8 +16,13 @@ makeTempFilename(std::string_view prefix, std::string_view suffix)
   return ss.str();
 }
 
-TempSurface::TempSurface(SDL_Surface* surface)
+TempSurface::TempSurface()
   : filename(makeTempFilename("temp_", ".png"))
+{
+}
+
+TempSurface::TempSurface(SDL_Surface* surface)
+  : TempSurface()
 {
   if (IMG_SavePNG(surface, filename.c_str()) < 0) {
     throw std::runtime_error{"Can not save"};

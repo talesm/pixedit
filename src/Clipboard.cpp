@@ -6,7 +6,7 @@ namespace pixedit {
 SDL_Surface*
 Clipboard::get()
 {
-  return nullptr;
+  return copyFromXClip();
 }
 
 bool
