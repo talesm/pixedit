@@ -2,9 +2,9 @@
 #include <SDL.h>
 #include <SDL_image.h>
 #include <imgui.h>
+#include "Clipboard.hpp"
 #include "FileDialogTinyfd.hpp"
 #include "ImGuiAppBase.hpp"
-#include "PngXClip.hpp"
 #include "tools/FreeHandTool.hpp"
 #include "tools/LinesTool.hpp"
 #include "tools/RectTool.hpp"
@@ -27,6 +27,8 @@ class EditorApp : ImGuiAppBase
 {
   std::vector<std::shared_ptr<PictureBuffer>> buffers;
   int bufferIndex = -1;
+
+  Clipboard clipboard;
 
 public:
   EditorApp(EditorInitSettings settings);
@@ -159,7 +161,7 @@ EditorApp::setupShortcuts()
     if (buffer) { appendFile(buffer); };
   });
   shortcuts.set({.key = SDLK_c, .ctrl = true}, [&] {
-    if (view.getBuffer()) copyToXClip(view.getBuffer()->getSurface());
+    if (view.getBuffer()) clipboard.set(view.getBuffer()->getSurface());
   });
   auto closeFile = [&] {
     if (buffers.empty()) {
