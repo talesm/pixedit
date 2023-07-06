@@ -26,7 +26,7 @@ struct FreeHandTool : PictureTool
       if (view.isEditing()) {
         auto currPoint = view.effectivePos();
         if (currPoint.x == lastPoint.x && currPoint.y == lastPoint.y) break;
-        view.canvas | LineTo(currPoint, lastPoint);
+        view.canvas | OpenLineTo(currPoint, lastPoint);
         view.previewEdit();
         lastPoint = currPoint;
       }
