@@ -113,6 +113,13 @@ public:
   constexpr const MouseState& getState() const { return state; }
   constexpr const MouseState& getOldState() const { return oldState; }
 
+  void swapColors()
+  {
+    auto colorA = canvas.getRawColorA();
+    auto colorB = canvas.getRawColorB();
+    canvas | RawColorA{colorB} | RawColorB{colorA};
+  }
+
 private:
   void updatePreview(SDL_Renderer* renderer);
 };

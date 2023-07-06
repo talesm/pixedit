@@ -28,9 +28,7 @@ private:
     if (ImGui::Button(
           "Swap colors",
           {0, ImGui::GetFrameHeightWithSpacing() + ImGui::GetFrameHeight()})) {
-      auto colorA = view.canvas.getRawColorA();
-      auto colorB = view.canvas.getRawColorB();
-      view.canvas | RawColorA{colorB} | RawColorB{colorA};
+      view.swapColors();
     }
     ImGui::SameLine();
     {
@@ -116,6 +114,9 @@ EditorApp::setupShortcuts()
   shortcuts.set({.key = SDLK_z, .ctrl = true}, [&] { view.undo(); });
   shortcuts.set({.key = SDLK_z, .ctrl = true, .shift = true},
                 [&] { view.redo(); });
+
+  // Swap colors
+  shortcuts.set({.key = SDLK_x, .alt = true}, [&] { view.swapColors(); });
 }
 }
 
