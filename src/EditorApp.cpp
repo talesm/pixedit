@@ -24,6 +24,8 @@ public:
 private:
   void setupShortcuts();
 
+  void event(const SDL_Event& ev, bool imGuiMayUse) final;
+
   void update() final
   {
     if (ImGui::Begin("Picture options")) { showPictureOptions(); }
@@ -122,6 +124,20 @@ EditorApp::EditorApp(InitSettings settings)
 
   view.canvas | ColorA{0, 0, 0, 255};
   view.canvas | ColorB{255, 255, 255, 255};
+}
+
+void
+EditorApp::event(const SDL_Event& ev, bool imGuiMayUse)
+{
+  switch (ev.type) {
+  case SDL_DROPFILE:
+    if (ImGui::GetIO().WantCaptureMouse) break;
+    appendFile(std::make_shared<PictureBuffer>(ev.drop.file));
+    break;
+
+  default: break;
+  }
+  return ImGuiAppBase::event(ev, imGuiMayUse);
 }
 
 void

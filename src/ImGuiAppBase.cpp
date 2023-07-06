@@ -19,46 +19,46 @@ ImGuiAppBase::ImGuiAppBase(const InitSettings& settings)
   setupImGui();
 }
 
+void
+ImGuiAppBase::event(const SDL_Event& ev, bool imGuiMayUse)
+{
+  switch (ev.type) {
+  case SDL_QUIT: exited = true; break;
+  case SDL_WINDOWEVENT:
+    switch (ev.window.event) {
+    case SDL_WINDOWEVENT_SIZE_CHANGED:
+      view.setViewport({0, 0, ev.window.data1, ev.window.data2});
+      break;
+    default: break;
+    }
+    break;
+  case SDL_MOUSEWHEEL:
+    if (ImGui::GetIO().WantCaptureMouse) break;
+    view.state.wheelX += ev.wheel.x;
+    view.state.wheelY += ev.wheel.y;
+    break;
+  case SDL_KEYDOWN: {
+    if (ImGui::GetIO().WantCaptureKeyboard) break;
+    auto mod = ev.key.keysym.mod;
+    shortcuts.exec({.key = ev.key.keysym.sym,
+                    .ctrl = (mod & KMOD_CTRL) != 0,
+                    .alt = (mod & KMOD_ALT) != 0,
+                    .shift = (mod & KMOD_SHIFT) != 0});
+    break;
+  }
+  default: break;
+  }
+}
+
 int
 ImGuiAppBase::run()
 {
   while (!exited) {
-    // Events
+    // Update
     for (SDL_Event ev; SDL_PollEvent(&ev);) {
-      ImGui_ImplSDL2_ProcessEvent(&ev);
-      switch (ev.type) {
-      case SDL_QUIT: exited = true; break;
-      case SDL_WINDOWEVENT:
-        switch (ev.window.event) {
-        case SDL_WINDOWEVENT_SIZE_CHANGED:
-          view.setViewport({0, 0, ev.window.data1, ev.window.data2});
-          break;
-        default: break;
-        }
-        break;
-      case SDL_MOUSEWHEEL:
-        if (ImGui::GetIO().WantCaptureMouse) break;
-        view.state.wheelX += ev.wheel.x;
-        view.state.wheelY += ev.wheel.y;
-        break;
-      case SDL_DROPFILE:
-        if (ImGui::GetIO().WantCaptureMouse) break;
-        // appendFile(std::make_shared<PictureBuffer>(ev.drop.file));
-        break;
-      case SDL_KEYDOWN: {
-        if (ImGui::GetIO().WantCaptureKeyboard) break;
-        auto mod = ev.key.keysym.mod;
-        shortcuts.exec({.key = ev.key.keysym.sym,
-                        .ctrl = (mod & KMOD_CTRL) != 0,
-                        .alt = (mod & KMOD_ALT) != 0,
-                        .shift = (mod & KMOD_SHIFT) != 0});
-        break;
-      }
-      default: break;
-      }
+      event(ev, ImGui_ImplSDL2_ProcessEvent(&ev));
     }
 
-    // Update
     ImGui_ImplSDLRenderer_NewFrame();
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();

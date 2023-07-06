@@ -40,6 +40,8 @@ struct ImGuiAppBase
 
   int run();
 
+  virtual void event(const SDL_Event& ev, bool imGuiMayUse);
+
   virtual void update() {}
 
   void setupImGui();
