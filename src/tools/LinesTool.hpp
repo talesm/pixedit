@@ -18,7 +18,6 @@ struct LinesTool : PictureTool
     case PictureEvent::LEFT:
       view.beginEdit();
       lastPoint = view.effectivePos();
-      view.enableScratch();
       view.canvas | lastPoint;
       view.previewEdit();
       break;
