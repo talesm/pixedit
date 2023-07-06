@@ -7,6 +7,7 @@
 #include "PngXClip.hpp"
 #include "tools/FreeHandTool.hpp"
 #include "tools/LinesTool.hpp"
+#include "tools/RectTool.hpp"
 #include "tools/ZoomTool.hpp"
 
 namespace pixedit {
@@ -68,6 +69,8 @@ EditorApp::EditorApp(InitSettings settings)
   tools.emplace_back("Zoom", [] { return new ZoomTool{}; });
   tools.emplace_back("Free hand", [] { return new FreeHandTool{}; });
   tools.emplace_back("Lines", [] { return new LinesTool{}; });
+  tools.emplace_back("Outline Rect", [] { return new RectTool{true}; });
+  tools.emplace_back("Filled Rect", [] { return new RectTool{false}; });
 
   view.canvas | ColorA{0, 0, 0, 255};
   view.canvas | ColorB{255, 255, 255, 255};
