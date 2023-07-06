@@ -63,14 +63,6 @@ rawToComponent(RawColor color, const SDL_PixelFormat* format)
   SDL_GetRGBA(color, format, &c.r, &c.g, &c.b, &c.a);
   return c;
 }
-
-constexpr std::array<float, 4>
-rawToNormalized(RawColor color, const SDL_PixelFormat* format)
-{
-  SDL_Color c = rawToComponent(color, format);
-  return {c.r / 255.f, c.g / 255.f, c.b / 255.f, c.a / 255.f};
-}
-
 constexpr RawColor
 componentToRaw(SDL_Color color, const SDL_PixelFormat* format)
 {
@@ -78,7 +70,33 @@ componentToRaw(SDL_Color color, const SDL_PixelFormat* format)
     return color.r << 24 | color.g << 16 | color.b << 8 | color.a;
   return SDL_MapRGBA(format, color.r, color.g, color.b, color.a);
 }
+
+constexpr std::array<float, 4>
+componentToNormalized(SDL_Color color)
+{
+  return {color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f};
+}
+constexpr SDL_Color
+normalizedToComponent(std::array<float, 4> color)
+{
+  return {
+    Uint8(color[0] * 255.f),
+    Uint8(color[1] * 255.f),
+    Uint8(color[2] * 255.f),
+    Uint8(color[3] * 255.f),
+  };
+}
 ///}
+
+/// @brief Safely gets format even if surface is null
+/// @param surface
+/// @return
+constexpr SDL_PixelFormat*
+safeGetFormat(SDL_Surface* surface)
+{
+  if (!surface) return nullptr;
+  return surface->format;
+}
 
 /**
  * A canvas where you can issue drawing commands to
@@ -103,13 +121,13 @@ public:
   constexpr RawColor getRawColorA() const { return brush.colorA; }
   constexpr RawColor getRawColorB() const { return brush.colorB; }
 
-  constexpr std::array<float, 4> getColorANormalized() const
+  constexpr Color getColorA() const
   {
-    return rawToNormalized(brush.colorA, surface ? surface->format : nullptr);
+    return rawToComponent(brush.colorA, safeGetFormat(surface));
   }
-  constexpr std::array<float, 4> getColorBNormalized() const
+  constexpr Color getColorB() const
   {
-    return rawToNormalized(brush.colorB, surface ? surface->format : nullptr);
+    return rawToComponent(brush.colorB, safeGetFormat(surface));
   }
 
   friend constexpr Canvas& operator|(Canvas& c, RawColor rawColor);

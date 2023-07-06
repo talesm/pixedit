@@ -33,25 +33,15 @@ private:
     ImGui::SameLine();
     {
       ImGui::BeginChild("Colors");
-      auto colorA = view.canvas.getColorANormalized();
+      auto colorA = componentToNormalized(view.canvas.getColorA());
       if (ImGui::ColorEdit4(
             "Color A", colorA.data(), ImGuiColorEditFlags_NoInputs)) {
-        view.canvas | ColorA{
-                        Uint8(colorA[0] * 255),
-                        Uint8(colorA[1] * 255),
-                        Uint8(colorA[2] * 255),
-                        Uint8(colorA[3] * 255),
-                      };
+        view.canvas | ColorA{normalizedToComponent(colorA)};
       }
-      auto colorB = view.canvas.getColorBNormalized();
+      auto colorB = componentToNormalized(view.canvas.getColorB());
       if (ImGui::ColorEdit4(
             "Color B", colorB.data(), ImGuiColorEditFlags_NoInputs)) {
-        view.canvas | ColorB{
-                        Uint8(colorB[0] * 255),
-                        Uint8(colorB[1] * 255),
-                        Uint8(colorB[2] * 255),
-                        Uint8(colorB[3] * 255),
-                      };
+        view.canvas | ColorB{normalizedToComponent(colorB)};
       }
       ImGui::EndChild();
     }

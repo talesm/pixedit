@@ -4,13 +4,6 @@
 
 namespace pixedit {
 
-constexpr SDL_PixelFormat*
-safeGetFormat(SDL_Surface* surface)
-{
-  if (!surface) return nullptr;
-  return surface->format;
-}
-
 void
 Canvas::setSurface(SDL_Surface* value, bool owning)
 {
