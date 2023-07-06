@@ -8,7 +8,6 @@ namespace pixedit {
 
 struct FreeHandTool : PictureTool
 {
-  bool pressed = false;
   SDL_Point lastPoint;
 
   void update(PictureView& view,
@@ -17,14 +16,14 @@ struct FreeHandTool : PictureTool
   {
     switch (event) {
     case PictureEvent::LEFT:
-      pressed = true;
+      view.beginEdit();
       lastPoint = view.effectivePos();
       view.canvas | lastPoint;
       view.previewEdit();
       break;
 
     case PictureEvent::NONE:
-      if (pressed) {
+      if (view.isEditing()) {
         auto currPoint = view.effectivePos();
         if (currPoint.x == lastPoint.x && currPoint.y == lastPoint.y) break;
         view.canvas | LineTo(currPoint, lastPoint);
@@ -32,18 +31,8 @@ struct FreeHandTool : PictureTool
         lastPoint = currPoint;
       }
       break;
-
-    case PictureEvent::OK:
-      if (pressed) {
-        view.endEdit();
-        pressed = false;
-      }
-      break;
-
-    default:
-      view.cancelEdit();
-      pressed = false;
-      break;
+    case PictureEvent::OK: view.endEdit(); break;
+    default: view.cancelEdit(); break;
     }
   }
 };
