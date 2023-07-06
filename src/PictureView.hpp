@@ -17,9 +17,13 @@ class PictureView
   MouseState oldState{};
   SDL_Texture* preview = nullptr;
   SDL_Surface* scratch = nullptr;
+  SDL_Surface* glassSurface = nullptr;
+  Canvas glassCanvas;
+
   bool scratchEnabled = false;
   bool changed = false;
   bool editing = false;
+  bool glassEnabled = false;
 
 public:
   SDL_FPoint offset{0};
@@ -119,6 +123,8 @@ public:
     auto colorB = canvas.getRawColorB();
     canvas | RawColorA{colorB} | RawColorB{colorA};
   }
+
+  Canvas& getGlassCanvas();
 
 private:
   void updatePreview(SDL_Renderer* renderer);

@@ -34,6 +34,9 @@ PictureView::updatePreview(SDL_Renderer* renderer)
   if (scratchEnabled) {
     SDL_BlitSurface(scratch, &dstRect, previewSurface, &dstRect);
   }
+  if (glassEnabled) {
+    SDL_BlitSurface(glassSurface, &dstRect, previewSurface, &dstRect);
+  }
   SDL_UnlockTexture(preview);
   movingMode = false;
 }
@@ -211,7 +214,10 @@ PictureView::update(SDL_Renderer* renderer)
   } else if (oldState.middle) {
     movingMode = false;
   } else if (tool != nullptr) {
+    bool wasGlassEnabled = glassEnabled;
+    glassEnabled = false;
     tool->update(*this, renderer, event);
+    if (wasGlassEnabled && !changed) glassEnabled = true;
   } else if (event == PictureEvent::LEFT) {
     movingMode = true;
   } else if (event != PictureEvent::NONE) {
@@ -238,7 +244,6 @@ PictureView::update(SDL_Renderer* renderer)
 SDL_Point
 PictureView::effectivePos() const
 {
-
   auto offset = effectiveOffset();
   auto scale = effectiveScale();
   auto size = effectiveSize();
@@ -249,6 +254,25 @@ PictureView::effectivePos() const
     int(xx),
     int(yy),
   };
+}
+
+Canvas&
+PictureView::getGlassCanvas()
+{
+  if (!buffer) { return glassCanvas; }
+  glassEnabled = true;
+
+  if (glassSurface != nullptr && glassSurface->w >= buffer->getW() &&
+      glassSurface->h >= buffer->getH()) {
+    SDL_Rect r{0, 0, buffer->getW(), buffer->getH()};
+    SDL_FillRect(glassSurface, &r, 0);
+  } else {
+    glassSurface = SDL_CreateRGBSurfaceWithFormat(
+      0, buffer->getW(), buffer->getH(), 32, SDL_PIXELFORMAT_ABGR32);
+    SDL_assert(glassSurface);
+  }
+  glassCanvas.setSurface(glassSurface, true);
+  return glassCanvas;
 }
 
 } // namespace pixedit
