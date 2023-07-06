@@ -38,7 +38,7 @@ CPPFLAGS := $(INC_FLAGS) -g -MMD -MP -Wall
 CXXFLAGS := $(CXXFLAGS) -std=gnu++20
 
 # ALL
-all: $(BUILD_DIR)/$(EXEC_EDITOR) $(BUILD_DIR)/$(EXEC_VIEWER) $(BUILD_DIR)/$(UNIT_TEST)
+all: $(BUILD_DIR)/$(EXEC_EDITOR) $(BUILD_DIR)/$(UNIT_TEST)
 
 # Removing non default objs
 DEFAULT_OBJS := $(filter-out $(NON_DEFAULT_OBJS),$(OBJS))
@@ -47,9 +47,9 @@ DEFAULT_OBJS := $(filter-out $(NON_DEFAULT_OBJS),$(OBJS))
 $(BUILD_DIR)/$(EXEC_EDITOR): $(DEFAULT_OBJS) $(BUILD_DIR)/src/EditorApp.cpp.o
 	$(CXX) $^ -o $@ $(LDFLAGS)
 
-# The final build step for our viewer app.
-$(BUILD_DIR)/$(EXEC_VIEWER): $(DEFAULT_OBJS) $(BUILD_DIR)/src/ViewerApp.cpp.o
-	$(CXX) $^ -o $@ $(LDFLAGS)
+# The final build step for our viewer app. Removed temporarily
+# $(BUILD_DIR)/$(EXEC_VIEWER): $(DEFAULT_OBJS) $(BUILD_DIR)/src/ViewerApp.cpp.o
+# 	$(CXX) $^ -o $@ $(LDFLAGS)
 
 $(BUILD_DIR)/$(UNIT_TEST): $(DEFAULT_OBJS) $(TEST_OBJS)
 	$(CXX) $^ -o $@ $(LDFLAGS)
