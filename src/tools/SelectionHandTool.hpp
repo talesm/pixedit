@@ -32,28 +32,48 @@ struct SelectionHandTool : PictureTool
               SDL_Renderer* renderer,
               PictureEvent event) final
   {
+    if (!view.getBuffer()->hasSelection()) { return; }
+    auto& rect = view.getBuffer()->getSelectionRect();
     switch (event) {
     case PictureEvent::LEFT:
-      view.beginEdit();
       lastPoint = view.effectivePos();
-      view.canvas | lastPoint;
-      view.previewEdit();
+      if (SDL_PointInRect(&lastPoint, &rect)) {
+        view.beginEdit();
+        renderSelection(view.getGlassCanvas(), rect);
+      } else {
+        view.cancelEdit();
+        view.setSelection(nullptr);
+      }
       break;
 
     case PictureEvent::NONE:
       if (view.isEditing()) {
         auto currPoint = view.effectivePos();
         if (currPoint.x == lastPoint.x && currPoint.y == lastPoint.y) break;
-        view.canvas | OpenLineTo(currPoint, lastPoint);
-        view.previewEdit();
+        auto& rect = view.getBuffer()->getSelectionRect();
+        rect.x += currPoint.x - lastPoint.x;
+        rect.y += currPoint.y - lastPoint.y;
         lastPoint = currPoint;
+        view.previewEdit();
+      } else {
+        renderSelection(view.getGlassCanvas(), rect);
       }
       break;
-    case PictureEvent::OK: view.endEdit(); break;
-    default: view.cancelEdit(); break;
+    case PictureEvent::OK:
+      if (view.isEditing()) {
+        view.cancelEdit();
+        auto& rect = view.getBuffer()->getSelectionRect();
+        renderSelection(view.getGlassCanvas(), rect);
+      }
+      break;
+    default:
+      view.cancelEdit();
+      view.setSelection(nullptr);
+      break;
     }
-    renderSelection(view.getGlassCanvas(), {0, 0, 10, 10});
   }
+
+  bool acceptsSelection() const final { return true; }
 };
 
 } // namespace pixedit

@@ -18,6 +18,8 @@ private:
   std::list<TempSurface> history;
   std::list<TempSurface>::iterator historyPoint = history.end();
   std::list<TempSurface>::iterator lastSave = history.end();
+  SDL_Surface* selectionSurface = nullptr;
+  SDL_Rect selectionRect{0, 0, 10, 10};
 
 public:
   PictureBuffer() = default;
@@ -69,6 +71,24 @@ public:
   constexpr int getW() const { return surface ? surface->w : 0; }
 
   constexpr int getH() const { return surface ? surface->h : 0; }
+
+  constexpr SDL_Rect& getSelectionRect() { return selectionRect; }
+  constexpr const SDL_Rect& getSelectionRect() const { return selectionRect; }
+  constexpr void setSelectionRect(SDL_Rect rect) { selectionRect = rect; }
+
+  constexpr auto getSelectionSurface() const { return selectionSurface; }
+  constexpr bool hasSelection() const { return selectionSurface; }
+  void clearSelection()
+  {
+    SDL_FreeSurface(selectionSurface);
+    selectionSurface = nullptr;
+  }
+  void setSelection(SDL_Surface* surface, SDL_Rect rect)
+  {
+    SDL_FreeSurface(selectionSurface);
+    selectionSurface = surface;
+    selectionRect = rect;
+  }
 };
 
 } // namespace pixedit

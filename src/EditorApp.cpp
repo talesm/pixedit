@@ -165,6 +165,18 @@ EditorApp::setupShortcuts()
   shortcuts.set({.key = SDLK_c, .ctrl = true}, [&] {
     if (view.getBuffer()) clipboard.set(view.getBuffer()->getSurface());
   });
+  shortcuts.set({.key = SDLK_v, .ctrl = true}, [&] {
+    auto& buffer = view.getBuffer();
+    if (!buffer) return;
+    auto surface = clipboard.get();
+    if (!surface) return;
+    if (!view.tool || !view.tool->acceptsSelection()) {
+      view.cancelEdit();
+      toolIndex = 6;
+      view.tool = new SelectionHandTool();
+    }
+    view.setSelection(surface);
+  });
   auto closeFile = [&] {
     if (buffers.empty()) {
       exited = true;

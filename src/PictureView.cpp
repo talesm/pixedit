@@ -31,6 +31,12 @@ PictureView::updatePreview(SDL_Renderer* renderer)
   SDL_LockTextureToSurface(preview, &dstRect, &previewSurface);
   SDL_FillRect(previewSurface, nullptr, 0);
   SDL_BlitSurface(buffer->getSurface(), &dstRect, previewSurface, &dstRect);
+  if (buffer->hasSelection()) {
+    SDL_BlitSurface(buffer->getSelectionSurface(),
+                    nullptr,
+                    previewSurface,
+                    &buffer->getSelectionRect());
+  }
   if (scratchEnabled) {
     SDL_BlitSurface(scratch, &dstRect, previewSurface, &dstRect);
   }
@@ -39,6 +45,7 @@ PictureView::updatePreview(SDL_Renderer* renderer)
   }
   SDL_UnlockTexture(preview);
   movingMode = false;
+  changed = false;
 }
 
 static void
@@ -217,7 +224,7 @@ PictureView::update(SDL_Renderer* renderer)
     bool wasGlassEnabled = glassEnabled;
     glassEnabled = false;
     tool->update(*this, renderer, event);
-    if (wasGlassEnabled && !changed) glassEnabled = true;
+    if (!changed) glassEnabled = wasGlassEnabled;
   } else if (event == PictureEvent::LEFT) {
     movingMode = true;
   } else if (event != PictureEvent::NONE) {
@@ -261,6 +268,7 @@ PictureView::getGlassCanvas()
 {
   if (!buffer) { return glassCanvas; }
   glassEnabled = true;
+  changed = true;
 
   if (glassSurface != nullptr && glassSurface->w >= buffer->getW() &&
       glassSurface->h >= buffer->getH()) {
@@ -273,6 +281,18 @@ PictureView::getGlassCanvas()
   }
   glassCanvas.setSurface(glassSurface, true);
   return glassCanvas;
+}
+
+void
+PictureView::setSelection(SDL_Surface* surface)
+{
+  if (!buffer) return;
+  if (surface) {
+    buffer->setSelection(surface, {0, 0, surface->w, surface->h});
+    changed = true;
+  } else {
+    buffer->clearSelection();
+  }
 }
 
 } // namespace pixedit

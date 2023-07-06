@@ -25,6 +25,8 @@ struct PictureTool
                       PictureEvent event) = 0;
 
   virtual ~PictureTool() = default;
+
+  virtual bool acceptsSelection() const { return false; }
 };
 
 } // namespace pixedit

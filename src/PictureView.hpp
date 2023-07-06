@@ -126,6 +126,10 @@ public:
 
   Canvas& getGlassCanvas();
 
+  constexpr bool isGlassEnabled() const { return glassEnabled; }
+
+  void setSelection(SDL_Surface* surface);
+
 private:
   void updatePreview(SDL_Renderer* renderer);
 };

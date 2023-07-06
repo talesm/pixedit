@@ -20,7 +20,8 @@ copyFromXClip()
 {
   TempSurface temp;
   std::string fromClipboard =
-    "xclip -selection clipboard -t image/png -out | " + temp.getFilename();
+    "xclip -selection clipboard -t image/png -out > " + temp.getFilename();
+  if (std::system(fromClipboard.c_str()) != 0) { return nullptr; }
   return temp.recover();
 }
 
