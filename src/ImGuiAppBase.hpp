@@ -34,20 +34,15 @@ struct ImGuiAppBase
   int toolIndex = 0;
   ShortcutManager shortcuts;
   PictureView view;
-  std::vector<std::shared_ptr<PictureBuffer>> buffers;
-  int bufferIndex = -1;
   bool exited = false;
 
   ImGuiAppBase(const InitSettings& settings);
 
   int run();
 
-  virtual void update();
+  virtual void update() {}
 
   void setupImGui();
-  virtual void showPictureOptions();
-
-  void appendFile(std::shared_ptr<PictureBuffer> buffer);
 };
 } // namespace pixedit
 

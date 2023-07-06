@@ -16,11 +16,6 @@ ImGuiAppBase::ImGuiAppBase(const InitSettings& settings)
   , view{{0, 0, settings.windowSz.x, settings.windowSz.y}}
 {
   if (!window || !renderer) { throw std::runtime_error{SDL_GetError()}; }
-
-  auto buffer = std::make_shared<PictureBuffer>(std::move(settings.filename));
-  view.setBuffer(buffer);
-  buffers.emplace_back(buffer);
-  bufferIndex = buffers.size() - 1;
   setupImGui();
 }
 
@@ -48,7 +43,7 @@ ImGuiAppBase::run()
         break;
       case SDL_DROPFILE:
         if (ImGui::GetIO().WantCaptureMouse) break;
-        appendFile(std::make_shared<PictureBuffer>(ev.drop.file));
+        // appendFile(std::make_shared<PictureBuffer>(ev.drop.file));
         break;
       case SDL_KEYDOWN: {
         if (ImGui::GetIO().WantCaptureKeyboard) break;
@@ -114,47 +109,6 @@ ImGuiAppBase::setupImGui()
   // Setup Platform/Renderer backends
   ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
   ImGui_ImplSDLRenderer_Init(renderer);
-}
-
-void
-ImGuiAppBase::appendFile(std::shared_ptr<PictureBuffer> buffer)
-{
-  view.setBuffer(buffer);
-  view.offset = {0, 0};
-  view.scale = 1.f;
-  buffers.emplace_back(buffer);
-  bufferIndex = buffers.size() - 1;
-}
-
-void
-ImGuiAppBase::update()
-{
-  if (ImGui::Begin("Picture options")) { showPictureOptions(); }
-  ImGui::End();
-}
-
-void
-ImGuiAppBase::showPictureOptions()
-{
-  if (ImGui::CollapsingHeader("Tools", ImGuiTreeNodeFlags_DefaultOpen)) {
-    int i = 0;
-    for (auto& tool : tools) {
-      if (ImGui::RadioButton(tool.name.c_str(), i == toolIndex)) {
-        delete view.tool;
-        view.tool = tool.build();
-        toolIndex = i;
-      }
-      ++i;
-    }
-  }
-  ImGui::DragFloat2("##offset", &view.offset.x, 1.f, -10000, +10000);
-  ImGui::SameLine();
-  if (ImGui::Button("Reset##offset")) { view.offset = {0}; }
-  if (ImGui::ArrowButton("Decrease zoom", ImGuiDir_Left)) { view.scale /= 2; }
-  ImGui::SameLine();
-  ImGui::Text("%g%%", view.scale * 100);
-  ImGui::SameLine();
-  if (ImGui::ArrowButton("Increase zoom", ImGuiDir_Right)) { view.scale *= 2; }
 }
 
 } // namespace pixedit

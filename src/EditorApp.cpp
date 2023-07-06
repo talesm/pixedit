@@ -14,6 +14,9 @@ namespace pixedit {
 
 class EditorApp : ImGuiAppBase
 {
+  std::vector<std::shared_ptr<PictureBuffer>> buffers;
+  int bufferIndex = -1;
+
 public:
   EditorApp(InitSettings settings = {});
   using ImGuiAppBase::run;
@@ -21,7 +24,13 @@ public:
 private:
   void setupShortcuts();
 
-  void showPictureOptions() final
+  void update() final
+  {
+    if (ImGui::Begin("Picture options")) { showPictureOptions(); }
+    ImGui::End();
+  }
+
+  void showPictureOptions()
   {
     if (ImGui::BeginCombo("File",
                           bufferIndex < 0
@@ -40,7 +49,27 @@ private:
       ImGui::EndCombo();
     }
 
-    ImGuiAppBase::showPictureOptions();
+    if (ImGui::CollapsingHeader("Tools", ImGuiTreeNodeFlags_DefaultOpen)) {
+      int i = 0;
+      for (auto& tool : tools) {
+        if (ImGui::RadioButton(tool.name.c_str(), i == toolIndex)) {
+          delete view.tool;
+          view.tool = tool.build();
+          toolIndex = i;
+        }
+        ++i;
+      }
+    }
+    ImGui::DragFloat2("##offset", &view.offset.x, 1.f, -10000, +10000);
+    ImGui::SameLine();
+    if (ImGui::Button("Reset##offset")) { view.offset = {0}; }
+    if (ImGui::ArrowButton("Decrease zoom", ImGuiDir_Left)) { view.scale /= 2; }
+    ImGui::SameLine();
+    ImGui::Text("%g%%", view.scale * 100);
+    ImGui::SameLine();
+    if (ImGui::ArrowButton("Increase zoom", ImGuiDir_Right)) {
+      view.scale *= 2;
+    }
 
     if (ImGui::Button(
           "Swap colors",
@@ -63,11 +92,25 @@ private:
       ImGui::EndChild();
     }
   }
+
+  void appendFile(std::shared_ptr<PictureBuffer> buffer)
+  {
+    view.setBuffer(buffer);
+    view.offset = {0, 0};
+    view.scale = 1.f;
+    buffers.emplace_back(buffer);
+    bufferIndex = buffers.size() - 1;
+  }
 };
 
 EditorApp::EditorApp(InitSettings settings)
   : ImGuiAppBase(settings)
 {
+  auto buffer = std::make_shared<PictureBuffer>(std::move(settings.filename));
+  view.setBuffer(buffer);
+  buffers.emplace_back(buffer);
+  bufferIndex = buffers.size() - 1;
+
   setupShortcuts();
 
   tools.emplace_back("Pan", [] { return nullptr; });
