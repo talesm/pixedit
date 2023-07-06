@@ -7,7 +7,7 @@ extern const int WINDOW_HEIGHT = PIXEDIT_WINDOW_HEIGHT;
 extern const bool WINDOW_MAXIMIZED = PIXEDIT_WINDOW_MAXIMIZED;
 extern const unsigned HISTORY_MAX = PIXEDIT_HISTORY_MAX;
 
-namespace clipboard {
+namespace clipboards {
 extern const int FALLBACK = CLIPBOARD_FALLBACK;
 extern const int XCLIP = CLIPBOARD_XCLIP;
 } // namespace clipboard
