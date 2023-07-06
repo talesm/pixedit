@@ -12,13 +12,24 @@
 
 namespace pixedit {
 
+namespace defaults {
+extern const int WINDOW_WIDTH;
+extern const int WINDOW_HEIGHT;
+extern const bool WINDOW_MAXIMIZED;
+} // namespace defaults
+
+struct EditorInitSettings
+{
+  SDL_Point windowSz;
+  std::string filename;
+};
 class EditorApp : ImGuiAppBase
 {
   std::vector<std::shared_ptr<PictureBuffer>> buffers;
   int bufferIndex = -1;
 
 public:
-  EditorApp(InitSettings settings = {});
+  EditorApp(EditorInitSettings settings);
   using ImGuiAppBase::run;
 
 private:
@@ -105,10 +116,10 @@ private:
   }
 };
 
-EditorApp::EditorApp(InitSettings settings)
-  : ImGuiAppBase(settings)
+EditorApp::EditorApp(EditorInitSettings settings)
+  : ImGuiAppBase(settings.windowSz)
 {
-  auto buffer = std::make_shared<PictureBuffer>(std::move(settings.filename));
+  auto buffer = std::make_shared<PictureBuffer>(settings.filename);
   view.setBuffer(buffer);
   buffers.emplace_back(buffer);
   bufferIndex = buffers.size() - 1;
@@ -191,7 +202,14 @@ main(int argc, char** argv)
 {
   try {
     if (SDL_Init(SDL_INIT_VIDEO)) throw std::runtime_error{SDL_GetError()};
-    pixedit::InitSettings settings;
+    pixedit::EditorInitSettings settings{
+      .windowSz =
+        {
+          pixedit::defaults::WINDOW_WIDTH,
+          pixedit::defaults::WINDOW_HEIGHT,
+        },
+      .filename = "../assets/samples/redball_128x128.png",
+    };
     if (argc > 1) { settings.filename = argv[argc - 1]; }
 
     pixedit::EditorApp app{settings};

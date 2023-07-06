@@ -14,12 +14,6 @@
 
 namespace pixedit {
 
-struct InitSettings
-{
-  std::string filename{"../assets/samples/redball_128x128.png"};
-  SDL_Point windowSz{1024, 768};
-};
-
 struct ToolDescription
 {
   std::string name;
@@ -36,7 +30,7 @@ struct ImGuiAppBase
   PictureView view;
   bool exited = false;
 
-  ImGuiAppBase(const InitSettings& settings);
+  ImGuiAppBase(const SDL_Point& windowSz);
 
   int run();
 

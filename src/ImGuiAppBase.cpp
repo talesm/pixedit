@@ -5,15 +5,15 @@
 
 namespace pixedit {
 
-ImGuiAppBase::ImGuiAppBase(const InitSettings& settings)
+ImGuiAppBase::ImGuiAppBase(const SDL_Point& windowSz)
   : window(SDL_CreateWindow("Pixedit viewer",
                             SDL_WINDOWPOS_UNDEFINED,
                             SDL_WINDOWPOS_UNDEFINED,
-                            settings.windowSz.x,
-                            settings.windowSz.y,
+                            windowSz.x,
+                            windowSz.y,
                             SDL_WINDOW_RESIZABLE))
   , renderer(SDL_CreateRenderer(window, -1, 0))
-  , view{{0, 0, settings.windowSz.x, settings.windowSz.y}}
+  , view{{0, 0, windowSz.x, windowSz.y}}
 {
   if (!window || !renderer) { throw std::runtime_error{SDL_GetError()}; }
   setupImGui();
