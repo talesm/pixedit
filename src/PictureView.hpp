@@ -127,6 +127,11 @@ public:
   Canvas& getGlassCanvas();
 
   constexpr bool isGlassEnabled() const { return glassEnabled; }
+  void enableGlass(bool enable = true)
+  {
+    glassEnabled = false;
+    changed = true;
+  }
 
   void setSelection(SDL_Surface* surface);
   void persistSelection();

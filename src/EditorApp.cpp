@@ -9,6 +9,7 @@
 #include "tools/LinesTool.hpp"
 #include "tools/RectTool.hpp"
 #include "tools/SelectionHandTool.hpp"
+#include "tools/SelectionRectTool.hpp"
 #include "tools/ZoomTool.hpp"
 
 namespace pixedit {
@@ -149,7 +150,7 @@ EditorApp::EditorApp(EditorInitSettings settings)
   tools.emplace_back("Lines", [] { return new LinesTool{}; });
   tools.emplace_back("Outline rect", [] { return new RectTool{true}; });
   tools.emplace_back("Filled rect", [] { return new RectTool{false}; });
-  tools.emplace_back("Rect select", [] { return new SelectionHandTool{}; });
+  tools.emplace_back("Rect select", [] { return new SelectionRectTool{}; });
 
   view.canvas | ColorA{0, 0, 0, 255};
   view.canvas | ColorB{255, 255, 255, 255};
