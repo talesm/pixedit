@@ -29,9 +29,7 @@ struct SelectionHandTool : PictureTool
   SDL_Point lastPoint;
   bool moving = false;
 
-  void update(PictureView& view,
-              SDL_Renderer* renderer,
-              PictureEvent event) final
+  void update(PictureView& view, PictureEvent event) final
   {
     auto& buffer = *view.getBuffer();
     if (!buffer.hasSelection()) {

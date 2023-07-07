@@ -11,9 +11,7 @@ struct LinesTool : PictureTool
   SDL_Point lastPoint;
   bool multiline = false;
 
-  void update(PictureView& view,
-              SDL_Renderer* renderer,
-              PictureEvent event) final
+  void update(PictureView& view, PictureEvent event) final
   {
     switch (event) {
     case PictureEvent::LEFT:

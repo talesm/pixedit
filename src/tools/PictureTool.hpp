@@ -20,11 +20,9 @@ enum class PictureEvent
 
 struct PictureTool
 {
-  virtual void update(PictureView& view,
-                      SDL_Renderer* renderer,
-                      PictureEvent event) = 0;
-
   virtual ~PictureTool() = default;
+
+  virtual void update(PictureView& view, PictureEvent event) = 0;
 
   virtual bool acceptsSelection() const { return false; }
 };

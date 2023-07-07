@@ -227,7 +227,7 @@ PictureView::update(SDL_Renderer* renderer)
   } else if (tool != nullptr) {
     bool wasGlassEnabled = glassEnabled;
     glassEnabled = false;
-    tool->update(*this, renderer, event);
+    tool->update(*this, event);
     if (!changed) glassEnabled = wasGlassEnabled;
   } else if (event == PictureEvent::LEFT) {
     movingMode = true;

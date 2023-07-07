@@ -8,9 +8,7 @@ namespace pixedit {
 
 struct ZoomTool : PictureTool
 {
-  void update(PictureView& view,
-              SDL_Renderer* renderer,
-              PictureEvent event) final
+  void update(PictureView& view, PictureEvent event) final
   {
     if (event == PictureEvent::LEFT) { view.setScale(view.scale * 2); }
     if (event == PictureEvent::RIGHT) { view.setScale(view.scale / 2); }
