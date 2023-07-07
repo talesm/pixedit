@@ -155,6 +155,25 @@ EditorApp::event(const SDL_Event& ev, bool imGuiMayUse)
   return ImGuiAppBase::event(ev, imGuiMayUse);
 }
 
+inline void
+copy(PictureView& view, Clipboard& clipboard)
+{
+  if (!view.getBuffer()) return;
+  auto& buffer = *view.getBuffer();
+  auto selectionSurface = buffer.getSelectionSurface();
+  clipboard.set(selectionSurface ?: buffer.getSurface());
+}
+
+inline void
+cut(PictureView& view, Clipboard& clipboard)
+{
+  if (!view.getBuffer()) return;
+  auto& buffer = *view.getBuffer();
+  if (!buffer.hasSelection()) return;
+  clipboard.set(buffer.getSelectionSurface());
+  view.setSelection(nullptr);
+}
+
 void
 EditorApp::setupShortcuts()
 {
@@ -162,9 +181,10 @@ EditorApp::setupShortcuts()
     auto buffer = loadFromFileDialog("./");
     if (buffer) { appendFile(buffer); };
   });
-  shortcuts.set({.key = SDLK_c, .ctrl = true}, [&] {
-    if (view.getBuffer()) clipboard.set(view.getBuffer()->getSurface());
-  });
+  shortcuts.set({.key = SDLK_ESCAPE}, [&] { view.persistSelection(); });
+  shortcuts.set({.key = SDLK_DELETE}, [&] { view.setSelection(nullptr); });
+  shortcuts.set({.key = SDLK_c, .ctrl = true}, [&] { copy(view, clipboard); });
+  shortcuts.set({.key = SDLK_x, .ctrl = true}, [&] { cut(view, clipboard); });
   shortcuts.set({.key = SDLK_v, .ctrl = true}, [&] {
     auto& buffer = view.getBuffer();
     if (!buffer) return;

@@ -289,16 +289,17 @@ PictureView::setSelection(SDL_Surface* surface)
   if (!buffer) return;
   if (surface) {
     buffer->setSelection(surface, {0, 0, surface->w, surface->h});
-  } else {
+    changed = true;
+  } else if (buffer->hasSelection()) {
     buffer->clearSelection();
+    changed = true;
   }
-  changed = true;
 }
 
 void
 PictureView::persistSelection()
 {
-  if (!buffer) return;
+  if (!buffer || !buffer->hasSelection()) return;
   cancelEdit();
   changed = true;
   buffer->persistSelection();
