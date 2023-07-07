@@ -6,7 +6,11 @@ namespace pixedit {
 void
 PictureView::updatePreview(SDL_Renderer* renderer)
 {
-  if (buffer != newBuffer) { buffer = newBuffer; }
+  if (buffer != newBuffer) {
+    buffer = newBuffer;
+  } else {
+    changed = false;
+  }
   if (!buffer || !buffer->getSurface()) return;
   if (!scratchEnabled) canvas.setSurface(buffer->getSurface());
   auto createPreview = [renderer, w = buffer->getW(), h = buffer->getH()] {
@@ -45,7 +49,6 @@ PictureView::updatePreview(SDL_Renderer* renderer)
   }
   SDL_UnlockTexture(preview);
   movingMode = false;
-  changed = false;
 }
 
 static void
@@ -183,6 +186,7 @@ PictureView::update(SDL_Renderer* renderer)
       updatePreview(renderer);
       return;
     }
+    glassEnabled = false;
     changed = true;
     if (editing && tool) { cancelEdit(); }
     state.left = state.middle = state.right = false; // Clear everything
