@@ -1,5 +1,5 @@
-#ifndef PIXEDIT_SRC_ALGORITHMS_LINE_INCLUDED
-#define PIXEDIT_SRC_ALGORITHMS_LINE_INCLUDED
+#ifndef PIXEDIT_SRC_UTILS_RASTER_LINE_INCLUDED
+#define PIXEDIT_SRC_UTILS_RASTER_LINE_INCLUDED
 
 #include <concepts>
 #include <cstdlib>
@@ -71,4 +71,4 @@ rasterLine(int xBeg, int yBeg, int xEnd, int yEnd, CALLBACK callback)
 
 } // namespace pixedit
 
-#endif /* PIXEDIT_SRC_ALGORITHMS_LINE_INCLUDED */
+#endif /* PIXEDIT_SRC_UTILS_RASTER_LINE_INCLUDED */

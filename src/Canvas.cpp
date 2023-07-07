@@ -1,6 +1,6 @@
 #include "Canvas.hpp"
-#include "algorithms/rasterLine.hpp"
-#include "algorithms/surface.hpp"
+#include "utils/rasterLine.hpp"
+#include "utils/surface.hpp"
 
 namespace pixedit {
 
