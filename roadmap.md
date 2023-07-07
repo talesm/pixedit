@@ -27,10 +27,10 @@ To do
   - [ ] Cancel action
 - [x] Clipboard
   - [x] Copy
-  - [ ] Copy selection
-  - [ ] Paste
+  - [x] Copy selection
+  - [x] Paste
   - [ ] Paste as new
-  - [ ] Internal* (as fallback??)
+  - [x] Internal* (as fallback??)
   - [x] X based support
 - [ ] Tools
   - [x] Zoom
