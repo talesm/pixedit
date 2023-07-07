@@ -8,24 +8,15 @@
 #include <vector>
 #include <SDL.h>
 #include "PictureBuffer.hpp"
-#include "PictureTool.hpp"
 #include "PictureView.hpp"
 #include "ShortcutManager.hpp"
 
 namespace pixedit {
 
-struct ToolDescription
-{
-  std::string name;
-  std::function<PictureTool*()> build;
-};
-
 struct ImGuiAppBase
 {
   SDL_Window* window = nullptr;
   SDL_Renderer* renderer = nullptr;
-  std::vector<ToolDescription> tools;
-  int toolIndex = 0;
   ShortcutManager shortcuts;
   PictureView view;
   bool exited = false;

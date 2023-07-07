@@ -19,6 +19,12 @@ extern const int WINDOW_HEIGHT;
 extern const bool WINDOW_MAXIMIZED;
 } // namespace defaults
 
+struct ToolDescription
+{
+  std::string name;
+  std::function<PictureTool*()> build;
+};
+
 struct EditorInitSettings
 {
   SDL_Point windowSz;
@@ -26,6 +32,8 @@ struct EditorInitSettings
 };
 class EditorApp : ImGuiAppBase
 {
+  std::vector<ToolDescription> tools;
+  int toolIndex = 0;
   std::vector<std::shared_ptr<PictureBuffer>> buffers;
   int bufferIndex = -1;
 
