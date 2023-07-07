@@ -32,7 +32,7 @@ To do
   - [x] Paste as new
   - [x] Internal* (as fallback??)
   - [x] X based support
-  - [ ] Paste image on current offset
+  - [x] Paste image on current offset
 - [ ] Tools
   - [x] Zoom
   - [x] Pan
