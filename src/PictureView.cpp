@@ -292,7 +292,19 @@ PictureView::setSelection(SDL_Surface* surface)
 {
   if (!buffer) return;
   if (surface) {
-    buffer->setSelection(surface, {0, 0, surface->w, surface->h});
+    auto offset = effectiveOffset();
+    auto size = effectiveSize();
+    auto scale = effectiveScale();
+    int xx = 0;
+    int yy = 0;
+    if (size.x > viewport.w) {
+      xx = ceil((size.x - viewport.w) / 2 / scale - offset.x);
+    }
+    if (size.y > viewport.h) {
+      yy = ceil((size.y - viewport.h) / 2 / scale - offset.y);
+    }
+    // = int(ceil(()));
+    buffer->setSelection(surface, {xx, yy, surface->w, surface->h});
     changed = true;
   } else if (buffer->hasSelection()) {
     buffer->clearSelection();
