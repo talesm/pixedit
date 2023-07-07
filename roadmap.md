@@ -39,12 +39,12 @@ To do
   - [x] Free hand
   - [x] Lines
   - [x] Rectangle
+  - [ ] Polygon
   - [ ] Elipsis*
-  - [ ] Polygon*
   - [ ] Pick color
   - [ ] Text* (using existing ImGui engine)
-  - [ ] Selection (Alt remove, shift adds)
-    - [ ] Rect
+  - [ ] Selection
+    - [x] Rect
     - [ ] Free form
     - [ ] Color
     - [ ] Contiguous color
@@ -92,4 +92,6 @@ Wishlist
 - Proper configuration support
 - Rich file dialogs
 - File browser
+- Add / Remove to selection
+- Use selection as stencil
 - Text support
