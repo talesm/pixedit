@@ -7,6 +7,7 @@
 #include "ImGuiAppBase.hpp"
 #include "tools/FreeHandTool.hpp"
 #include "tools/LinesTool.hpp"
+#include "tools/PolyTool.hpp"
 #include "tools/RectTool.hpp"
 #include "tools/SelectionHandTool.hpp"
 #include "tools/SelectionRectTool.hpp"
@@ -150,6 +151,8 @@ EditorApp::EditorApp(EditorInitSettings settings)
   tools.emplace_back("Lines", [] { return new LinesTool{}; });
   tools.emplace_back("Outline rect", [] { return new RectTool{true}; });
   tools.emplace_back("Filled rect", [] { return new RectTool{false}; });
+  tools.emplace_back("Outline poly", [] { return new PolyTool{true}; });
+  tools.emplace_back("Filled poly", [] { return new PolyTool{false}; });
   tools.emplace_back("Rect select", [] { return new SelectionRectTool{}; });
 
   view.canvas | ColorA{0, 0, 0, 255};
