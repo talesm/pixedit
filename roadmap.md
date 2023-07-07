@@ -18,18 +18,18 @@ To do
   - [x] Load C+o
   - [x] Save C+S | C+s
   - [x] Close C+w
-  - [x] ~~Muliple files~~
+  - [x] Muliple files
   - [x] Zoom (C+wheel)
   - [x] Pan (C+click)
-- [ ] History
+- [x] History
   - [x] Undo
   - [x] Redo
-  - [ ] Cancel action
+  - [x] Cancel action
 - [x] Clipboard
   - [x] Copy
   - [x] Copy selection
   - [x] Paste
-  - [ ] Paste as new
+  - [x] Paste as new
   - [x] Internal* (as fallback??)
   - [x] X based support
 - [ ] Tools
