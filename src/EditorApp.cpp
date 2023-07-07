@@ -122,6 +122,7 @@ private:
   void copy();
   void cut();
   void paste();
+  void pasteAsNew();
 };
 
 EditorApp::EditorApp(EditorInitSettings settings)
@@ -183,7 +184,10 @@ void
 EditorApp::paste()
 {
   auto& buffer = view.getBuffer();
-  if (!buffer) return;
+  if (!buffer) {
+    pasteAsNew();
+    return;
+  }
   auto surface = clipboard.get();
   if (!surface) return;
   if (!view.tool || !view.tool->acceptsSelection()) {
@@ -192,6 +196,13 @@ EditorApp::paste()
     view.tool = new SelectionHandTool();
   }
   view.setSelection(surface);
+}
+void
+EditorApp::pasteAsNew()
+{
+  auto surface = clipboard.get();
+  if (!surface) return; // TODO Error?
+  appendFile(std::make_shared<PictureBuffer>("", surface));
 }
 
 void
@@ -206,6 +217,8 @@ EditorApp::setupShortcuts()
   shortcuts.set({.key = SDLK_c, .ctrl = true}, [&] { copy(); });
   shortcuts.set({.key = SDLK_x, .ctrl = true}, [&] { cut(); });
   shortcuts.set({.key = SDLK_v, .ctrl = true}, [&] { paste(); });
+  shortcuts.set({.key = SDLK_v, .ctrl = true, .shift = true},
+                [&] { pasteAsNew(); });
   auto closeFile = [&] {
     if (buffers.empty()) {
       exited = true;
