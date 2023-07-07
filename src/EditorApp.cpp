@@ -117,6 +117,11 @@ private:
     buffers.emplace_back(buffer);
     bufferIndex = buffers.size() - 1;
   }
+
+  /// Actions
+  void copy();
+  void cut();
+  void paste();
 };
 
 EditorApp::EditorApp(EditorInitSettings settings)
@@ -156,7 +161,7 @@ EditorApp::event(const SDL_Event& ev, bool imGuiMayUse)
 }
 
 inline void
-copy(PictureView& view, Clipboard& clipboard)
+EditorApp::copy()
 {
   if (!view.getBuffer()) return;
   auto& buffer = *view.getBuffer();
@@ -165,13 +170,28 @@ copy(PictureView& view, Clipboard& clipboard)
 }
 
 inline void
-cut(PictureView& view, Clipboard& clipboard)
+EditorApp::cut()
 {
   if (!view.getBuffer()) return;
   auto& buffer = *view.getBuffer();
   if (!buffer.hasSelection()) return;
   clipboard.set(buffer.getSelectionSurface());
   view.setSelection(nullptr);
+}
+
+void
+EditorApp::paste()
+{
+  auto& buffer = view.getBuffer();
+  if (!buffer) return;
+  auto surface = clipboard.get();
+  if (!surface) return;
+  if (!view.tool || !view.tool->acceptsSelection()) {
+    view.cancelEdit();
+    toolIndex = 6;
+    view.tool = new SelectionHandTool();
+  }
+  view.setSelection(surface);
 }
 
 void
@@ -183,20 +203,9 @@ EditorApp::setupShortcuts()
   });
   shortcuts.set({.key = SDLK_ESCAPE}, [&] { view.persistSelection(); });
   shortcuts.set({.key = SDLK_DELETE}, [&] { view.setSelection(nullptr); });
-  shortcuts.set({.key = SDLK_c, .ctrl = true}, [&] { copy(view, clipboard); });
-  shortcuts.set({.key = SDLK_x, .ctrl = true}, [&] { cut(view, clipboard); });
-  shortcuts.set({.key = SDLK_v, .ctrl = true}, [&] {
-    auto& buffer = view.getBuffer();
-    if (!buffer) return;
-    auto surface = clipboard.get();
-    if (!surface) return;
-    if (!view.tool || !view.tool->acceptsSelection()) {
-      view.cancelEdit();
-      toolIndex = 6;
-      view.tool = new SelectionHandTool();
-    }
-    view.setSelection(surface);
-  });
+  shortcuts.set({.key = SDLK_c, .ctrl = true}, [&] { copy(); });
+  shortcuts.set({.key = SDLK_x, .ctrl = true}, [&] { cut(); });
+  shortcuts.set({.key = SDLK_v, .ctrl = true}, [&] { paste(); });
   auto closeFile = [&] {
     if (buffers.empty()) {
       exited = true;
