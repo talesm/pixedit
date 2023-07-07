@@ -32,6 +32,7 @@ To do
   - [x] Paste as new
   - [x] Internal* (as fallback??)
   - [x] X based support
+  - [ ] Paste image on current offset
 - [ ] Tools
   - [x] Zoom
   - [x] Pan
@@ -47,30 +48,34 @@ To do
     - [ ] Free form
     - [ ] Color
     - [ ] Contiguous color
-- [ ] New file dialog
-- [ ] Exit confirmation dialog
+- [ ] "New file" dialog
+- [ ] "Exit confirmation" dialog
 - [ ] Options
   - [ ] ~~Color pallete (not pallete image, just reference)~~
   - [x] Color selector/Wheel
   - [x] Swap color
   - [ ] Mask
   - [ ] Tile
-- [ ] File menu
-  - [ ] New
-  - [ ] Load 
-  - [ ] Save
-  - [ ] Save as 
-  - [ ] Close
-  - [ ] Exit
-  - [ ] ~~Last files~~
-- [ ] Edit menu
-  - [ ] Copy
-  - [ ] Paste
-  - [ ] Paste as new
-  - [ ] Undo/redo
-- [ ] Status bar
+- [ ] Tabs for switching files
+- [ ] Menu bar
+  - [ ] File menu
+    - [ ] New
+    - [ ] Load 
+    - [ ] Save
+    - [ ] Save as 
+    - [ ] Close
+    - [ ] Exit
+    - [ ] ~~Last files~~
+  - [ ] Edit menu
+    - [ ] Copy
+    - [ ] Paste
+    - [ ] Paste as new
+    - [ ] Undo/redo
+  - [ ] Help/About
+- [ ] Status bar*
   - [ ] Tool name
   - [ ] Mouse pos
+- [ ] Windowed mode*
 
 Wishlist
 --------
