@@ -2,27 +2,9 @@
 #define PIXEDIT_SRC_TOOLS_SELECTION_HAND_TOOL_INCLUDED
 
 #include "PictureTool.hpp"
+#include "renderSelection.hpp"
 
 namespace pixedit {
-
-constexpr SDL_Color selectedColorA{0, 0, 128, 255};
-constexpr SDL_Color selectedColorB{255, 255, 128, 255};
-
-inline void
-renderSelection(Canvas& canvas, SDL_Rect rect)
-{
-  // Backup
-  auto bkpColorA = canvas.getRawColorA();
-  auto bkpColorB = canvas.getRawColorB();
-
-  canvas | ColorA{selectedColorA} | ColorB{selectedColorB} |
-    patterns::CHECKERED_4;
-
-  canvas | OutlineRect{rect};
-
-  // Restore
-  canvas | RawColorA{bkpColorA} | RawColorB{bkpColorB} | patterns::SOLID;
-}
 
 struct SelectionHandTool : PictureTool
 {
