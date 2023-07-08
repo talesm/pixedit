@@ -4,6 +4,7 @@
 #include <vector>
 #include "PictureTool.hpp"
 #include "PictureView.hpp"
+#include "rasterPoly.hpp"
 
 namespace pixedit {
 
@@ -81,6 +82,13 @@ struct PolyTool : PictureTool
 
   void render(Canvas& canvas, bool open) const
   {
+    if (!outline && !open && points.size() >= 3) {
+      rasterPoly(
+        (const int*)points.data(), points.size(), [&](int x, int y, int len) {
+          canvas | HorizontalLine{x, y, len};
+        });
+      return;
+    }
     for (auto it = points.begin() + 1; it != points.end(); ++it) {
       canvas | OpenLineTo(*it, *(it - 1));
     }
