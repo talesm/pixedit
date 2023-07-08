@@ -4,9 +4,7 @@
 #include <vector>
 #include "PictureTool.hpp"
 #include "PictureView.hpp"
-#include "primitives/Line.hpp"
-#include "rasterPoly.hpp"
-
+#include "primitives/Poly.hpp"
 namespace pixedit {
 
 struct PolyTool : PictureTool
@@ -49,7 +47,7 @@ struct PolyTool : PictureTool
         moved = true;
         view.enableScratch();
         render(view.canvas, true);
-        view.canvas | LineTo{currPoint, lastPoint};
+        view.canvas | LineTo{lastPoint, currPoint};
         view.previewEdit();
       }
       break;
@@ -83,20 +81,12 @@ struct PolyTool : PictureTool
 
   void render(Canvas& canvas, bool open) const
   {
-    if (!outline && !open && points.size() >= 3) {
-      rasterPoly(
-        (const int*)points.data(), points.size(), [&](int x, int y, int len) {
-          canvas | HorizontalLine{x, y, len};
-        });
-      return;
-    }
-    for (auto it = points.begin() + 1; it != points.end(); ++it) {
-      canvas | OpenLineTo(*it, *(it - 1));
-    }
-    if (open || points.size() < 3) {
-      canvas | points.front();
+    if (open) {
+      canvas | Lines{points};
+    } else if (outline) {
+      canvas | OutlinePoly{points};
     } else {
-      canvas | OpenLineTo(points.front(), points.back());
+      canvas | FillPoly{points};
     }
   }
 };
