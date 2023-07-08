@@ -10,14 +10,14 @@ constexpr SDL_Color selectedColorA{0, 0, 128, 255};
 constexpr SDL_Color selectedColorB{255, 255, 128, 255};
 
 inline void
-renderSelection(Canvas& canvas, SDL_Rect rect)
+renderSelection(Canvas& canvas, SDL_Rect rect, bool inProgress = false)
 {
   // Backup
   auto bkpColorA = canvas.getRawColorA();
   auto bkpColorB = canvas.getRawColorB();
 
-  canvas | ColorA{selectedColorA} | ColorB{selectedColorB} |
-    patterns::CHECKERED_4;
+  canvas | ColorA{selectedColorA} | ColorB{selectedColorB};
+  canvas | (inProgress ? patterns::CHECKERED_2 : patterns::CHECKERED_4);
 
   canvas | OutlineRect{rect};
 

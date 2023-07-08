@@ -35,7 +35,7 @@ struct SelectionRectTool : PictureTool
         if (currPoint.x == lastPoint.x && currPoint.y == lastPoint.y) break;
         SDL_Rect rect = intersectFromOrigin(fromPoints(currPoint, lastPoint),
                                             buffer.getSize());
-        renderSelection(view.getGlassCanvas(), rect);
+        renderSelection(view.getGlassCanvas(), rect, true);
       }
       break;
     case PictureEvent::OK:
