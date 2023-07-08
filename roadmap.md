@@ -6,7 +6,7 @@ Here we have the our building strategy.
 Version Goals
 -------------
 
-- [ ] **v0.1 Table stakes**: Open/Save PNG and BMP, 24/32 bits, multiple images. Color selection and pseudo pallete. Basic tools, copy and paste;
+- [ ] **v0.1 Table stakes**: Open/Save PNG and BMP, 24/32 bits, multiple images. Color selection and pseudo palette. Basic tools, copy and paste;
 - [ ] **v0.2 Magic sauce**: Layers and animation, import/export, extension hooks for loader/save, effects, etc;
 - [ ] **v0.3 Glyphs**: Tiling and text support;
 
@@ -18,7 +18,7 @@ To do
   - [x] Load C+o
   - [x] Save C+S | C+s
   - [x] Close C+w
-  - [x] Muliple files
+  - [x] Multiple files
   - [x] Zoom (C+wheel)
   - [x] Pan (C+click)
 - [x] History
@@ -39,8 +39,8 @@ To do
   - [x] Free hand
   - [x] Lines
   - [x] Rectangle
-  - [ ] Polygon
-  - [ ] Elipsis*
+  - [x] Polygon
+  - [ ] Ellipsis*
   - [ ] Pick color
   - [ ] Text* (using existing ImGui engine)
   - [ ] Selection
@@ -51,7 +51,7 @@ To do
 - [ ] "New file" dialog
 - [ ] "Exit confirmation" dialog
 - [ ] Options
-  - [ ] ~~Color pallete (not pallete image, just reference)~~
+  - [ ] Color palette (not palette image, just reference)*
   - [x] Color selector/Wheel
   - [x] Swap color
   - [ ] Mask
@@ -84,9 +84,9 @@ Wishlist
 - Better integrated open/save dialogs
 - Animation
 - Custom file support
-- Reference palletes
-- 8bit pallete mode
-- 8bit grayscale/color scale mode
+- Reference palettes
+- 8bit palette mode
+- 8bit gray-scale/color scale mode
 - Stamp (Colored tiles)
 - File history
 - Proper configuration support
