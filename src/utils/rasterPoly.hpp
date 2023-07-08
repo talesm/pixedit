@@ -2,16 +2,18 @@
 #define PIXEDIT_SRC_UTILS_RASTER_POLY_INCLUDED
 
 #include <algorithm>
-#include <set>
+#include <span>
 #include <vector>
+#include <SDL.h>
 #include "rasterLine.hpp"
 
 namespace pixedit {
 
-template<class CALLBACK>
+template<std::invocable<int, int, int> CALLBACK>
 void
-rasterPoly(const int points[], size_t count, CALLBACK callback)
+rasterPoly(std::span<const int> points, CALLBACK callback)
 {
+  auto count = points.size() / 2;
   if (count < 3) return;
   int minY = points[1], maxY = points[1];
   for (size_t i = 1; i < count; ++i) {
@@ -49,6 +51,13 @@ rasterPoly(const int points[], size_t count, CALLBACK callback)
       callback(xA, y, xB - xA + 1);
     }
   }
+}
+
+template<std::invocable<int, int, int> CALLBACK>
+void
+rasterPoly(std::span<const SDL_Point> points, CALLBACK callback)
+{
+  rasterPoly(std::span{&points.front().x, points.size() * 2}, callback);
 }
 
 } // namespace pixedit
