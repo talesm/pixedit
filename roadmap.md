@@ -35,12 +35,13 @@ To do
   - [x] Paste image on current offset
 - [ ] Tools
   - [x] Zoom
-  - [x] Pan
+  - [x] Move
   - [x] Free hand
   - [x] Lines
   - [x] Rectangle
   - [x] Polygon
   - [ ] Ellipsis*
+  - [ ] Flood fill
   - [ ] Pick color
   - [ ] Text* (using existing ImGui engine)
   - [ ] Selection
