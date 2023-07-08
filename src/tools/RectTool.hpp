@@ -3,6 +3,7 @@
 
 #include "PictureTool.hpp"
 #include "PictureView.hpp"
+#include "primitives/Rect.hpp"
 
 namespace pixedit {
 

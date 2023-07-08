@@ -1,5 +1,6 @@
 #include "catch.hpp"
 #include "Canvas.hpp"
+#include "primitives/Rect.hpp"
 
 using namespace pixedit;
 

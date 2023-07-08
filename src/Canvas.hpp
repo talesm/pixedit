@@ -5,102 +5,20 @@
 #include <cstdlib>
 #include <SDL.h>
 #include "Brush.hpp"
+#include "utils/Color.hpp"
+#include "utils/safeGetFormat.hpp"
 
 namespace pixedit {
 
-struct HorizontalLine
-{
-  int x;
-  int y;
-  int length;
-};
+struct HorizontalLine;
 
-struct LineTo
-{
-  int x1, y1, x2, y2;
-  LineTo(int x1, int y1, int x2, int y2)
-    : x1(x1)
-    , y1(y1)
-    , x2(x2)
-    , y2(y2)
-  {
-  }
-  LineTo(const SDL_Point& p1, const SDL_Point& p2)
-    : LineTo(p1.x, p1.y, p2.x, p2.y)
-  {
-  }
-};
+struct LineTo;
 
-using Color = SDL_Color;
+struct OpenLineTo;
 
-// Forward decl
-struct ColorB;
-
-struct OpenLineTo : LineTo
-{
-  using LineTo::LineTo;
-};
-
-/// @brief Sets color
-using RawColorA = RawColor;
-
-/// @brief Sets secondary color
-struct RawColorB
-{
-  RawColor color;
-};
-
-/// Color conversion utilities
-/// @{
-constexpr SDL_Color
-rawToComponent(RawColor color, const SDL_PixelFormat* format)
-{
-  if (format == nullptr) {
-    return {
-      Uint8(color >> 24), Uint8(color >> 16), Uint8(color >> 8), Uint8(color)};
-  }
-  SDL_Color c;
-  SDL_GetRGBA(color, format, &c.r, &c.g, &c.b, &c.a);
-  return c;
-}
-constexpr RawColor
-componentToRaw(SDL_Color color, const SDL_PixelFormat* format)
-{
-  if (format == nullptr)
-    return color.r << 24 | color.g << 16 | color.b << 8 | color.a;
-  return SDL_MapRGBA(format, color.r, color.g, color.b, color.a);
-}
-
-constexpr std::array<float, 4>
-componentToNormalized(SDL_Color color)
-{
-  return {color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f};
-}
-constexpr SDL_Color
-normalizedToComponent(std::array<float, 4> color)
-{
-  return {
-    Uint8(color[0] * 255.f),
-    Uint8(color[1] * 255.f),
-    Uint8(color[2] * 255.f),
-    Uint8(color[3] * 255.f),
-  };
-}
-///}
-
-/// @brief Safely gets format even if surface is null
-/// @param surface
-/// @return
-constexpr SDL_PixelFormat*
-safeGetFormat(SDL_Surface* surface)
-{
-  if (!surface) return nullptr;
-  return surface->format;
-}
-
-/**
- * A canvas where you can issue drawing commands to
- */
+/// @brief A canvas where you can issue drawing commands to.
+///
+/// See @ref primitives to how to interact with it
 class Canvas
 {
   SDL_Surface* surface;
@@ -143,133 +61,6 @@ public:
   friend Canvas& operator|(Canvas& c, SDL_Rect rect);
 };
 
-/// @{
-/// @brief draw point centered at given coordinates
-/// @param x the x coordinate
-/// @param y the y coordinate
-/// @param p the coordinates
-/// @return An SDL_Point that might be used with operator| to render the point
-constexpr SDL_Point
-Point(int x, int y)
-{
-  return {x, y};
-}
-constexpr SDL_Point
-Point(SDL_Point p)
-{
-  return p;
-}
-/// @}
-
-/// @{
-/// @brief Fill rect with given position and size
-/// @param rect the rect containing the top left position and size
-/// @param pos the point containing the top left position
-/// @param pos the point containing the size
-/// @param x the leftmost pixel
-/// @param y the topmost pixel
-/// @param w the horizontal size
-/// @param h the vertical size
-/// @return An SDL_Rect that you can add to canvas through operator|
-constexpr SDL_Rect
-FillRect(SDL_Rect rect)
-{
-  return rect;
-}
-constexpr auto
-FillRect(int x, int y, int w, int h)
-{
-  return FillRect({x, y, w, h});
-}
-constexpr auto
-FillRect(SDL_Point p, SDL_Point sz)
-{
-  return FillRect(p.x, p.y, sz.x, sz.y);
-}
-/// @}
-
-/// @{
-/// @brief Fill rect from (x1,y1) to (x2, y2), inclusive
-/// @param x1 the first x position
-/// @param y1 the first y position
-/// @param x2 the second x position
-/// @param y2 the second y position
-/// @param p1 the first position
-/// @param p2 the second poistion
-/// @return the rectangle to fill (to be used on Canvas in combination with
-/// operator|)
-constexpr auto
-FillRectTo(int x1, int y1, int x2, int y2)
-{
-  using std::min, std::abs;
-  return FillRect(min(x1, x2), min(y1, y2), abs(x2 - x1) + 1, abs(y2 - y1) + 1);
-}
-constexpr auto
-FillRectTo(SDL_Point p1, SDL_Point p2)
-{
-  return FillRectTo(p1.x, p1.y, p2.x, p2.y);
-}
-/// @}
-
-/// @brief Represents an rect outlined (not filled)
-struct OutlineRect : SDL_Rect
-{
-  /// @{
-  /// @brief Constructs outline rect command with given position and size
-  /// @param rect the rect containing the top left position and size
-  /// @param pos the point containing the top left position
-  /// @param pos the point containing the size
-  /// @param x the leftmost pixel
-  /// @param y the topmost pixel
-  /// @param w the horizontal size
-  /// @param h the vertical size
-  /// @return An OutlineRect that you can add to canvas through operator|
-  constexpr OutlineRect(SDL_Rect rect)
-    : SDL_Rect(rect)
-  {
-  }
-  constexpr OutlineRect(int x, int y, int w, int h)
-    : OutlineRect(SDL_Rect{x, y, w, h})
-  {
-  }
-  constexpr OutlineRect(SDL_Point p, SDL_Point sz)
-    : OutlineRect(p.x, p.y, sz.x, sz.y)
-  {
-  }
-  /// @}
-};
-
-/// @{
-/// @brief Draw rect outline from (x1,y1) to (x2, y2), inclusive
-/// @param x1 the first x position
-/// @param y1 the first y position
-/// @param x2 the second x position
-/// @param y2 the second y position
-/// @param p1 the first position
-/// @param p2 the second poistion
-/// @return the outline rectangle to draw (to be used on Canvas in combination
-/// with operator|)
-constexpr auto
-OutlineRectTo(int x1, int y1, int x2, int y2)
-{
-  using std::min, std::abs;
-  return OutlineRect(
-    min(x1, x2), min(y1, y2), abs(x2 - x1) + 1, abs(y2 - y1) + 1);
-}
-constexpr auto
-OutlineRectTo(SDL_Point p1, SDL_Point p2)
-{
-  return OutlineRectTo(p1.x, p1.y, p2.x, p2.y);
-}
-/// @}
-
-struct drawVerticalLine
-{
-  int x;
-  int y;
-  int length;
-};
-
 constexpr Canvas&
 operator|(Canvas& c, RawColor rawColor)
 {
@@ -297,24 +88,6 @@ operator|(Canvas& c, const Pen& pen)
 {
   c.brush.pen = pen;
   return c;
-}
-
-inline Canvas&
-operator|(Canvas& c, drawVerticalLine l)
-{
-  return c | FillRect(l.x, l.y, 1, l.length);
-}
-
-inline Canvas&
-operator|(Canvas& c, OutlineRect outline)
-{
-  if (outline.h <= 2) { return c | FillRect(outline); }
-  int x1 = outline.x, y1 = outline.y;
-  int w = outline.w, h = outline.h;
-  int x2 = x1 + w - 1, y2 = y1 + h - 1;
-  return c | HorizontalLine{x1, y1, w} | HorizontalLine{x1, y2, w} |
-         drawVerticalLine{x1, y1 + 1, h - 2} |
-         drawVerticalLine{x2, y1 + 1, h - 2};
 }
 
 struct ColorA : SDL_Color

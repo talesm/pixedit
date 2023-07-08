@@ -1,5 +1,6 @@
 #include "catch.hpp"
 #include "Canvas.hpp"
+#include "Point.hpp"
 
 using namespace pixedit;
 

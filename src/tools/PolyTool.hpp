@@ -4,6 +4,7 @@
 #include <vector>
 #include "PictureTool.hpp"
 #include "PictureView.hpp"
+#include "primitives/Line.hpp"
 #include "rasterPoly.hpp"
 
 namespace pixedit {

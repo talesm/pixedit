@@ -1,4 +1,5 @@
 #include "Canvas.hpp"
+#include "primitives/Line.hpp"
 #include "utils/rasterLine.hpp"
 #include "utils/surface.hpp"
 
