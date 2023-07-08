@@ -17,7 +17,6 @@ struct SelectionRectTool : PictureTool
 
   void update(PictureView& view, PictureEvent event) final
   {
-
     auto& buffer = *view.getBuffer();
     if (buffer.hasSelection()) {
       handTool.update(view, event);
@@ -34,7 +33,8 @@ struct SelectionRectTool : PictureTool
       if (selecting) {
         auto currPoint = view.effectivePos();
         if (currPoint.x == lastPoint.x && currPoint.y == lastPoint.y) break;
-        SDL_Rect rect = fromPoints(currPoint, lastPoint);
+        SDL_Rect rect = intersectFromOrigin(fromPoints(currPoint, lastPoint),
+                                            buffer.getSize());
         renderSelection(view.getGlassCanvas(), rect);
       }
       break;
@@ -42,7 +42,8 @@ struct SelectionRectTool : PictureTool
       if (selecting) {
         selecting = false;
         auto currPoint = view.effectivePos();
-        SDL_Rect rect = fromPoints(currPoint, lastPoint);
+        SDL_Rect rect = intersectFromOrigin(fromPoints(currPoint, lastPoint),
+                                            buffer.getSize());
         renderSelection(view.getGlassCanvas(), rect);
         buffer.setSelection(cutoutSurface(buffer.getSurface(), rect, 0), rect);
       };

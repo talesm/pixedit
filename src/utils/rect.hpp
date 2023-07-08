@@ -25,6 +25,22 @@ fromPoints(const SDL_Point& a, const SDL_Point& b)
   return rect;
 }
 
+constexpr SDL_Rect
+intersectFromOrigin(SDL_Rect rect, const SDL_Point ceil)
+{
+  if (rect.x < 0) {
+    rect.w += rect.x;
+    rect.x = 0;
+  }
+  if (rect.y < 0) {
+    rect.h += rect.y;
+    rect.y = 0;
+  }
+  if (rect.x + rect.w > ceil.x) { rect.w = ceil.x - rect.x; }
+  if (rect.y + rect.h > ceil.y) { rect.h = ceil.y - rect.y; }
+  return rect;
+}
+
 } // namespace pixedit
 
 #endif /* PIXEDIT_SRC_UTILS_RECT_INCLUDED */

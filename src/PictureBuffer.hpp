@@ -69,8 +69,8 @@ public:
   constexpr SDL_Surface* getSurface() const { return surface; }
 
   constexpr int getW() const { return surface ? surface->w : 0; }
-
   constexpr int getH() const { return surface ? surface->h : 0; }
+  constexpr SDL_Point getSize() const { return {getW(), getH()}; }
 
   constexpr SDL_Rect& getSelectionRect() { return selectionRect; }
   constexpr const SDL_Rect& getSelectionRect() const { return selectionRect; }
