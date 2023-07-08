@@ -36,10 +36,9 @@ PictureView::updatePreview(SDL_Renderer* renderer)
   SDL_FillRect(previewSurface, nullptr, 0);
   SDL_BlitSurface(buffer->getSurface(), &dstRect, previewSurface, &dstRect);
   if (buffer->hasSelection()) {
-    SDL_BlitSurface(buffer->getSelectionSurface(),
-                    nullptr,
-                    previewSurface,
-                    &buffer->getSelectionRect());
+    SDL_Rect dstRect = buffer->getSelectionRect();
+    SDL_BlitScaled(
+      buffer->getSelectionSurface(), nullptr, previewSurface, &dstRect);
   }
   if (scratchEnabled) {
     SDL_BlitSurface(scratch, &dstRect, previewSurface, &dstRect);

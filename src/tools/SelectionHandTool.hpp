@@ -34,7 +34,6 @@ struct SelectionHandTool : PictureTool
       if (moving) {
         auto currPoint = view.effectivePos();
         if (currPoint.x == lastPoint.x && currPoint.y == lastPoint.y) break;
-        auto& rect = buffer.getSelectionRect();
         rect.x += currPoint.x - lastPoint.x;
         rect.y += currPoint.y - lastPoint.y;
         lastPoint = currPoint;
@@ -46,7 +45,7 @@ struct SelectionHandTool : PictureTool
 
     case PictureEvent::OK:
       if (moving) {
-        renderSelection(view.getGlassCanvas(), buffer.getSelectionRect());
+        renderSelection(view.getGlassCanvas(), rect);
         moving = false;
       }
       break;
