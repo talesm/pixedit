@@ -40,8 +40,8 @@ To do
   - [x] Lines
   - [x] Rectangle
   - [x] Polygon
-  - [ ] Ellipsis*
-  - [ ] Flood fill
+  - [x] Ellipsis*
+  - [x] Flood fill
   - [ ] Pick color
   - [ ] Text* (using existing ImGui engine)
   - [ ] Selection
