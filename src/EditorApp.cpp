@@ -5,6 +5,7 @@
 #include "Clipboard.hpp"
 #include "FileDialogTinyfd.hpp"
 #include "ImGuiAppBase.hpp"
+#include "tools/FloodFillTool.hpp"
 #include "tools/FreeHandTool.hpp"
 #include "tools/LinesTool.hpp"
 #include "tools/OvalTool.hpp"
@@ -150,6 +151,7 @@ EditorApp::EditorApp(EditorInitSettings settings)
   tools.emplace_back("Zoom", [] { return new ZoomTool{}; });
   tools.emplace_back("Free hand", [] { return new FreeHandTool{}; });
   tools.emplace_back("Lines", [] { return new LinesTool{}; });
+  tools.emplace_back("Flood fill", [] { return new FloodFillTool{}; });
   tools.emplace_back("Outline rect", [] { return new RectTool{true}; });
   tools.emplace_back("Filled rect", [] { return new RectTool{false}; });
   tools.emplace_back("Outline oval", [] { return new OvalTool{true}; });
