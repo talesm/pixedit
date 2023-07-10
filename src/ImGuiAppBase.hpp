@@ -20,6 +20,7 @@ struct ImGuiAppBase
   ShortcutManager shortcuts;
   PictureView view;
   bool exited = false;
+  bool showView = false;
 
   ImGuiAppBase(const SDL_Point& windowSz);
 

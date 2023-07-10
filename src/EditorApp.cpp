@@ -1,4 +1,6 @@
 #include <iostream>
+#include <map>
+#include <string>
 #include <SDL.h>
 #include <SDL_image.h>
 #include <imgui.h>
@@ -34,11 +36,20 @@ struct EditorInitSettings
   SDL_Point windowSz;
   std::string filename;
 };
+
+struct ViewSettings
+{
+  SDL_Texture* texture = nullptr;
+  SDL_FPoint offset = {0};
+  float scale = 1;
+};
+
 class EditorApp : ImGuiAppBase
 {
   std::vector<ToolDescription> tools;
   int toolIndex = 0;
   std::vector<std::shared_ptr<PictureBuffer>> buffers;
+  std::map<PictureBuffer*, ViewSettings> viewSettings;
   int bufferIndex = -1;
 
   Clipboard clipboard;
@@ -57,12 +68,95 @@ private:
     showMainMenuBar();
     if (ImGui::Begin("Picture options")) { showPictureOptions(); }
     ImGui::End();
+    if (!showView) { showPictureWindows(); }
+  }
+
+  void showPictureWindows()
+  {
+    for (auto& buffer : buffers) { showPictureWindow(buffer); }
+  }
+
+  void showPictureWindow(const std::shared_ptr<PictureBuffer>& buffer)
+  {
+    auto& settings = viewSettings[buffer.get()];
+    // TODO Measure title and decoration instead of guessing
+    ImGui::SetNextWindowSize(ImVec2(buffer->getW() + 16, buffer->getH() + 35),
+                             ImGuiCond_Once);
+    if (ImGui::Begin(buffer->getFilename().c_str())) {
+      bool redraw = false;
+      ImVec2 canvasSz = ImGui::GetContentRegionAvail();
+      if (canvasSz.x < 50.0f) canvasSz.x = 50.0f;
+      if (canvasSz.y < 50.0f) canvasSz.y = 50.0f;
+      {
+        int picW, picH;
+        SDL_QueryTexture(settings.texture, nullptr, nullptr, &picW, &picH);
+        if (settings.texture == nullptr || picW != canvasSz.x ||
+            picH != canvasSz.y) {
+          SDL_DestroyTexture(settings.texture);
+          settings.texture = SDL_CreateTexture(renderer,
+                                               SDL_PIXELFORMAT_ABGR32,
+                                               SDL_TEXTUREACCESS_TARGET,
+                                               canvasSz.x,
+                                               canvasSz.y);
+          SDL_SetTextureBlendMode(settings.texture, SDL_BLENDMODE_BLEND);
+          redraw = true;
+        }
+      }
+      ImVec2 canvasP0 = ImGui::GetCursorScreenPos();
+      ImVec2 canvasP1 =
+        ImVec2(canvasP0.x + canvasSz.x, canvasP0.y + canvasSz.y);
+
+      ImGuiIO& io = ImGui::GetIO();
+
+      if (ImGui::IsWindowFocused()) {
+        ImGui::InvisibleButton("Canvas",
+                               canvasSz,
+                               ImGuiButtonFlags_MouseButtonLeft |
+                                 ImGuiButtonFlags_MouseButtonRight |
+                                 ImGuiButtonFlags_MouseButtonMiddle);
+        const bool is_hovered = ImGui::IsItemHovered(); // Hovered
+        const bool is_active = ImGui::IsItemActive();   // Held
+        if (is_hovered || is_active) {
+          view.state.x = io.MousePos.x - canvasP0.x;
+          view.state.y = io.MousePos.y - canvasP0.y;
+          view.state.left = ImGui::IsMouseDown(ImGuiMouseButton_Left);
+          view.state.middle = ImGui::IsMouseDown(ImGuiMouseButton_Middle);
+          view.state.right = ImGui::IsMouseDown(ImGuiMouseButton_Right);
+          view.state.wheelX += io.MouseWheelH;
+          view.state.wheelY += io.MouseWheel;
+        }
+      }
+      if (ImGui::IsWindowFocused() || redraw) {
+        view.scale = settings.scale;
+        view.offset = settings.offset;
+        view.setBuffer(buffer);
+        SDL_SetRenderTarget(renderer, settings.texture);
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+        SDL_RenderClear(renderer);
+        auto vp = view.getViewport();
+        view.setViewport({0, 0, int(canvasSz.x), int(canvasSz.y)});
+        view.update(renderer);
+        view.render(renderer);
+
+        if (ImGui::IsWindowFocused()) {
+          settings.scale = view.scale;
+          settings.offset = view.offset;
+        }
+
+        view.setViewport(vp);
+        SDL_SetRenderTarget(renderer, nullptr);
+      }
+      ImDrawList* draw_list = ImGui::GetWindowDrawList();
+      draw_list->AddImage(settings.texture, canvasP0, canvasP1);
+    }
+    ImGui::End();
   }
 
   void showMainMenuBar();
 
   void showPictureOptions()
   {
+    ImGui::BeginDisabled(showView == false);
     if (ImGui::BeginCombo("File",
                           bufferIndex < 0
                             ? "None"
@@ -79,6 +173,7 @@ private:
       }
       ImGui::EndCombo();
     }
+    ImGui::EndDisabled();
 
     if (ImGui::CollapsingHeader("Tools", ImGuiTreeNodeFlags_DefaultOpen)) {
       int i = 0;
@@ -138,6 +233,7 @@ private:
   void cut();
   void paste();
   void pasteAsNew();
+  void close();
 };
 
 EditorApp::EditorApp(EditorInitSettings settings)
@@ -226,6 +322,23 @@ EditorApp::pasteAsNew()
 }
 
 void
+EditorApp::close()
+{
+  if (buffers.empty()) {
+    exited = true;
+  } else {
+    buffers.erase(buffers.begin() + bufferIndex);
+    if (bufferIndex >= int(buffers.size())) { bufferIndex -= 1; }
+    if (bufferIndex < 0) {
+      view.setBuffer(nullptr);
+    } else {
+      viewSettings.erase(view.getBuffer().get());
+      if (showView) { view.setBuffer(buffers[bufferIndex]); }
+    }
+  }
+}
+
+void
 EditorApp::setupShortcuts()
 {
   shortcuts.set({.key = SDLK_o, .ctrl = true}, [&] {
@@ -239,21 +352,8 @@ EditorApp::setupShortcuts()
   shortcuts.set({.key = SDLK_v, .ctrl = true}, [&] { paste(); });
   shortcuts.set({.key = SDLK_v, .ctrl = true, .shift = true},
                 [&] { pasteAsNew(); });
-  auto closeFile = [&] {
-    if (buffers.empty()) {
-      exited = true;
-    } else {
-      buffers.erase(buffers.begin() + bufferIndex);
-      if (bufferIndex >= int(buffers.size())) { bufferIndex -= 1; }
-      if (bufferIndex < 0) {
-        view.setBuffer(nullptr);
-      } else {
-        view.setBuffer(buffers[bufferIndex]);
-      }
-    }
-  };
-  shortcuts.set({.key = SDLK_w, .ctrl = true}, closeFile);
-  shortcuts.set({.key = SDLK_F4, .ctrl = true}, closeFile);
+  shortcuts.set({.key = SDLK_w, .ctrl = true}, [&] { close(); });
+  shortcuts.set({.key = SDLK_F4, .ctrl = true}, [&] { close(); });
   shortcuts.set({.key = SDLK_s, .ctrl = true}, [&] {
     if (buffers.empty() || bufferIndex < 0) return;
     if (view.getBuffer()->getFilename().empty()) {
@@ -296,18 +396,8 @@ EditorApp::showMainMenuBar()
         if (buffers.empty() || bufferIndex < 0) return;
         saveWithFileDialog(*view.getBuffer());
       }
-      if (ImGui::MenuItem("Close", "Ctrl+F4")) {
-        if (buffers.empty()) {
-          exited = true;
-        } else {
-          buffers.erase(buffers.begin() + bufferIndex);
-          if (bufferIndex >= int(buffers.size())) { bufferIndex -= 1; }
-          if (bufferIndex < 0) {
-            view.setBuffer(nullptr);
-          } else {
-            view.setBuffer(buffers[bufferIndex]);
-          }
-        }
+      if (ImGui::MenuItem("Close File", "Ctrl+F4", nullptr, !buffers.empty())) {
+        close();
       }
       ImGui::Separator();
       if (ImGui::MenuItem("Exit")) { exited = true; }
@@ -323,6 +413,7 @@ EditorApp::showMainMenuBar()
       if (ImGui::MenuItem("Paste as new", "Ctrl+Shift+V")) { pasteAsNew(); }
       ImGui::EndMenu();
     }
+    ImGui::Checkbox("Maximize", &showView);
     ImGui::EndMainMenuBar();
   }
 }

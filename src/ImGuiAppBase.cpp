@@ -33,7 +33,7 @@ ImGuiAppBase::event(const SDL_Event& ev, bool imGuiMayUse)
     }
     break;
   case SDL_MOUSEWHEEL:
-    if (ImGui::GetIO().WantCaptureMouse) break;
+    if (ImGui::GetIO().WantCaptureMouse || !showView) break;
     view.state.wheelX += ev.wheel.x;
     view.state.wheelY += ev.wheel.y;
     break;
@@ -65,19 +65,21 @@ ImGuiAppBase::run()
     update();
     ImGui::ShowDemoWindow();
 
-    if (!ImGui::GetIO().WantCaptureMouse && SDL_GetMouseFocus() == window) {
-      auto buttonState = SDL_GetMouseState(&view.state.x, &view.state.y);
-      view.state.left = buttonState & SDL_BUTTON_LMASK;
-      view.state.middle = buttonState & SDL_BUTTON_MMASK;
-      view.state.right = buttonState & SDL_BUTTON_RMASK;
-    };
-    view.update(renderer);
+    if (showView) {
+      if (!ImGui::GetIO().WantCaptureMouse && SDL_GetMouseFocus() == window) {
+        auto buttonState = SDL_GetMouseState(&view.state.x, &view.state.y);
+        view.state.left = buttonState & SDL_BUTTON_LMASK;
+        view.state.middle = buttonState & SDL_BUTTON_MMASK;
+        view.state.right = buttonState & SDL_BUTTON_RMASK;
+      };
+      view.update(renderer);
+    }
 
     /// Render
     SDL_SetRenderDrawColor(renderer, 60, 60, 60, 255);
     SDL_RenderClear(renderer);
 
-    view.render(renderer);
+    if (showView) { view.render(renderer); }
 
     ImGui::Render();
     ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
