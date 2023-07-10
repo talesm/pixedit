@@ -72,6 +72,8 @@ struct PolyTool : PictureTool
         render(view.canvas, false);
         view.endEdit();
         points.clear();
+      } else {
+        view.pickColorUnderMouse();
       }
       break;
 

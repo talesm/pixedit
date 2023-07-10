@@ -1,5 +1,6 @@
 #include "PictureView.hpp"
 #include <cmath>
+#include "utils/surface.hpp"
 
 namespace pixedit {
 
@@ -319,6 +320,17 @@ PictureView::persistSelection()
   changed = true;
   buffer->persistSelection();
   buffer->makeSnapshot();
+}
+
+void
+PictureView::pickColorUnderMouse()
+{
+  if (!buffer) return;
+  auto surface = buffer->getSurface();
+  auto pos = effectivePos();
+  auto pixel = pixelAt(surface, pos.x, pos.y);
+  if (!pixel) return;
+  canvas | RawColorA{getPixel(pixel, surface->format->BytesPerPixel)};
 }
 
 } // namespace pixedit

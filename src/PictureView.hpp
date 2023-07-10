@@ -136,6 +136,8 @@ public:
   void setSelection(SDL_Surface* surface);
   void persistSelection();
 
+  void pickColorUnderMouse();
+
 private:
   void updatePreview(SDL_Renderer* renderer);
 };

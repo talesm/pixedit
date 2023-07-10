@@ -53,6 +53,8 @@ struct OvalTool : PictureTool
         view.endEdit();
       };
       break;
+
+    case PictureEvent::RIGHT: view.pickColorUnderMouse(); break;
     default: view.cancelEdit(); break;
     }
   }

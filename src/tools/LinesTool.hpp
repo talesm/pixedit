@@ -55,8 +55,9 @@ struct LinesTool : PictureTool
         view.enableScratch(false);
         view.canvas | OpenLineTo(currPoint, lastPoint);
         view.endEdit();
+      } else {
+        view.pickColorUnderMouse();
       }
-      break;
 
     default: view.cancelEdit(); break;
     }

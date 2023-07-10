@@ -42,6 +42,8 @@ struct FloodFillTool : PictureTool
                 view.effectivePos(),
                 view.canvas.getRawColorA());
       view.endEdit();
+    } else if (event == PictureEvent::RIGHT) {
+      view.pickColorUnderMouse();
     }
   }
 };

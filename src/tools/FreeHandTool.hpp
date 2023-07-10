@@ -31,6 +31,7 @@ struct FreeHandTool : PictureTool
       }
       break;
     case PictureEvent::OK: view.endEdit(); break;
+    case PictureEvent::RIGHT: view.pickColorUnderMouse(); break;
     default: view.cancelEdit(); break;
     }
   }
