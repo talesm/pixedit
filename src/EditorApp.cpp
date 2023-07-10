@@ -187,7 +187,7 @@ EditorApp::copy()
   if (!view.getBuffer()) return;
   auto& buffer = *view.getBuffer();
   auto selectionSurface = buffer.getSelectionSurface();
-  clipboard.set(selectionSurface ?: buffer.getSurface());
+  clipboard.set(selectionSurface.get() ?: buffer.getSurface().get());
 }
 
 inline void
@@ -196,7 +196,7 @@ EditorApp::cut()
   if (!view.getBuffer()) return;
   auto& buffer = *view.getBuffer();
   if (!buffer.hasSelection()) return;
-  clipboard.set(buffer.getSelectionSurface());
+  clipboard.set(buffer.getSelectionSurface().get());
   view.setSelection(nullptr);
 }
 

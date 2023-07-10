@@ -6,6 +6,7 @@
 #include <SDL.h>
 #include "Brush.hpp"
 #include "utils/Color.hpp"
+#include "utils/Surface.hpp"
 #include "utils/safeGetFormat.hpp"
 
 namespace pixedit {
@@ -21,31 +22,30 @@ struct OpenLineTo;
 /// See @ref primitives to how to interact with it
 class Canvas
 {
-  SDL_Surface* surface;
+  Surface surface;
   Brush brush;
 
 public:
-  constexpr Canvas(SDL_Surface* surface = nullptr, bool owning = false)
+  Canvas(Surface surface = {}, bool owning = false)
     : surface(surface)
   {
-    if (surface && !owning) { surface->refcount++; }
+    if (surface && !owning) { surface.get()->refcount++; }
   }
   Canvas(const Canvas&) = delete;
-  ~Canvas() { SDL_FreeSurface(surface); }
   Canvas& operator=(const Canvas&) = delete;
 
-  void setSurface(SDL_Surface* value, bool owning = false);
+  void setSurface(Surface value, bool owning = false);
 
   constexpr RawColor getRawColorA() const { return brush.colorA; }
   constexpr RawColor getRawColorB() const { return brush.colorB; }
 
   constexpr Color getColorA() const
   {
-    return rawToComponent(brush.colorA, safeGetFormat(surface));
+    return rawToComponent(brush.colorA, surface.getFormat());
   }
   constexpr Color getColorB() const
   {
-    return rawToComponent(brush.colorB, safeGetFormat(surface));
+    return rawToComponent(brush.colorB, surface.getFormat());
   }
 
   friend constexpr Canvas& operator|(Canvas& c, RawColor rawColor);

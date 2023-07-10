@@ -9,26 +9,30 @@
 namespace pixedit {
 
 inline void
-floodFill(SDL_Surface* surface, const SDL_Point& p, RawColor color)
+floodFill(Surface surface, const SDL_Point& p, RawColor color)
 {
-  if (p.x < 0 || p.y < 0 || p.x >= surface->w || p.y >= surface->h) { return; }
-  auto prevColor = getPixelAt(surface, p.x, p.y);
+  const int WW = surface.getW();
+  const int HH = surface.getH();
+  if (p.x < 0 || p.y < 0 || p.x >= WW || p.y >= HH) { return; }
+
+  auto BPP = surface.getFormat()->BytesPerPixel;
+  auto prevColor = surface.getPixel(p.x, p.y);
   if (prevColor == color) { return; }
   std::vector<SDL_Point> stack{p};
+
   while (!stack.empty()) {
     auto p = stack.back();
     stack.pop_back();
 
-    auto pixelPtr = pixelAt(surface, p.x, p.y);
-    auto c = getPixel(pixelPtr, surface->format->BytesPerPixel);
+    auto pixelPtr = surface.pixel(p.x, p.y);
+    auto c = getPixel(pixelPtr, BPP);
     if (c != prevColor) continue;
-
-    setPixel(pixelPtr, color, surface->format->BytesPerPixel);
+    setPixel(pixelPtr, color, BPP);
 
     if (p.x > 0) stack.emplace_back(p.x - 1, p.y);
-    if (p.x < surface->w - 1) stack.emplace_back(p.x + 1, p.y);
+    if (p.x < WW - 1) stack.emplace_back(p.x + 1, p.y);
     if (p.y > 0) stack.emplace_back(p.x, p.y - 1);
-    if (p.y < surface->h - 1) stack.emplace_back(p.x, p.y + 1);
+    if (p.y < HH - 1) stack.emplace_back(p.x, p.y + 1);
   }
 }
 

@@ -32,21 +32,20 @@ PictureView::updatePreview(SDL_Renderer* renderer)
     preview = createPreview();
   }
   SDL_Rect dstRect{0, 0, buffer->getW(), buffer->getH()};
-  SDL_Surface* previewSurface;
-  SDL_LockTextureToSurface(preview, &dstRect, &previewSurface);
-  SDL_FillRect(previewSurface, nullptr, 0);
-  SDL_BlitSurface(buffer->getSurface(), &dstRect, previewSurface, &dstRect);
+  Surface previewSurface;
+  {
+    SDL_Surface* temp;
+    SDL_LockTextureToSurface(preview, &dstRect, &temp);
+    previewSurface = Surface{temp};
+  }
+
+  previewSurface.fillRect(dstRect, 0);
+  previewSurface.blit(buffer->getSurface());
   if (buffer->hasSelection()) {
-    SDL_Rect dstRect = buffer->getSelectionRect();
-    SDL_BlitScaled(
-      buffer->getSelectionSurface(), nullptr, previewSurface, &dstRect);
+    previewSurface.blitScaled(buffer->getSurface(), buffer->getSelectionRect());
   }
-  if (scratchEnabled) {
-    SDL_BlitSurface(scratch, &dstRect, previewSurface, &dstRect);
-  }
-  if (glassEnabled) {
-    SDL_BlitSurface(glassSurface, &dstRect, previewSurface, &dstRect);
-  }
+  if (scratchEnabled) { previewSurface.blit(scratch); }
+  if (glassEnabled) { previewSurface.blit(glassSurface); }
   SDL_UnlockTexture(preview);
   movingMode = false;
 }
@@ -328,9 +327,10 @@ PictureView::pickColorUnderMouse()
   if (!buffer) return;
   auto surface = buffer->getSurface();
   auto pos = effectivePos();
-  auto pixel = pixelAt(surface, pos.x, pos.y);
-  if (!pixel) return;
-  canvas | RawColorA{getPixel(pixel, surface->format->BytesPerPixel)};
+  if (pos.x < 0 || pos.y < 0 || pos.x >= surface.getW() ||
+      pos.y >= surface.getH())
+    return;
+  canvas | RawColorA{surface.getPixel(pos.x, pos.y)};
 }
 
 } // namespace pixedit

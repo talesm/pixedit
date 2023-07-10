@@ -8,7 +8,8 @@ extern const unsigned HISTORY_MAX;
 } // namespace defaults
 
 PictureBuffer::PictureBuffer(std::string filename)
-  : PictureBuffer(std::move(filename), IMG_Load(filename.c_str()), true)
+  : PictureBuffer(std::move(filename),
+                  Surface{IMG_Load(filename.c_str()), true})
 {
   lastSave = history.begin();
 }
@@ -33,7 +34,7 @@ PictureBuffer::saveAs(const std::string& filename)
 bool
 PictureBuffer::saveCopy(const std::string& filename)
 {
-  return IMG_SavePNG(surface, filename.c_str()) == 0;
+  return IMG_SavePNG(surface.get(), filename.c_str()) == 0;
 }
 
 void
@@ -44,7 +45,7 @@ PictureBuffer::makeSnapshot()
   if (historyPoint != history.end()) {
     history.erase(++historyPoint, history.end());
   }
-  historyPoint = history.emplace(history.end(), surface);
+  historyPoint = history.emplace(history.end(), surface.get());
   if (history.size() > defaults::HISTORY_MAX) history.pop_front();
 }
 
@@ -52,7 +53,6 @@ void
 PictureBuffer::refresh()
 {
   if (!surface || history.empty() || historyPoint == history.end()) return;
-  SDL_FreeSurface(surface);
   if (selectionSurface) clearSelection();
   surface = historyPoint->recover();
 }

@@ -6,35 +6,32 @@
 namespace pixedit {
 
 void
-Canvas::setSurface(SDL_Surface* value, bool owning)
+Canvas::setSurface(Surface value, bool owning)
 {
-  if (surface == value) return;
+  if (surface.get() == value.get()) { return; }
   brush.colorA = componentToRaw(
-    rawToComponent(brush.colorA, safeGetFormat(surface)), safeGetFormat(value));
+    rawToComponent(brush.colorA, surface.getFormat()), value.getFormat());
   brush.colorB = componentToRaw(
-    rawToComponent(brush.colorB, safeGetFormat(surface)), safeGetFormat(value));
-  SDL_FreeSurface(surface);
+    rawToComponent(brush.colorB, surface.getFormat()), value.getFormat());
   surface = value;
-  if (surface && !owning) { surface->refcount++; }
+  if (surface && !owning) { surface.get()->refcount++; }
 }
 
 Canvas&
 operator|(Canvas& c, Color color)
 {
-  c.brush.colorA =
-    componentToRaw(color, c.surface ? c.surface->format : nullptr);
+  c.brush.colorA = componentToRaw(color, c.surface.getFormat());
   return c;
 }
 Canvas&
 operator|(Canvas& c, ColorB color)
 {
-  c.brush.colorB =
-    componentToRaw(color, c.surface ? c.surface->format : nullptr);
+  c.brush.colorB = componentToRaw(color, c.surface.getFormat());
   return c;
 }
 
 void
-doPixel(SDL_Surface* surface, const Brush& b, SDL_Point p)
+doPixel(Surface surface, const Brush& b, SDL_Point p)
 {
   auto color = b.colorA;
   if (b.pattern.data8x8) {
@@ -42,11 +39,11 @@ doPixel(SDL_Surface* surface, const Brush& b, SDL_Point p)
     int yy = p.y % 8;
     if ((b.pattern.data8x8 >> (yy * 8 + xx)) & 1) { color = b.colorB; }
   }
-  setPixelAt(surface, p.x, p.y, color);
+  surface.setPixel(p.x, p.y, color);
 }
 
 void
-doPoint(SDL_Surface* surface, const Brush& b, SDL_Point p)
+doPoint(Surface surface, const Brush& b, SDL_Point p)
 {
   if (b.pen.type == Pen::BOX) {
     int xBeg = p.x - (b.pen.w / 2 + b.pen.w % 2 - 1);
@@ -69,7 +66,7 @@ operator|(Canvas& c, SDL_Point p)
 }
 
 void
-doHLine(SDL_Surface* surface, const Brush& b, const HorizontalLine& l)
+doHLine(Surface surface, const Brush& b, const HorizontalLine& l)
 {
   SDL_Point p{l.x, l.y};
   for (int i = 0; i < l.length; ++i, ++p.x) doPoint(surface, b, p);
@@ -81,8 +78,7 @@ operator|(Canvas& c, HorizontalLine l)
   if (c.brush.pattern.data8x8 || c.brush.pen.type != Pen::DOT) {
     doHLine(c.surface, c.brush, l);
   } else {
-    SDL_Rect rect{l.x, l.y, l.length, 1};
-    SDL_FillRect(c.surface, &rect, c.brush.colorA);
+    c.surface.fillRect({l.x, l.y, l.length, 1}, c.brush.colorA);
   }
   return c;
 }
@@ -106,13 +102,13 @@ operator|(Canvas& c, OpenLineTo l)
 }
 
 void
-doBox(SDL_Surface* surface, const Brush& b, const SDL_Rect& rect)
+doBox(Surface surface, const Brush& b, const SDL_Rect& rect)
 {
   if (b.pattern.data8x8 || b.pen.type != Pen::DOT) {
     HorizontalLine l{rect.x, rect.y, rect.w};
     for (int i = 0; i < rect.h; ++i, ++l.y) doHLine(surface, b, l);
   } else {
-    SDL_FillRect(surface, &rect, b.colorA);
+    surface.fillRect(rect, b.colorA);
   }
 }
 
