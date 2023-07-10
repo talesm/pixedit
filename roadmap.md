@@ -77,6 +77,7 @@ To do
   - [ ] Tool name
   - [ ] Mouse pos
 - [ ] Windowed mode*
+- [ ] Update title with filename, dirty "*"
 
 Wishlist
 --------
