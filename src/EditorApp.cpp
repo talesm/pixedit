@@ -54,9 +54,12 @@ private:
 
   void update() final
   {
+    showMainMenuBar();
     if (ImGui::Begin("Picture options")) { showPictureOptions(); }
     ImGui::End();
   }
+
+  void showMainMenuBar();
 
   void showPictureOptions()
   {
@@ -270,6 +273,60 @@ EditorApp::setupShortcuts()
   // Swap colors
   shortcuts.set({.key = SDLK_x, .alt = true}, [&] { view.swapColors(); });
 }
+
+void
+EditorApp::showMainMenuBar()
+{
+  if (ImGui::BeginMainMenuBar()) {
+    if (ImGui::BeginMenu("File")) {
+      if (ImGui::MenuItem("New")) {}
+      if (ImGui::MenuItem("Open", "Ctrl+O")) {
+        auto buffer = loadFromFileDialog("./");
+        if (buffer) { appendFile(buffer); };
+      }
+      if (ImGui::MenuItem("Save", "Ctrl+S")) {
+        if (buffers.empty() || bufferIndex < 0) return;
+        if (view.getBuffer()->getFilename().empty()) {
+          saveWithFileDialog(*view.getBuffer());
+        } else {
+          view.getBuffer()->save();
+        }
+      }
+      if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S")) {
+        if (buffers.empty() || bufferIndex < 0) return;
+        saveWithFileDialog(*view.getBuffer());
+      }
+      if (ImGui::MenuItem("Close", "Ctrl+F4")) {
+        if (buffers.empty()) {
+          exited = true;
+        } else {
+          buffers.erase(buffers.begin() + bufferIndex);
+          if (bufferIndex >= int(buffers.size())) { bufferIndex -= 1; }
+          if (bufferIndex < 0) {
+            view.setBuffer(nullptr);
+          } else {
+            view.setBuffer(buffers[bufferIndex]);
+          }
+        }
+      }
+      ImGui::Separator();
+      if (ImGui::MenuItem("Exit")) { exited = true; }
+      ImGui::EndMenu();
+    }
+    if (ImGui::BeginMenu("Edit")) {
+      if (ImGui::MenuItem("Undo", "Ctrl+Z")) { view.undo(); }
+      if (ImGui::MenuItem("Redo", "Ctrl+Shift+Z")) { view.redo(); }
+      ImGui::Separator();
+      if (ImGui::MenuItem("Cut", "Ctrl+X")) { cut(); }
+      if (ImGui::MenuItem("Copy", "Ctrl+C")) { copy(); }
+      if (ImGui::MenuItem("Paste", "Ctrl+V")) { paste(); }
+      if (ImGui::MenuItem("Paste as new", "Ctrl+Shift+V")) { pasteAsNew(); }
+      ImGui::EndMenu();
+    }
+    ImGui::EndMainMenuBar();
+  }
+}
+
 }
 
 int

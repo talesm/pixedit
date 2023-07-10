@@ -59,19 +59,19 @@ To do
   - [ ] Tile
 - [ ] ~~Tabs for switching files~~
 - [ ] Menu bar
-  - [ ] File menu
-    - [ ] New
-    - [ ] Load 
-    - [ ] Save
-    - [ ] Save as 
-    - [ ] Close
-    - [ ] Exit
+  - [x] File menu
+    - [x] New
+    - [x] Load 
+    - [x] Save
+    - [x] Save as 
+    - [x] Close
+    - [x] Exit
     - [ ] ~~Last files~~
-  - [ ] Edit menu
-    - [ ] Copy
-    - [ ] Paste
-    - [ ] Paste as new
-    - [ ] Undo/redo
+  - [x] Edit menu
+    - [x] Copy
+    - [x] Paste
+    - [x] Paste as new
+    - [x] Undo/redo
   - [ ] Help/About
 - [ ] Status bar*
   - [ ] Tool name
