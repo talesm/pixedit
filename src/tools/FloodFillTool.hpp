@@ -4,7 +4,7 @@
 #include <vector>
 #include "PictureTool.hpp"
 #include "PictureView.hpp"
-#include "utils/surface.hpp"
+#include "utils/pixel.hpp"
 
 namespace pixedit {
 

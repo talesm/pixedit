@@ -1,5 +1,5 @@
-#ifndef PIXEDIT_SRC_ALGORITHMS_SURFACE_INCLUDED
-#define PIXEDIT_SRC_ALGORITHMS_SURFACE_INCLUDED
+#ifndef PIXEDIT_SRC_UTILS_PIXEL_INCLUDED
+#define PIXEDIT_SRC_UTILS_PIXEL_INCLUDED
 
 #include <SDL.h>
 
@@ -82,4 +82,4 @@ setPixelAt(SDL_Surface* surface, int x, int y, Uint32 value)
 
 } // namespace pixedit
 
-#endif /* PIXEDIT_SRC_ALGORITHMS_SURFACE_INCLUDED */
+#endif /* PIXEDIT_SRC_UTILS_PIXEL_INCLUDED */

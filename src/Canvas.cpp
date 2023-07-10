@@ -1,7 +1,7 @@
 #include "Canvas.hpp"
 #include "primitives/Line.hpp"
+#include "utils/pixel.hpp"
 #include "utils/rasterLine.hpp"
-#include "utils/surface.hpp"
 
 namespace pixedit {
 

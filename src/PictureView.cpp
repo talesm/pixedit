@@ -1,6 +1,6 @@
 #include "PictureView.hpp"
 #include <cmath>
-#include "utils/surface.hpp"
+#include "utils/pixel.hpp"
 
 namespace pixedit {
 
