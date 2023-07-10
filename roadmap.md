@@ -42,7 +42,7 @@ To do
   - [x] Polygon
   - [x] Ellipsis*
   - [x] Flood fill
-  - [ ] Pick color
+  - [x] Pick color
   - [ ] Text* (using existing ImGui engine)
   - [ ] Selection
     - [x] Rect
@@ -57,7 +57,7 @@ To do
   - [x] Swap color
   - [ ] Mask
   - [ ] Tile
-- [ ] Tabs for switching files
+- [ ] ~~Tabs for switching files~~
 - [ ] Menu bar
   - [ ] File menu
     - [ ] New
