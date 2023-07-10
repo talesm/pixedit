@@ -76,7 +76,7 @@ To do
 - [ ] Status bar*
   - [ ] Tool name
   - [ ] Mouse pos
-- [ ] Windowed mode*
+- [x] Windowed mode*
 - [ ] Update title with filename, dirty "*"
 
 Wishlist
