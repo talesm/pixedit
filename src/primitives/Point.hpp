@@ -3,26 +3,11 @@
 
 #include <SDL.h>
 #include "Canvas.hpp"
+#include "utils/rect.hpp"
 
 namespace pixedit {
 
-/// @{
-/// @brief draw point centered at given coordinates
-/// @param x the x coordinate
-/// @param y the y coordinate
-/// @param p the coordinates
-/// @return An SDL_Point that might be used with operator| to render the point
-constexpr SDL_Point
-Point(int x, int y)
-{
-  return {x, y};
-}
-constexpr SDL_Point
-Point(SDL_Point p)
-{
-  return p;
-}
-/// @}
+// TODO single pixel
 
 } // namespace pixedit
 

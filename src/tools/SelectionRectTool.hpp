@@ -33,8 +33,8 @@ struct SelectionRectTool : PictureTool
       if (selecting) {
         auto currPoint = view.effectivePos();
         if (currPoint.x == lastPoint.x && currPoint.y == lastPoint.y) break;
-        SDL_Rect rect = intersectFromOrigin(fromPoints(currPoint, lastPoint),
-                                            buffer.getSize());
+        SDL_Rect rect = intersectFromOrigin(
+          Rect::fromPoints(currPoint, lastPoint), buffer.getSize());
         renderSelection(view.getGlassCanvas(), rect, true);
       }
       break;
@@ -42,8 +42,8 @@ struct SelectionRectTool : PictureTool
       if (selecting) {
         selecting = false;
         auto currPoint = view.effectivePos();
-        SDL_Rect rect = intersectFromOrigin(fromPoints(currPoint, lastPoint),
-                                            buffer.getSize());
+        SDL_Rect rect = intersectFromOrigin(
+          Rect::fromPoints(currPoint, lastPoint), buffer.getSize());
         renderSelection(view.getGlassCanvas(), rect);
         buffer.setSelection(cutoutSurface(buffer.getSurface(), rect, 0), rect);
       };
