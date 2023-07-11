@@ -302,11 +302,13 @@ EditorApp::showPictureWindow(const std::shared_ptr<PictureBuffer>& buffer)
       }
     }
   }
+  ImGuiWindowFlags flags = 0;
+  if (buffer->isDirty()) { flags |= ImGuiWindowFlags_UnsavedDocument; }
   const char* title = settings.titleBuffer.c_str();
   // TODO Measure title and decoration instead of guessing
   ImGui::SetNextWindowSize(ImVec2(buffer->getW() + 16, buffer->getH() + 35),
                            ImGuiCond_Once);
-  if (ImGui::Begin(title)) {
+  if (ImGui::Begin(title, nullptr, flags)) {
     bool redraw = false;
     ImVec2 canvasSz = ImGui::GetContentRegionAvail();
     if (canvasSz.x < 50.0f) canvasSz.x = 50.0f;

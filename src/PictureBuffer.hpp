@@ -33,7 +33,7 @@ public:
   }
 
   /// @brief True if this needs saving
-  bool isDirty() const { return lastSave == historyPoint; }
+  bool isDirty() const { return lastSave != historyPoint; }
 
   bool save(bool force = false);
 
