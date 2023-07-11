@@ -308,7 +308,9 @@ EditorApp::showPictureWindow(const std::shared_ptr<PictureBuffer>& buffer)
   // TODO Measure title and decoration instead of guessing
   ImGui::SetNextWindowSize(ImVec2(buffer->getW() + 16, buffer->getH() + 35),
                            ImGuiCond_Once);
-  if (ImGui::Begin(title, nullptr, flags)) {
+
+  bool stayOpen = true;
+  if (ImGui::Begin(title, &stayOpen, flags)) {
     bool redraw = false;
     ImVec2 canvasSz = ImGui::GetContentRegionAvail();
     if (canvasSz.x < 50.0f) canvasSz.x = 50.0f;
@@ -374,6 +376,7 @@ EditorApp::showPictureWindow(const std::shared_ptr<PictureBuffer>& buffer)
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     draw_list->AddImage(settings.texture, canvasP0, canvasP1);
   }
+  if (!stayOpen) { close(); }
   ImGui::End();
 }
 
