@@ -1,5 +1,6 @@
 #include <iostream>
 #include <map>
+#include <sstream>
 #include <string>
 #include <SDL.h>
 #include <SDL_image.h>
@@ -42,6 +43,9 @@ struct ViewSettings
   SDL_Texture* texture = nullptr;
   SDL_FPoint offset = {0};
   float scale = 1;
+  int fileUnamedId = 0;
+  std::string filename;
+  std::string titleBuffer;
 };
 
 class EditorApp : ImGuiAppBase
@@ -268,10 +272,41 @@ void
 EditorApp::showPictureWindow(const std::shared_ptr<PictureBuffer>& buffer)
 {
   auto& settings = viewSettings[buffer.get()];
+  if (buffer->getFilename().empty()) {
+    if (settings.fileUnamedId == 0) {
+      int largestUnnamedId = 0;
+      for (auto& s : viewSettings) {
+        if (s.second.fileUnamedId > largestUnnamedId) {
+          largestUnnamedId = s.second.fileUnamedId;
+        }
+      }
+      settings.fileUnamedId = largestUnnamedId + 1;
+      std::stringstream ss;
+      ss << "New image " << settings.fileUnamedId << "##"
+         << makeTempFilename("new_image_", ".png");
+      settings.titleBuffer = ss.str();
+    }
+  } else {
+    auto& filename = buffer->getFilename();
+    if (filename != settings.filename) {
+      settings.filename = filename;
+      settings.fileUnamedId = 0;
+
+      auto lastSlash = filename.find_last_of('/');
+      if (lastSlash == std::string::npos) {
+        settings.titleBuffer = filename;
+      } else {
+        std::stringstream ss;
+        ss << filename.substr(lastSlash + 1) << "##" << filename;
+        settings.titleBuffer = ss.str();
+      }
+    }
+  }
+  const char* title = settings.titleBuffer.c_str();
   // TODO Measure title and decoration instead of guessing
   ImGui::SetNextWindowSize(ImVec2(buffer->getW() + 16, buffer->getH() + 35),
                            ImGuiCond_Once);
-  if (ImGui::Begin(buffer->getFilename().c_str())) {
+  if (ImGui::Begin(title)) {
     bool redraw = false;
     ImVec2 canvasSz = ImGui::GetContentRegionAvail();
     if (canvasSz.x < 50.0f) canvasSz.x = 50.0f;
