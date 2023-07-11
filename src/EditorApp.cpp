@@ -84,70 +84,7 @@ private:
 
   void showMainMenuBar();
 
-  void showPictureOptions()
-  {
-    ImGui::BeginDisabled(showView == false);
-    if (ImGui::BeginCombo("File",
-                          bufferIndex < 0
-                            ? "None"
-                            : buffers[bufferIndex]->getFilename().c_str())) {
-      int i = 0;
-      for (auto& b : buffers) {
-        bool selected = bufferIndex == i;
-        if (ImGui::Selectable(b->getFilename().c_str(), selected)) {
-          bufferIndex = i;
-          view.setBuffer(buffers[bufferIndex]);
-        }
-        if (selected) { ImGui::SetItemDefaultFocus(); }
-        ++i;
-      }
-      ImGui::EndCombo();
-    }
-    ImGui::EndDisabled();
-
-    if (ImGui::CollapsingHeader("Tools", ImGuiTreeNodeFlags_DefaultOpen)) {
-      int i = 0;
-      for (auto& tool : tools) {
-        if (ImGui::RadioButton(tool.name.c_str(), i == toolIndex)) {
-          delete view.tool;
-          view.tool = tool.build();
-          toolIndex = i;
-        }
-        ++i;
-      }
-    }
-    ImGui::DragFloat2("##offset", &view.offset.x, 1.f, -10000, +10000);
-    ImGui::SameLine();
-    if (ImGui::Button("Reset##offset")) { view.offset = {0}; }
-    if (ImGui::ArrowButton("Decrease zoom", ImGuiDir_Left)) { view.scale /= 2; }
-    ImGui::SameLine();
-    ImGui::Text("%g%%", view.scale * 100);
-    ImGui::SameLine();
-    if (ImGui::ArrowButton("Increase zoom", ImGuiDir_Right)) {
-      view.scale *= 2;
-    }
-
-    if (ImGui::Button(
-          "Swap colors",
-          {0, ImGui::GetFrameHeightWithSpacing() + ImGui::GetFrameHeight()})) {
-      view.swapColors();
-    }
-    ImGui::SameLine();
-    {
-      ImGui::BeginChild("Colors");
-      auto colorA = componentToNormalized(view.canvas.getColorA());
-      if (ImGui::ColorEdit4(
-            "Color A", colorA.data(), ImGuiColorEditFlags_NoInputs)) {
-        view.canvas | ColorA{normalizedToComponent(colorA)};
-      }
-      auto colorB = componentToNormalized(view.canvas.getColorB());
-      if (ImGui::ColorEdit4(
-            "Color B", colorB.data(), ImGuiColorEditFlags_NoInputs)) {
-        view.canvas | ColorB{normalizedToComponent(colorB)};
-      }
-      ImGui::EndChild();
-    }
-  }
+  void showPictureOptions();
 
   void appendFile(std::shared_ptr<PictureBuffer> buffer)
   {
@@ -265,6 +202,70 @@ EditorApp::close()
       viewSettings.erase(view.getBuffer().get());
       if (showView) { view.setBuffer(buffers[bufferIndex]); }
     }
+  }
+}
+
+void
+EditorApp::showPictureOptions()
+{
+  ImGui::BeginDisabled(showView == false);
+  if (ImGui::BeginCombo("File",
+                        bufferIndex < 0
+                          ? "None"
+                          : buffers[bufferIndex]->getFilename().c_str())) {
+    int i = 0;
+    for (auto& b : buffers) {
+      bool selected = bufferIndex == i;
+      if (ImGui::Selectable(b->getFilename().c_str(), selected)) {
+        bufferIndex = i;
+        view.setBuffer(buffers[bufferIndex]);
+      }
+      if (selected) { ImGui::SetItemDefaultFocus(); }
+      ++i;
+    }
+    ImGui::EndCombo();
+  }
+  ImGui::EndDisabled();
+
+  if (ImGui::CollapsingHeader("Tools", ImGuiTreeNodeFlags_DefaultOpen)) {
+    int i = 0;
+    for (auto& tool : tools) {
+      if (ImGui::RadioButton(tool.name.c_str(), i == toolIndex)) {
+        delete view.tool;
+        view.tool = tool.build();
+        toolIndex = i;
+      }
+      ++i;
+    }
+  }
+  ImGui::DragFloat2("##offset", &view.offset.x, 1.f, -10000, +10000);
+  ImGui::SameLine();
+  if (ImGui::Button("Reset##offset")) { view.offset = {0}; }
+  if (ImGui::ArrowButton("Decrease zoom", ImGuiDir_Left)) { view.scale /= 2; }
+  ImGui::SameLine();
+  ImGui::Text("%g%%", view.scale * 100);
+  ImGui::SameLine();
+  if (ImGui::ArrowButton("Increase zoom", ImGuiDir_Right)) { view.scale *= 2; }
+
+  if (ImGui::Button(
+        "Swap colors",
+        {0, ImGui::GetFrameHeightWithSpacing() + ImGui::GetFrameHeight()})) {
+    view.swapColors();
+  }
+  ImGui::SameLine();
+  {
+    ImGui::BeginChild("Colors");
+    auto colorA = componentToNormalized(view.canvas.getColorA());
+    if (ImGui::ColorEdit4(
+          "Color A", colorA.data(), ImGuiColorEditFlags_NoInputs)) {
+      view.canvas | ColorA{normalizedToComponent(colorA)};
+    }
+    auto colorB = componentToNormalized(view.canvas.getColorB());
+    if (ImGui::ColorEdit4(
+          "Color B", colorB.data(), ImGuiColorEditFlags_NoInputs)) {
+      view.canvas | ColorB{normalizedToComponent(colorB)};
+    }
+    ImGui::EndChild();
   }
 }
 
