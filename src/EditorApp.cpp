@@ -58,6 +58,8 @@ class EditorApp : ImGuiAppBase
 
   Clipboard clipboard;
 
+  std::string requestModal;
+
 public:
   EditorApp(EditorInitSettings settings);
   using ImGuiAppBase::run;
@@ -74,6 +76,8 @@ private:
     ImGui::End();
     if (!showView) { showPictureWindows(); }
   }
+
+  void showNewFileDialog();
 
   void showPictureWindows()
   {
@@ -208,6 +212,12 @@ EditorApp::close()
 void
 EditorApp::showPictureOptions()
 {
+  if (!requestModal.empty()) {
+    ImGui::OpenPopup(requestModal.c_str());
+    requestModal.clear();
+  }
+  showNewFileDialog();
+
   ImGui::BeginDisabled(showView == false);
   if (ImGui::BeginCombo("File",
                         bufferIndex < 0
@@ -422,7 +432,7 @@ EditorApp::showMainMenuBar()
 {
   if (ImGui::BeginMainMenuBar()) {
     if (ImGui::BeginMenu("File")) {
-      if (ImGui::MenuItem("New")) {}
+      if (ImGui::MenuItem("New")) { requestModal = "New image"; }
       if (ImGui::MenuItem("Open", "Ctrl+O")) {
         auto buffer = loadFromFileDialog("./");
         if (buffer) { appendFile(buffer); };
@@ -458,6 +468,36 @@ EditorApp::showMainMenuBar()
     }
     ImGui::Checkbox("Maximize", &showView);
     ImGui::EndMainMenuBar();
+  }
+}
+
+void
+EditorApp::showNewFileDialog()
+{
+  ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+  ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+  if (ImGui::BeginPopupModal(
+        "New image", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+    ImGui::Text("Do you want to create a new image");
+    ImGui::Separator();
+
+    static int width = 320, height = 240;
+    if (ImGui::InputInt("width", &width)) {
+      if (width < 1) width = 1;
+    }
+    if (ImGui::InputInt("height", &height)) {
+      if (height < 1) height = 1;
+    }
+
+    if (ImGui::Button("OK", ImVec2(120, 0))) {
+      appendFile(
+        std::make_shared<PictureBuffer>("", Surface::create(width, height)));
+      ImGui::CloseCurrentPopup();
+    }
+    ImGui::SetItemDefaultFocus();
+    ImGui::SameLine();
+    if (ImGui::Button("Cancel", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
+    ImGui::EndPopup();
   }
 }
 

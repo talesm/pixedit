@@ -39,6 +39,14 @@ public:
     return *this;
   }
 
+  static Surface create(int w, int h)
+  {
+    return {
+      SDL_CreateRGBSurfaceWithFormat(0, w, h, 32, SDL_PIXELFORMAT_ABGR32),
+      true,
+    };
+  }
+
   constexpr SDL_PixelFormat* getFormat() const
   {
     return safeGetFormat(surface);
