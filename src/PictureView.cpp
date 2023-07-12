@@ -20,6 +20,8 @@ PictureView::updatePreview(SDL_Renderer* renderer)
     SDL_SetTextureBlendMode(t, SDL_BLENDMODE_BLEND);
     return t;
   };
+  movingMode = false;
+  if (!renderer) { return; }
   if (preview) {
     int w, h;
     SDL_QueryTexture(preview, nullptr, nullptr, &w, &h);
@@ -47,7 +49,6 @@ PictureView::updatePreview(SDL_Renderer* renderer)
   if (scratchEnabled) { previewSurface.blit(scratch); }
   if (glassEnabled) { previewSurface.blit(glassSurface); }
   SDL_UnlockTexture(preview);
-  movingMode = false;
 }
 
 static void

@@ -43,7 +43,7 @@ CPPFLAGS := $(INC_FLAGS) -g -MMD -MP -Wall
 CXXFLAGS := $(CXXFLAGS) -std=gnu++20
 
 # ALL
-all: $(BUILD_DIR)/$(EXEC_EDITOR) $(BUILD_DIR)/$(UNIT_TEST)
+all: $(BUILD_DIR)/$(EXEC_EDITOR) $(BUILD_DIR)/$(UNIT_TEST) scratch
 scratch: $(SCRATCH)
 
 # Removing non default objs
