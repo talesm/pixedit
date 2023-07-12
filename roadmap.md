@@ -49,7 +49,7 @@ To do
     - [ ] Free form
     - [ ] Color
     - [ ] Contiguous color
-- [ ] "New file" dialog
+- [x] "New file" dialog
 - [ ] "Exit confirmation" dialog
 - [ ] Options
   - [ ] Color palette (not palette image, just reference)*
