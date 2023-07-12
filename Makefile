@@ -7,19 +7,24 @@ UNIT_TEST := pixedit_tests
 BUILD_DIR := build
 SRC_DIRS := src external
 TEST_DIRS := test
+SCRATCH_DIR := scratch
 
 # Find all the C and C++ files we want to compile
 # Note the single quotes around the * expressions. The shell will incorrectly expand these otherwise, but we want to send the * directly to the find command.
 SRCS := $(shell find $(SRC_DIRS) -name '*.cpp' -or -name '*.c' -or -name '*.s')
-NON_DEFAULT_SRCS := src/ViewerApp.cpp src/EditorApp.cpp
+SCRATCH_SRCS := $(shell find $(SCRATCH_DIR) -name '*.cpp' -or -name '*.c' -or -name '*.s')
+NON_DEFAULT_SRCS := src/ViewerApp.cpp src/EditorApp.cpp $(SCRATCH_SRCS)
 TEST_SRCS := $(shell find $(TEST_DIRS) -name '*.cpp' -or -name '*.c' -or -name '*.s')
 
 # Prepends BUILD_DIR and appends .o to every src file
 # As an example, ./your_dir/hello.cpp turns into ./build/./your_dir/hello.cpp.o
-OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
+OBJS := $(SRCS:%=$(BUILD_DIR)/%.o) $(SCRATCH_SRCS:%=$(BUILD_DIR)/%.o)
 NON_DEFAULT_OBJS := $(NON_DEFAULT_SRCS:%=$(BUILD_DIR)/%.o)
 LDFLAGS := $(LDFLAGS)  $(shell sdl2-config --libs) -lSDL2_image
 TEST_OBJS := $(TEST_SRCS:%=$(BUILD_DIR)/%.o)
+
+# This is for creating temporary testing programs
+SCRATCH := $(SCRATCH_SRCS:%=$(BUILD_DIR)/%.out)
 
 # String substitution (suffix version without %).
 # As an example, ./build/hello.cpp.o turns into ./build/hello.cpp.d
@@ -39,6 +44,7 @@ CXXFLAGS := $(CXXFLAGS) -std=gnu++20
 
 # ALL
 all: $(BUILD_DIR)/$(EXEC_EDITOR) $(BUILD_DIR)/$(UNIT_TEST)
+scratch: $(SCRATCH)
 
 # Removing non default objs
 DEFAULT_OBJS := $(filter-out $(NON_DEFAULT_OBJS),$(OBJS))
@@ -51,7 +57,12 @@ $(BUILD_DIR)/$(EXEC_EDITOR): $(DEFAULT_OBJS) $(BUILD_DIR)/src/EditorApp.cpp.o
 # $(BUILD_DIR)/$(EXEC_VIEWER): $(DEFAULT_OBJS) $(BUILD_DIR)/src/ViewerApp.cpp.o
 # 	$(CXX) $^ -o $@ $(LDFLAGS)
 
+# Unit tests
 $(BUILD_DIR)/$(UNIT_TEST): $(DEFAULT_OBJS) $(TEST_OBJS)
+	$(CXX) $^ -o $@ $(LDFLAGS)
+
+# Scratch
+$(SCRATCH): %.out: %.o $(DEFAULT_OBJS)
 	$(CXX) $^ -o $@ $(LDFLAGS)
 
 # Build step for C source
@@ -65,7 +76,7 @@ $(BUILD_DIR)/%.cpp.o: %.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@ 
 
 
-.PHONY: clean all
+.PHONY: clean all scratch
 clean:
 	rm -r $(BUILD_DIR)
 
