@@ -158,10 +158,6 @@ EditorApp::paste()
   }
   auto surface = clipboard.get();
   if (!surface) return;
-  if (getTool(view.getToolId()).flags & ToolDescription::ENABLE_SELECTION) {
-    view.cancelEdit();
-    view.setToolId(tools::RECT_SELECT);
-  }
   view.setSelection(surface);
 }
 void

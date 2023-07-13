@@ -173,15 +173,24 @@ PictureView::enableScratch(bool enable)
   }
 }
 
+inline std::optional<ToolId>
+adjustNextToolId(ToolId toolId)
+{
+  if (getTool(toolId).flags & ToolDescription::ENABLE_SELECTION) { return {}; }
+  for (auto& tool : getTools()) {
+    if (tool.flags & ToolDescription::ENABLE_SELECTION) { return tool.id; }
+  }
+  return {};
+}
+
 void
 PictureView::update(SDL_Renderer* renderer)
 {
   if (nextToolId) {
     toolId = nextToolId.value();
     nextToolId.reset();
-    cancelEdit();
+    if (tool) { tool(*this, PictureEvent::DETACHED); }
     tool = getTool(toolId).build();
-    if (tool) { tool(*this, PictureEvent::RESET); }
   }
   if (buffer != newBuffer) {
     if (!buffer) {
@@ -196,6 +205,7 @@ PictureView::update(SDL_Renderer* renderer)
       tool(*this, PictureEvent::RESET);
     }
     buffer = newBuffer;
+    if (buffer->hasSelection()) { nextToolId = adjustNextToolId(toolId); }
   }
   if (!buffer || !buffer->getSurface()) return;
   auto event = PictureEvent::NONE;
@@ -308,6 +318,7 @@ PictureView::setSelection(Surface surface)
     // = int(ceil(()));
     buffer->setSelection(surface, {xx, yy, surface.getW(), surface.getH()});
     changed = true;
+    nextToolId = adjustNextToolId(toolId);
   } else if (buffer->hasSelection()) {
     buffer->clearSelection();
     changed = true;

@@ -46,6 +46,7 @@ To do
   - [ ] Text* (using existing ImGui engine)
   - [ ] Selection
     - [x] Rect
+      - [x] Make selection persist over cycling buffer focus
     - [ ] Free form
     - [ ] Color
     - [ ] Contiguous color
@@ -55,7 +56,7 @@ To do
   - [ ] Color palette (not palette image, just reference)*
   - [x] Color selector/Wheel
   - [x] Swap color
-  - [ ] Mask
+  - [ ] Pen
   - [ ] Tile
 - [ ] ~~Tabs for switching files~~
 - [ ] Menu bar

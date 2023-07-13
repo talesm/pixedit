@@ -13,12 +13,13 @@ struct PictureView;
 /// @brief Represents the event ocurrent on this frame
 enum class PictureEvent
 {
-  NONE,   ///< @brief Just idle
-  OK,     ///< @brief Last clicked mouse button released
-  CANCEL, ///< @brief a second button was clicked
-  LEFT,   ///< @brief Left button down
-  RIGHT,  ///< @brief Right button up
-  RESET,  ///< @brief When the state must be set back to initial
+  NONE,     ///< @brief Just idle
+  OK,       ///< @brief Last clicked mouse button released
+  CANCEL,   ///< @brief a second button was clicked
+  LEFT,     ///< @brief Left button down
+  RIGHT,    ///< @brief Right button up
+  RESET,    ///< @brief When the state must be set back to initial
+  DETACHED, ///< @brief When the state must be set back to initial
 };
 
 /// @brief Represents an unique id for a tool

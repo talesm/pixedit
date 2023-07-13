@@ -48,6 +48,7 @@ struct SelectionHandTool
         moving = false;
       }
       break;
+    case PictureEvent::RESET: break;
 
     default: view.persistSelection(); break;
     }
