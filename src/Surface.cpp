@@ -2,6 +2,7 @@
 #include <fstream>
 #include <SDL_image.h>
 #include "utils/dumpSurface.hpp"
+#include "utils/replayPicture.hpp"
 
 namespace pixedit {
 
@@ -29,7 +30,10 @@ Surface::save(const std::string& filename) const
 Surface
 Surface::load(const std::string& filename)
 {
-  if (filename.ends_with(".txt")) { return {}; }
+  if (filename.ends_with(".txt")) {
+    std::ifstream fStream(filename);
+    return replayPicture(fStream);
+  }
   return {IMG_Load(filename.c_str()), true};
 }
 
