@@ -89,6 +89,14 @@ private:
   void paste();
   void pasteAsNew();
   void close();
+
+  void focusBufferWindow()
+  {
+    if (!showView && bufferIndex >= 0) {
+      ImGui::SetWindowFocus(
+        viewSettings[view.getBuffer().get()].titleBuffer.c_str());
+    }
+  }
 };
 
 EditorApp::EditorApp(EditorInitSettings settings)
@@ -104,6 +112,7 @@ EditorApp::EditorApp(EditorInitSettings settings)
   view.canvas | ColorA{0, 0, 0, 255};
   view.canvas | ColorB{255, 255, 255, 255};
   view.setTool(tools::FREE_HAND);
+  focusBufferWindow();
 }
 
 void
@@ -214,26 +223,30 @@ EditorApp::showPictureOptions()
     for (auto& tool : getTools()) {
       if (ImGui::RadioButton(tool.name.c_str(), tool.id == currId)) {
         view.setTool(tool.id);
-        if (bufferIndex >= 0 && !showView) {
-          ImGui::SetWindowFocus(
-            viewSettings[view.getBuffer().get()].titleBuffer.c_str());
-        }
+        focusBufferWindow();
       }
     }
   }
   ImGui::DragFloat2("##offset", &view.offset.x, 1.f, -10000, +10000);
   ImGui::SameLine();
   if (ImGui::Button("Reset##offset")) { view.offset = {0}; }
-  if (ImGui::ArrowButton("Decrease zoom", ImGuiDir_Left)) { view.scale /= 2; }
+  if (ImGui::ArrowButton("Decrease zoom", ImGuiDir_Left)) {
+    view.scale /= 2;
+    focusBufferWindow();
+  }
   ImGui::SameLine();
   ImGui::Text("%g%%", view.scale * 100);
   ImGui::SameLine();
-  if (ImGui::ArrowButton("Increase zoom", ImGuiDir_Right)) { view.scale *= 2; }
+  if (ImGui::ArrowButton("Increase zoom", ImGuiDir_Right)) {
+    view.scale *= 2;
+    focusBufferWindow();
+  }
 
   if (ImGui::Button(
         "Swap colors",
         {0, ImGui::GetFrameHeightWithSpacing() + ImGui::GetFrameHeight()})) {
     view.swapColors();
+    focusBufferWindow();
   }
   ImGui::SameLine();
   {
@@ -242,11 +255,13 @@ EditorApp::showPictureOptions()
     if (ImGui::ColorEdit4(
           "Color A", colorA.data(), ImGuiColorEditFlags_NoInputs)) {
       view.canvas | ColorA{normalizedToComponent(colorA)};
+      focusBufferWindow();
     }
     auto colorB = componentToNormalized(view.canvas.getColorB());
     if (ImGui::ColorEdit4(
           "Color B", colorB.data(), ImGuiColorEditFlags_NoInputs)) {
       view.canvas | ColorB{normalizedToComponent(colorB)};
+      focusBufferWindow();
     }
     ImGui::EndChild();
   }
