@@ -7,15 +7,8 @@
 #include "Clipboard.hpp"
 #include "FileDialogTinyfd.hpp"
 #include "ImGuiAppBase.hpp"
-#include "tools/FloodFillTool.hpp"
-#include "tools/FreeHandTool.hpp"
-#include "tools/LinesTool.hpp"
-#include "tools/OvalTool.hpp"
-#include "tools/PolyTool.hpp"
-#include "tools/RectTool.hpp"
-#include "tools/SelectionHandTool.hpp"
-#include "tools/SelectionRectTool.hpp"
-#include "tools/ZoomTool.hpp"
+#include "ToolDescription.hpp"
+#include "tools.hpp"
 
 namespace pixedit {
 
@@ -24,12 +17,6 @@ extern const int WINDOW_WIDTH;
 extern const int WINDOW_HEIGHT;
 extern const bool WINDOW_MAXIMIZED;
 } // namespace defaults
-
-struct ToolDescription
-{
-  std::string name;
-  std::function<PictureTool*()> build;
-};
 
 struct EditorInitSettings
 {
@@ -49,8 +36,6 @@ struct ViewSettings
 
 class EditorApp : ImGuiAppBase
 {
-  std::vector<ToolDescription> tools;
-  int toolIndex = 0;
   std::vector<std::shared_ptr<PictureBuffer>> buffers;
   std::map<PictureBuffer*, ViewSettings> viewSettings;
   int bufferIndex = -1;
@@ -116,21 +101,9 @@ EditorApp::EditorApp(EditorInitSettings settings)
 
   setupShortcuts();
 
-  tools.emplace_back("Pan", [] { return nullptr; });
-  tools.emplace_back("Zoom", [] { return new ZoomTool{}; });
-  tools.emplace_back("Free hand", [] { return new FreeHandTool{}; });
-  tools.emplace_back("Lines", [] { return new LinesTool{}; });
-  tools.emplace_back("Flood fill", [] { return new FloodFillTool{}; });
-  tools.emplace_back("Outline rect", [] { return new RectTool{true}; });
-  tools.emplace_back("Filled rect", [] { return new RectTool{false}; });
-  tools.emplace_back("Outline oval", [] { return new OvalTool{true}; });
-  tools.emplace_back("Filled oval", [] { return new OvalTool{false}; });
-  tools.emplace_back("Outline poly", [] { return new PolyTool{true}; });
-  tools.emplace_back("Filled poly", [] { return new PolyTool{false}; });
-  tools.emplace_back("Rect select", [] { return new SelectionRectTool{}; });
-
   view.canvas | ColorA{0, 0, 0, 255};
   view.canvas | ColorB{255, 255, 255, 255};
+  view.setTool(tools::FREE_HAND);
 }
 
 void
@@ -176,10 +149,9 @@ EditorApp::paste()
   }
   auto surface = clipboard.get();
   if (!surface) return;
-  if (!view.tool || !view.tool->acceptsSelection()) {
+  if (getTool(view.getTool()).flags & ToolDescription::ENABLE_SELECTION) {
     view.cancelEdit();
-    toolIndex = 6;
-    view.tool = new SelectionHandTool();
+    view.setTool(tools::RECT_SELECT);
   }
   view.setSelection(surface);
 }
@@ -201,6 +173,7 @@ EditorApp::close()
     if (bufferIndex >= int(buffers.size())) { bufferIndex -= 1; }
     if (bufferIndex < 0) {
       view.setBuffer(nullptr);
+      view.update(nullptr);
     } else {
       viewSettings.erase(view.getBuffer().get());
       if (showView) { view.setBuffer(buffers[bufferIndex]); }
@@ -237,14 +210,15 @@ EditorApp::showPictureOptions()
   ImGui::EndDisabled();
 
   if (ImGui::CollapsingHeader("Tools", ImGuiTreeNodeFlags_DefaultOpen)) {
-    int i = 0;
-    for (auto& tool : tools) {
-      if (ImGui::RadioButton(tool.name.c_str(), i == toolIndex)) {
-        delete view.tool;
-        view.tool = tool.build();
-        toolIndex = i;
+    auto currId = view.getTool();
+    for (auto& tool : getTools()) {
+      if (ImGui::RadioButton(tool.name.c_str(), tool.id == currId)) {
+        view.setTool(tool.id);
+        if (bufferIndex >= 0 && !showView) {
+          ImGui::SetWindowFocus(
+            viewSettings[view.getBuffer().get()].titleBuffer.c_str());
+        }
       }
-      ++i;
     }
   }
   ImGui::DragFloat2("##offset", &view.offset.x, 1.f, -10000, +10000);
@@ -314,13 +288,11 @@ EditorApp::showPictureWindow(const std::shared_ptr<PictureBuffer>& buffer)
   }
   ImGuiWindowFlags flags = 0;
   if (buffer->isDirty()) { flags |= ImGuiWindowFlags_UnsavedDocument; }
-  const char* title = settings.titleBuffer.c_str();
   // TODO Measure title and decoration instead of guessing
   ImGui::SetNextWindowSize(ImVec2(buffer->getW() + 16, buffer->getH() + 35),
                            ImGuiCond_Once);
-
   bool stayOpen = true;
-  if (ImGui::Begin(title, &stayOpen, flags)) {
+  if (ImGui::Begin(settings.titleBuffer.c_str(), &stayOpen, flags)) {
     bool redraw = false;
     ImVec2 canvasSz = ImGui::GetContentRegionAvail();
     if (canvasSz.x < 50.0f) canvasSz.x = 50.0f;

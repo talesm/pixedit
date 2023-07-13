@@ -1,17 +1,16 @@
 #ifndef PIXEDIT_SRC_TOOLS_FREE_HAND_TOOL_INCLUDED
 #define PIXEDIT_SRC_TOOLS_FREE_HAND_TOOL_INCLUDED
 
-#include "PictureTool.hpp"
 #include "PictureView.hpp"
 #include "primitives/Line.hpp"
 
 namespace pixedit {
 
-struct FreeHandTool : PictureTool
+struct FreeHandTool
 {
   SDL_Point lastPoint;
 
-  void update(PictureView& view, PictureEvent event) final
+  void operator()(PictureView& view, PictureEvent event)
   {
     switch (event) {
     case PictureEvent::LEFT:

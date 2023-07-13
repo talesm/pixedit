@@ -1,18 +1,17 @@
 #ifndef PIXEDIT_SRC_TOOLS_LINES_TOOL_INCLUDED
 #define PIXEDIT_SRC_TOOLS_LINES_TOOL_INCLUDED
 
-#include "PictureTool.hpp"
 #include "PictureView.hpp"
 #include "primitives/Line.hpp"
 
 namespace pixedit {
 
-struct LinesTool : PictureTool
+struct LinesTool
 {
   SDL_Point lastPoint;
   bool multiline = false;
 
-  void update(PictureView& view, PictureEvent event) final
+  void operator()(PictureView& view, PictureEvent event)
   {
     switch (event) {
     case PictureEvent::LEFT:

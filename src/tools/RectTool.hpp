@@ -1,13 +1,12 @@
 #ifndef PIXEDIT_SRC_TOOLS_RECT_TOOL_INCLUDED
 #define PIXEDIT_SRC_TOOLS_RECT_TOOL_INCLUDED
 
-#include "PictureTool.hpp"
 #include "PictureView.hpp"
 #include "primitives/Rect.hpp"
 
 namespace pixedit {
 
-struct RectTool : PictureTool
+struct RectTool
 {
   bool outline = false;
   SDL_Point lastPoint;
@@ -17,7 +16,7 @@ struct RectTool : PictureTool
   {
   }
 
-  void update(PictureView& view, PictureEvent event) final
+  void operator()(PictureView& view, PictureEvent event)
   {
     switch (event) {
     case PictureEvent::LEFT:

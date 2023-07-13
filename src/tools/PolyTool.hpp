@@ -2,12 +2,11 @@
 #define PIXEDIT_SRC_TOOLS_POLY_TOOL_INCLUDED
 
 #include <vector>
-#include "PictureTool.hpp"
 #include "PictureView.hpp"
 #include "primitives/Poly.hpp"
 namespace pixedit {
 
-struct PolyTool : PictureTool
+struct PolyTool
 {
   bool outline;
   std::vector<SDL_Point> points;
@@ -18,7 +17,7 @@ struct PolyTool : PictureTool
   {
   }
 
-  void update(PictureView& view, PictureEvent event) final
+  void operator()(PictureView& view, PictureEvent event)
   {
     switch (event) {
     case PictureEvent::LEFT:

@@ -1,17 +1,16 @@
 #ifndef PIXEDIT_SRC_TOOLS_SELECTION_HAND_TOOL_INCLUDED
 #define PIXEDIT_SRC_TOOLS_SELECTION_HAND_TOOL_INCLUDED
 
-#include "PictureTool.hpp"
 #include "renderSelection.hpp"
 
 namespace pixedit {
 
-struct SelectionHandTool : PictureTool
+struct SelectionHandTool
 {
   SDL_Point lastPoint;
   bool moving = false;
 
-  void update(PictureView& view, PictureEvent event) final
+  void operator()(PictureView& view, PictureEvent event)
   {
     auto& buffer = *view.getBuffer();
     if (!buffer.hasSelection()) {
@@ -53,8 +52,6 @@ struct SelectionHandTool : PictureTool
     default: view.persistSelection(); break;
     }
   }
-
-  bool acceptsSelection() const final { return true; }
 };
 
 } // namespace pixedit

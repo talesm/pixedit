@@ -1,7 +1,6 @@
 #ifndef PIXEDIT_SRC_TOOLS_SELECTION_RECT_TOOL_INCLUDED
 #define PIXEDIT_SRC_TOOLS_SELECTION_RECT_TOOL_INCLUDED
 
-#include "PictureTool.hpp"
 #include "SelectionHandTool.hpp"
 #include "renderSelection.hpp"
 #include "utils/cutoutSurface.hpp"
@@ -9,17 +8,17 @@
 
 namespace pixedit {
 
-struct SelectionRectTool : PictureTool
+struct SelectionRectTool
 {
   SelectionHandTool handTool;
   bool selecting = false;
   SDL_Point lastPoint;
 
-  void update(PictureView& view, PictureEvent event) final
+  void operator()(PictureView& view, PictureEvent event)
   {
     auto& buffer = *view.getBuffer();
     if (buffer.hasSelection()) {
-      handTool.update(view, event);
+      handTool(view, event);
       return;
     }
     switch (event) {
@@ -54,8 +53,6 @@ struct SelectionRectTool : PictureTool
       break;
     }
   }
-
-  bool acceptsSelection() const final { return true; }
 };
 }
 

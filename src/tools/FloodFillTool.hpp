@@ -2,7 +2,6 @@
 #define PIXEDIT_SRC_TOOLS_FLOOD_FILL_TOOL_INCLUDED
 
 #include <vector>
-#include "PictureTool.hpp"
 #include "PictureView.hpp"
 #include "utils/pixel.hpp"
 
@@ -36,9 +35,9 @@ floodFill(Surface surface, const SDL_Point& p, RawColor color)
   }
 }
 
-struct FloodFillTool : PictureTool
+struct FloodFillTool
 {
-  void update(PictureView& view, PictureEvent event) final
+  void operator()(PictureView& view, PictureEvent event)
   {
     if (event == PictureEvent::LEFT) {
       view.beginEdit();

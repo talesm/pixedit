@@ -1,5 +1,6 @@
 #include "PictureView.hpp"
 #include <cmath>
+#include "tools.hpp"
 #include "utils/pixel.hpp"
 
 namespace pixedit {
@@ -7,11 +8,7 @@ namespace pixedit {
 void
 PictureView::updatePreview(SDL_Renderer* renderer)
 {
-  if (buffer != newBuffer) {
-    buffer = newBuffer;
-  } else {
-    changed = false;
-  }
+  changed = false;
   if (!buffer || !buffer->getSurface()) return;
   if (!scratchEnabled) canvas.setSurface(buffer->getSurface());
   auto createPreview = [renderer, w = buffer->getW(), h = buffer->getH()] {
@@ -179,6 +176,13 @@ PictureView::enableScratch(bool enable)
 void
 PictureView::update(SDL_Renderer* renderer)
 {
+  if (nextToolId) {
+    toolId = nextToolId.value();
+    nextToolId.reset();
+    cancelEdit();
+    tool = pixedit::getTool(toolId).build();
+    if (tool) { tool(*this, PictureEvent::RESET); }
+  }
   if (buffer != newBuffer) {
     if (!buffer) {
       buffer = newBuffer;
@@ -187,10 +191,11 @@ PictureView::update(SDL_Renderer* renderer)
     }
     glassEnabled = false;
     changed = true;
-    if (editing && tool) { cancelEdit(); }
-    state.left = state.middle = state.right = false; // Clear everything
-    state.wheelX = oldState.wheelX;
-    state.wheelY = oldState.wheelY;
+    if (tool) {
+      if (editing) { cancelEdit(); }
+      tool(*this, PictureEvent::RESET);
+    }
+    buffer = newBuffer;
   }
   if (!buffer || !buffer->getSurface()) return;
   auto event = PictureEvent::NONE;
@@ -226,7 +231,7 @@ PictureView::update(SDL_Renderer* renderer)
   } else if (tool != nullptr) {
     bool wasGlassEnabled = glassEnabled;
     glassEnabled = false;
-    tool->update(*this, event);
+    tool(*this, event);
     if (!changed) glassEnabled = wasGlassEnabled;
   } else if (event == PictureEvent::LEFT) {
     movingMode = true;

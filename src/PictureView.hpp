@@ -2,11 +2,12 @@
 #define PIXEDIT_SRC_PICTURE_VIEW_INCLUDED
 
 #include <memory>
+#include <optional>
 #include <SDL.h>
 #include "Canvas.hpp"
 #include "MouseState.hpp"
 #include "PictureBuffer.hpp"
-#include "PictureTool.hpp"
+#include "ToolDescription.hpp"
 
 namespace pixedit {
 
@@ -25,6 +26,10 @@ class PictureView
   bool editing = false;
   bool glassEnabled = false;
 
+  ToolId toolId = 0;
+  std::optional<ToolId> nextToolId;
+  Tool tool = nullptr;
+
 public:
   SDL_FPoint offset{0};
   float scale{1.f};
@@ -32,7 +37,6 @@ public:
   bool movingMode = false;
 
   Canvas canvas;
-  PictureTool* tool = nullptr;
   SDL_Color checkerColors[2] = {{200, 200, 200, 255}, {150, 150, 150, 255}};
   int checkerSize = 16;
 
@@ -103,6 +107,10 @@ public:
     scale = value;
     return scale = effectiveScale();
   }
+
+  ToolId getTool() { return toolId; }
+
+  void setTool(ToolId id) { nextToolId = id; }
 
   SDL_Point effectivePos() const;
 
