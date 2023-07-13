@@ -20,6 +20,7 @@ private:
   std::list<TempSurface>::iterator historyPoint = history.end();
   std::list<TempSurface>::iterator lastSave = history.end();
   Surface selectionSurface;
+  Surface selectionMask;
   SDL_Rect selectionRect{0, 0, 10, 10};
 
 public:
@@ -65,19 +66,24 @@ public:
   {
     return selectionSurface;
   }
+  constexpr const Surface& getSelectionMask() const { return selectionMask; }
+
   bool hasSelection() const { return selectionSurface; }
   void clearSelection() { selectionSurface.reset(); }
   void setSelection(Surface surface, SDL_Rect rect)
   {
     selectionSurface = std::move(surface);
     selectionRect = rect;
+    selectionMask.reset();
+  }
+  void setSelection(Surface surface, SDL_Rect rect, Surface mask)
+  {
+    selectionSurface = std::move(surface);
+    selectionRect = rect;
+    selectionMask = std::move(mask);
   }
 
-  void persistSelection()
-  {
-    surface.blitScaled(selectionSurface, selectionRect);
-    clearSelection();
-  }
+  void persistSelection();
 };
 
 } // namespace pixedit

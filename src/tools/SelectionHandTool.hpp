@@ -23,7 +23,7 @@ struct SelectionHandTool
       lastPoint = view.effectivePos();
       if (SDL_PointInRect(&lastPoint, &rect)) {
         moving = true;
-        renderSelection(view.getGlassCanvas(), rect);
+        renderSelection(view.getGlassCanvas(), rect, buffer.getSelectionMask());
       } else {
         view.persistSelection();
       }
@@ -38,13 +38,13 @@ struct SelectionHandTool
         lastPoint = currPoint;
         view.previewEdit();
       } else {
-        renderSelection(view.getGlassCanvas(), rect);
+        renderSelection(view.getGlassCanvas(), rect, buffer.getSelectionMask());
       }
       break;
 
     case PictureEvent::OK:
       if (moving) {
-        renderSelection(view.getGlassCanvas(), rect);
+        renderSelection(view.getGlassCanvas(), rect, buffer.getSelectionMask());
         moving = false;
       }
       break;

@@ -79,4 +79,15 @@ PictureBuffer::redo()
   return false;
 }
 
+void
+PictureBuffer::persistSelection()
+{
+  if (selectionMask) {
+    selectionMask.setColorKey(0);
+    surface.blitScaled(selectionMask, selectionRect);
+  }
+  surface.blitScaled(selectionSurface, selectionRect);
+  clearSelection();
+}
+
 } // namespace pixedit

@@ -5,6 +5,7 @@
 #include "tools/OvalTool.hpp"
 #include "tools/PolyTool.hpp"
 #include "tools/RectTool.hpp"
+#include "tools/SelectionFreeTool.hpp"
 #include "tools/SelectionHandTool.hpp"
 #include "tools/SelectionRectTool.hpp"
 #include "tools/ZoomTool.hpp"
@@ -17,7 +18,7 @@ getTools()
   static const std::vector<ToolDescription> tools{
     {"Move", tools::MOVE, [] { return nullptr; }},
     {"Zoom", tools::ZOOM, [] { return ZoomTool{}; }},
-    {"Free hand", tools::FREE_HAND, [] { return FreeHandTool{}; }},
+    {"Pen", tools::FREE_HAND, [] { return FreeHandTool{}; }},
     {"Lines", tools::LINES, [] { return LinesTool{}; }},
     {"Flood fill", tools::FLOOD_FILL, [] { return FloodFillTool{}; }},
     {"Outline rect", tools::OUTLINE_RECT, [] { return RectTool{true}; }},
@@ -29,6 +30,10 @@ getTools()
     {.name = "Rect select",
      .id = tools::RECT_SELECT,
      .build = [] { return SelectionRectTool{}; },
+     .flags = ToolDescription::ENABLE_SELECTION},
+    {.name = "Free form select",
+     .id = tools::FREE_HAND_SELECT,
+     .build = [] { return SelectionFreeTool{}; },
      .flags = ToolDescription::ENABLE_SELECTION},
   };
   return tools;

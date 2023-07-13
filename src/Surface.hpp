@@ -1,6 +1,7 @@
 #ifndef PIXEDIT_SRC_SURFACE_INCLUDED
 #define PIXEDIT_SRC_SURFACE_INCLUDED
 
+#include <optional>
 #include <string>
 #include <SDL.h>
 #include "utils/pixel.hpp"
@@ -48,6 +49,15 @@ public:
       SDL_CreateRGBSurfaceWithFormat(0, w, h, 32, SDL_PIXELFORMAT_ABGR32),
       true,
     };
+  }
+
+  static Surface createMask(int w, int h)
+  {
+    auto surface =
+      SDL_CreateRGBSurfaceWithFormat(0, w, h, 8, SDL_PIXELFORMAT_INDEX8);
+    static SDL_Color colors[2] = {{255, 255, 255, 0}, {255, 255, 255, 0}};
+    SDL_SetPaletteColors(surface->format->palette, colors, 0, 2);
+    return {surface, true};
   }
 
   constexpr SDL_PixelFormat* getFormat() const
@@ -143,6 +153,15 @@ public:
   bool save(const std::string& filename) const;
 
   static Surface load(const std::string& filename);
+
+  std::optional<Uint32> getColorKey() const
+  {
+    Uint32 key;
+    if (SDL_GetColorKey(surface, &key) == 0) { return key; }
+    return {};
+  }
+  void setColorKey(Uint32 color) { SDL_SetColorKey(surface, true, color); }
+  void unsetColorKey() { SDL_SetColorKey(surface, false, 0); }
 };
 
 } // namespace pixedit

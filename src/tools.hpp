@@ -32,6 +32,7 @@ constexpr ToolId FILLED_OVAL = 8;
 constexpr ToolId OUTLINE_POLY = 9;
 constexpr ToolId FILLED_POLY = 10;
 constexpr ToolId RECT_SELECT = 11;
+constexpr ToolId FREE_HAND_SELECT = 12;
 } // namespace tools
 
 } // namespace pixedit

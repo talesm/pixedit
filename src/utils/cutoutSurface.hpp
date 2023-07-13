@@ -42,6 +42,18 @@ cutoutSurface(Surface surface, const SDL_Rect& rect, Uint32 replaceColor)
   return cutout;
 }
 
+inline Surface
+cutoutSurface(Surface surface, const SDL_Rect& rect, Surface mask)
+{
+  if (!surface) { return nullptr; }
+  auto cutout = copySurface(surface, rect);
+  mask.setColorKey(1);
+  cutout.blit(mask);
+  mask.setColorKey(0);
+  surface.blit(mask, {rect.x, rect.y});
+  return cutout;
+}
+
 } // namespace pixedit
 
 #endif /* PIXEDIT_SRC_UTILS_CUTOUT_SURFACE_INCLUDED */

@@ -285,6 +285,7 @@ Canvas&
 PictureView::getGlassCanvas()
 {
   if (!buffer) { return glassCanvas; }
+  if (glassEnabled) { return glassCanvas; }
   glassEnabled = true;
   changed = true;
 
