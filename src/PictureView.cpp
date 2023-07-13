@@ -44,7 +44,8 @@ PictureView::updatePreview(SDL_Renderer* renderer)
   previewSurface.fillRect(dstRect, 0);
   previewSurface.blit(buffer->getSurface());
   if (buffer->hasSelection()) {
-    previewSurface.blitScaled(buffer->getSurface(), buffer->getSelectionRect());
+    previewSurface.blitScaled(buffer->getSelectionSurface(),
+                              buffer->getSelectionRect());
   }
   if (scratchEnabled) { previewSurface.blit(scratch); }
   if (glassEnabled) { previewSurface.blit(glassSurface); }
