@@ -351,8 +351,10 @@ EditorApp::showPictureWindow(const std::shared_ptr<PictureBuffer>& buffer)
       }
     }
     if (ImGui::IsWindowFocused() || redraw) {
-      view.scale = settings.scale;
-      view.offset = settings.offset;
+      if (redraw) {
+        std::swap(view.scale, settings.scale);
+        std::swap(view.offset, settings.offset);
+      }
       view.setBuffer(buffer);
       SDL_SetRenderTarget(renderer, settings.texture);
       SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
@@ -365,6 +367,9 @@ EditorApp::showPictureWindow(const std::shared_ptr<PictureBuffer>& buffer)
       if (ImGui::IsWindowFocused()) {
         settings.scale = view.scale;
         settings.offset = view.offset;
+      } else {
+        std::swap(view.scale, settings.scale);
+        std::swap(view.offset, settings.offset);
       }
 
       view.setViewport(vp);
@@ -380,9 +385,8 @@ EditorApp::showPictureWindow(const std::shared_ptr<PictureBuffer>& buffer)
 void
 EditorApp::setupShortcuts()
 {
-  shortcuts.set({.key = SDLK_n, .ctrl = true}, [&] {
-    requestModal = "New image";
-  });
+  shortcuts.set({.key = SDLK_n, .ctrl = true},
+                [&] { requestModal = "New image"; });
   shortcuts.set({.key = SDLK_o, .ctrl = true}, [&] {
     auto buffer = loadFromFileDialog("./");
     if (buffer) { appendFile(buffer); };
