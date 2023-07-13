@@ -180,7 +180,7 @@ PictureView::update(SDL_Renderer* renderer)
     toolId = nextToolId.value();
     nextToolId.reset();
     cancelEdit();
-    tool = pixedit::getTool(toolId).build();
+    tool = getTool(toolId).build();
     if (tool) { tool(*this, PictureEvent::RESET); }
   }
   if (buffer != newBuffer) {

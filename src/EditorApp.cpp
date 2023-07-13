@@ -111,7 +111,7 @@ EditorApp::EditorApp(EditorInitSettings settings)
 
   view.canvas | ColorA{0, 0, 0, 255};
   view.canvas | ColorB{255, 255, 255, 255};
-  view.setTool(tools::FREE_HAND);
+  view.setToolId(tools::FREE_HAND);
   focusBufferWindow();
 }
 
@@ -158,9 +158,9 @@ EditorApp::paste()
   }
   auto surface = clipboard.get();
   if (!surface) return;
-  if (getTool(view.getTool()).flags & ToolDescription::ENABLE_SELECTION) {
+  if (getTool(view.getToolId()).flags & ToolDescription::ENABLE_SELECTION) {
     view.cancelEdit();
-    view.setTool(tools::RECT_SELECT);
+    view.setToolId(tools::RECT_SELECT);
   }
   view.setSelection(surface);
 }
@@ -219,10 +219,10 @@ EditorApp::showPictureOptions()
   ImGui::EndDisabled();
 
   if (ImGui::CollapsingHeader("Tools", ImGuiTreeNodeFlags_DefaultOpen)) {
-    auto currId = view.getTool();
+    auto currId = view.getToolId();
     for (auto& tool : getTools()) {
       if (ImGui::RadioButton(tool.name.c_str(), tool.id == currId)) {
-        view.setTool(tool.id);
+        view.setToolId(tool.id);
         focusBufferWindow();
       }
     }

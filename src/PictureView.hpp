@@ -108,9 +108,9 @@ public:
     return scale = effectiveScale();
   }
 
-  ToolId getTool() { return toolId; }
+  ToolId getToolId() { return toolId; }
 
-  void setTool(ToolId id) { nextToolId = id; }
+  void setToolId(ToolId id) { nextToolId = id; }
 
   SDL_Point effectivePos() const;
 
