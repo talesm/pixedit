@@ -78,7 +78,18 @@ To do
   - [ ] Tool name
   - [ ] Mouse pos
 - [x] Windowed mode*
-- [ ] Update title with filename, dirty "*"
+- [ ] Finishing touches:
+  - [ ] Move show view to view menu
+  - [ ] Ensure maximized view preserve zoom offset
+  - [ ] SCA
+  - [ ] Enable save on exit
+  - [ ] Control cutout color: BLANK or FILL
+  - [ ] When loading, convert surface, if needed
+  - [ ] Path configuration
+    - Temporary files (user dir)
+    - Somehow do the same for ImGui
+  - [ ] Configure default blank image
+  - [ ] Update title with filename, dirty "*"
 
 Wishlist
 --------
