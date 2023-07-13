@@ -30,15 +30,15 @@ class PictureView
   std::optional<ToolId> nextToolId;
   Tool tool = nullptr;
 
+  bool movingMode = false;
+  SDL_Color checkerColors[2] = {{200, 200, 200, 255}, {150, 150, 150, 255}};
+  int checkerSize = 16;
+
 public:
   SDL_FPoint offset{0};
   float scale{1.f};
   MouseState state{};
-  bool movingMode = false;
-
   Canvas canvas;
-  SDL_Color checkerColors[2] = {{200, 200, 200, 255}, {150, 150, 150, 255}};
-  int checkerSize = 16;
 
   PictureView(const SDL_Rect& viewport)
     : viewport(viewport)
