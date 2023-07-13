@@ -380,6 +380,9 @@ EditorApp::showPictureWindow(const std::shared_ptr<PictureBuffer>& buffer)
 void
 EditorApp::setupShortcuts()
 {
+  shortcuts.set({.key = SDLK_n, .ctrl = true}, [&] {
+    requestModal = "New image";
+  });
   shortcuts.set({.key = SDLK_o, .ctrl = true}, [&] {
     auto buffer = loadFromFileDialog("./");
     if (buffer) { appendFile(buffer); };
