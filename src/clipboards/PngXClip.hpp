@@ -1,7 +1,7 @@
 #ifndef PIXEDIT_SRC_CLIPBOARDS_PNG_XCLIP_INCLUDED
 #define PIXEDIT_SRC_CLIPBOARDS_PNG_XCLIP_INCLUDED
 
-#include <SDL.h>
+#include "Surface.hpp"
 
 namespace pixedit {
 
@@ -13,14 +13,14 @@ namespace pixedit {
  * @return true if copied successfully
  */
 bool
-copyToXClip(SDL_Surface* surface);
+copyToXClip(Surface surface);
 
 /**
  * Copy surface from clipboard
  *
  * @return the surface to be copied
  */
-SDL_Surface*
+Surface
 copyFromXClip();
 
 } // namespace pixedit

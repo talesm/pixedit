@@ -4,8 +4,8 @@
 #include <list>
 #include <string>
 #include <SDL.h>
+#include "Surface.hpp"
 #include "TempSurface.hpp"
-#include "utils/Surface.hpp"
 
 namespace pixedit {
 /**

@@ -6,7 +6,7 @@
 namespace pixedit {
 
 void
-Canvas::setSurface(Surface value, bool owning)
+Canvas::setSurface(Surface value)
 {
   if (surface.get() == value.get()) { return; }
   brush.colorA = componentToRaw(
@@ -14,7 +14,6 @@ Canvas::setSurface(Surface value, bool owning)
   brush.colorB = componentToRaw(
     rawToComponent(brush.colorB, surface.getFormat()), value.getFormat());
   surface = value;
-  if (surface && !owning) { surface.get()->refcount++; }
 }
 
 Canvas&

@@ -1,7 +1,7 @@
 #ifndef PIXEDIT_SRC_CLIPBOARDS_FALLBACK_CLIP_INCLUDED
 #define PIXEDIT_SRC_CLIPBOARDS_FALLBACK_CLIP_INCLUDED
 
-#include <SDL.h>
+#include "Surface.hpp"
 
 namespace pixedit {
 
@@ -13,14 +13,14 @@ namespace pixedit {
  * @return true if copied successfully
  */
 bool
-copyToFallback(SDL_Surface* surface);
+copyToFallback(Surface surface);
 
 /**
  * Copy surface from clipboard
  *
  * @return the surface to be copied
  */
-SDL_Surface*
+Surface
 copyFromFallback();
 
 } // namespace pixedit

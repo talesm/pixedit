@@ -12,7 +12,7 @@ SCENARIO("Drawing a point", "[canvas]")
     AND_GIVEN("it is associated with a 8x8 surface")
     {
       Uint32 pixels[8 * 8] = {0}; // Blank
-      SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(pixels,
+      auto surface = Surface{SDL_CreateRGBSurfaceFrom(pixels,
                                                       8,
                                                       8,
                                                       32,
@@ -20,7 +20,8 @@ SCENARIO("Drawing a point", "[canvas]")
                                                       0xFF00'0000,
                                                       0x00FF'0000,
                                                       0x0000'FF00,
-                                                      0x0000'00FF);
+                                                      0x0000'00FF),
+                             true};
       canvas.setSurface(surface);
       AND_GIVEN("color is set to white")
       {

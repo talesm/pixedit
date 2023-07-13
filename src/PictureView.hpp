@@ -16,8 +16,8 @@ class PictureView
   std::shared_ptr<PictureBuffer> buffer, newBuffer;
   MouseState oldState{};
   SDL_Texture* preview = nullptr;
-  SDL_Surface* scratch = nullptr;
-  SDL_Surface* glassSurface = nullptr;
+  Surface scratch;
+  Surface glassSurface;
   Canvas glassCanvas;
 
   bool scratchEnabled = false;
@@ -133,7 +133,7 @@ public:
     changed = true;
   }
 
-  void setSelection(SDL_Surface* surface);
+  void setSelection(Surface surface);
   void persistSelection();
 
   void pickColorUnderMouse();

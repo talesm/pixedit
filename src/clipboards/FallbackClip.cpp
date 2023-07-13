@@ -1,21 +1,20 @@
 #include "FallbackClip.hpp"
-#include <SDL_image.h>
 
 namespace pixedit {
 
 static const char* tempClip = "fallback_clipboard.png";
 
 bool
-copyToFallback(SDL_Surface* surface)
+copyToFallback(Surface surface)
 {
-  if (surface == nullptr) { return false; }
-  return IMG_SavePNG(surface, tempClip) == 0;
+  if (!surface) { return false; }
+  return surface.save(tempClip);
 }
 
-SDL_Surface*
+Surface
 copyFromFallback()
 {
-  return IMG_Load(tempClip);
+  return Surface::load(tempClip);
 }
 
 } // namespace pixedit

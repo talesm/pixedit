@@ -1,16 +1,16 @@
 #ifndef PIXEDIT_SRC_CLIPBOARD_INCLUDED
 #define PIXEDIT_SRC_CLIPBOARD_INCLUDED
 
-#include <SDL.h>
+#include "Surface.hpp"
 
 namespace pixedit {
 
 /// @brief Clipboard for images
 struct Clipboard
 {
-  SDL_Surface* get();
+  Surface get();
 
-  bool set(SDL_Surface* surface);
+  bool set(Surface surface);
 };
 
 } // namespace pixedit

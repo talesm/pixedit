@@ -1,10 +1,11 @@
-#ifndef PIXEDIT_SRC_UTILS_SURFACE_INCLUDED
-#define PIXEDIT_SRC_UTILS_SURFACE_INCLUDED
+#ifndef PIXEDIT_SRC_SURFACE_INCLUDED
+#define PIXEDIT_SRC_SURFACE_INCLUDED
 
+#include <string>
 #include <SDL.h>
-#include "pixel.hpp"
-#include "rect.hpp"
-#include "safeGetFormat.hpp"
+#include "utils/pixel.hpp"
+#include "utils/rect.hpp"
+#include "utils/safeGetFormat.hpp"
 
 namespace pixedit {
 
@@ -16,7 +17,9 @@ class Surface
 public:
   constexpr Surface()
     : surface(nullptr){};
-  constexpr Surface(SDL_Surface* surface, bool owning = false)
+  constexpr Surface(nullptr_t)
+    : surface(nullptr){};
+  constexpr Surface(SDL_Surface* surface, bool owning)
     : surface(surface)
   {
     if (surface && !owning) { surface->refcount++; }
@@ -136,8 +139,12 @@ public:
   {
     SDL_SetSurfaceBlendMode(surface, mode);
   }
+
+  bool save(const std::string& filename) const;
+
+  static Surface load(const std::string& filename);
 };
 
 } // namespace pixedit
 
-#endif /* PIXEDIT_SRC_UTILS_SURFACE_INCLUDED */
+#endif /* PIXEDIT_SRC_SURFACE_INCLUDED */

@@ -1,5 +1,4 @@
 #include "PictureBuffer.hpp"
-#include <SDL_image.h>
 
 namespace pixedit {
 
@@ -8,8 +7,7 @@ extern const unsigned HISTORY_MAX;
 } // namespace defaults
 
 PictureBuffer::PictureBuffer(std::string filename)
-  : PictureBuffer(std::move(filename),
-                  Surface{IMG_Load(filename.c_str()), true})
+  : PictureBuffer(filename, Surface::load(filename))
 {
   lastSave = history.begin();
 }
@@ -34,7 +32,7 @@ PictureBuffer::saveAs(const std::string& filename)
 bool
 PictureBuffer::saveCopy(const std::string& filename)
 {
-  return IMG_SavePNG(surface.get(), filename.c_str()) == 0;
+  return surface.save(filename);
 }
 
 void
@@ -45,7 +43,7 @@ PictureBuffer::makeSnapshot()
   if (historyPoint != history.end()) {
     history.erase(++historyPoint, history.end());
   }
-  historyPoint = history.emplace(history.end(), surface.get());
+  historyPoint = history.emplace(history.end(), surface);
   if (history.size() > defaults::HISTORY_MAX) history.pop_front();
 }
 

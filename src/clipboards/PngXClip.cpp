@@ -5,9 +5,9 @@
 namespace pixedit {
 
 bool
-copyToXClip(SDL_Surface* surface)
+copyToXClip(Surface surface)
 {
-  if (surface == nullptr) { return false; }
+  if (!surface) { return false; }
   TempSurface temp{surface};
   std::string toClipboard =
     "xclip -selection clipboard -t image/png  -in " + temp.getFilename();
@@ -15,7 +15,7 @@ copyToXClip(SDL_Surface* surface)
   return true;
 }
 
-SDL_Surface*
+Surface
 copyFromXClip()
 {
   TempSurface temp;

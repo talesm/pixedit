@@ -3,7 +3,6 @@
 #include <sstream>
 #include <string>
 #include <SDL.h>
-#include <SDL_image.h>
 #include <imgui.h>
 #include "Clipboard.hpp"
 #include "FileDialogTinyfd.hpp"
@@ -154,7 +153,7 @@ EditorApp::copy()
   if (!view.getBuffer()) return;
   auto& buffer = *view.getBuffer();
   auto selectionSurface = buffer.getSelectionSurface();
-  clipboard.set(selectionSurface.get() ?: buffer.getSurface().get());
+  clipboard.set(selectionSurface ?: buffer.getSurface());
 }
 
 inline void
@@ -163,7 +162,7 @@ EditorApp::cut()
   if (!view.getBuffer()) return;
   auto& buffer = *view.getBuffer();
   if (!buffer.hasSelection()) return;
-  clipboard.set(buffer.getSelectionSurface().get());
+  clipboard.set(buffer.getSelectionSurface());
   view.setSelection(nullptr);
 }
 

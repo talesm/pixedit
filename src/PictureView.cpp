@@ -38,7 +38,7 @@ PictureView::updatePreview(SDL_Renderer* renderer)
   {
     SDL_Surface* temp;
     SDL_LockTextureToSurface(preview, &dstRect, &temp);
-    previewSurface = Surface{temp};
+    previewSurface = Surface{temp, false};
   }
 
   previewSurface.fillRect(dstRect, 0);
@@ -163,17 +163,15 @@ PictureView::enableScratch(bool enable)
   changed = true;
   if (!enable) {
     canvas.setSurface(buffer->getSurface());
-    scratch = nullptr;
-  } else if (scratch != nullptr && scratch->w >= buffer->getW() &&
-             scratch->h >= buffer->getH()) {
-    SDL_Rect r{0, 0, buffer->getW(), buffer->getH()};
-    SDL_FillRect(scratch, &r, 0);
-    canvas.setSurface(scratch, true);
+    scratch.reset();
+  } else if (scratch && scratch.getW() >= buffer->getW() &&
+             scratch.getH() >= buffer->getH()) {
+    scratch.fillRect({0, 0, buffer->getW(), buffer->getH()}, 0);
+    canvas.setSurface(scratch);
   } else {
-    scratch = SDL_CreateRGBSurfaceWithFormat(
-      0, buffer->getW(), buffer->getH(), 32, SDL_PIXELFORMAT_ABGR32);
+    scratch = Surface::create(buffer->getW(), buffer->getH());
     SDL_assert(scratch);
-    canvas.setSurface(scratch, true);
+    canvas.setSurface(scratch);
   }
 }
 
@@ -274,21 +272,19 @@ PictureView::getGlassCanvas()
   glassEnabled = true;
   changed = true;
 
-  if (glassSurface != nullptr && glassSurface->w >= buffer->getW() &&
-      glassSurface->h >= buffer->getH()) {
-    SDL_Rect r{0, 0, buffer->getW(), buffer->getH()};
-    SDL_FillRect(glassSurface, &r, 0);
+  if (glassSurface && glassSurface.getW() >= buffer->getW() &&
+      glassSurface.getH() >= buffer->getH()) {
+    glassSurface.fillRect({0, 0, buffer->getW(), buffer->getH()}, 0);
   } else {
-    glassSurface = SDL_CreateRGBSurfaceWithFormat(
-      0, buffer->getW(), buffer->getH(), 32, SDL_PIXELFORMAT_ABGR32);
+    glassSurface = Surface::create(buffer->getW(), buffer->getH());
     SDL_assert(glassSurface);
   }
-  glassCanvas.setSurface(glassSurface, true);
+  glassCanvas.setSurface(glassSurface);
   return glassCanvas;
 }
 
 void
-PictureView::setSelection(SDL_Surface* surface)
+PictureView::setSelection(Surface surface)
 {
   if (!buffer) return;
   if (surface) {
@@ -304,7 +300,7 @@ PictureView::setSelection(SDL_Surface* surface)
       yy = ceil((size.y - viewport.h) / 2 / scale - offset.y);
     }
     // = int(ceil(()));
-    buffer->setSelection(surface, {xx, yy, surface->w, surface->h});
+    buffer->setSelection(surface, {xx, yy, surface.getW(), surface.getH()});
     changed = true;
   } else if (buffer->hasSelection()) {
     buffer->clearSelection();

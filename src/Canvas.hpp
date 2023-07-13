@@ -5,9 +5,8 @@
 #include <cstdlib>
 #include <SDL.h>
 #include "Brush.hpp"
+#include "Surface.hpp"
 #include "utils/Color.hpp"
-#include "utils/Surface.hpp"
-#include "utils/safeGetFormat.hpp"
 
 namespace pixedit {
 
@@ -26,15 +25,14 @@ class Canvas
   Brush brush;
 
 public:
-  Canvas(Surface surface = {}, bool owning = false)
+  Canvas(Surface surface = {})
     : surface(surface)
   {
-    if (surface && !owning) { surface.get()->refcount++; }
   }
   Canvas(const Canvas&) = delete;
   Canvas& operator=(const Canvas&) = delete;
 
-  void setSurface(Surface value, bool owning = false);
+  void setSurface(Surface value);
 
   constexpr RawColor getRawColorA() const { return brush.colorA; }
   constexpr RawColor getRawColorB() const { return brush.colorB; }

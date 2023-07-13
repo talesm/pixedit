@@ -3,7 +3,6 @@
 #include <filesystem>
 #include <sstream>
 #include <stdexcept>
-#include <SDL_image.h>
 
 namespace pixedit {
 
@@ -21,19 +20,23 @@ TempSurface::TempSurface()
 {
 }
 
-TempSurface::TempSurface(SDL_Surface* surface)
+TempSurface::TempSurface(Surface surface)
   : TempSurface()
 {
-  if (IMG_SavePNG(surface, filename.c_str()) < 0) {
-    throw std::runtime_error{"Can not save"};
-  }
+  if (!surface.save(filename)) { throw std::runtime_error{"Can not save"}; }
 }
 
-SDL_Surface*
+TempSurface::TempSurface(Surface surface, std::string filename)
+  : filename(std::move(filename))
+{
+  if (!surface.save(filename)) { throw std::runtime_error{"Can not save"}; }
+}
+
+Surface
 TempSurface::recover() const
 {
-  SDL_Surface* surface = IMG_Load(filename.c_str());
-  if (surface == nullptr) { throw std::runtime_error{"Can not recover"}; }
+  Surface surface = Surface::load(filename);
+  if (!surface) { throw std::runtime_error{"Can not recover"}; }
   return surface;
 }
 

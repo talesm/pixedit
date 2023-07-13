@@ -3,7 +3,7 @@
 
 #include <string>
 #include <string_view>
-#include <SDL.h>
+#include "Surface.hpp"
 
 namespace pixedit {
 
@@ -18,7 +18,8 @@ private:
 
 public:
   TempSurface();
-  TempSurface(SDL_Surface* surface);
+  TempSurface(Surface surface);
+  TempSurface(Surface surface, std::string filename);
   TempSurface(const TempSurface&) = delete;
   TempSurface(TempSurface&& rhs) { std::swap(filename, rhs.filename); }
   ~TempSurface() { reset(); }
@@ -28,7 +29,7 @@ public:
     return *this;
   }
 
-  SDL_Surface* recover() const;
+  Surface recover() const;
   void reset();
 
   const std::string& getFilename() const { return filename; }

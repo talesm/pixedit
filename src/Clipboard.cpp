@@ -15,7 +15,7 @@ extern const int XCLIP;
 } // namespace defaults
 using namespace defaults;
 
-SDL_Surface*
+Surface
 Clipboard::get()
 {
   if (CLIPBOARD_MANAGER == clipboards::XCLIP) return copyFromXClip();
@@ -23,7 +23,7 @@ Clipboard::get()
 }
 
 bool
-Clipboard::set(SDL_Surface* surface)
+Clipboard::set(Surface surface)
 {
   if (CLIPBOARD_MANAGER == clipboards::XCLIP) return copyToXClip(surface);
   return copyToFallback(surface);
