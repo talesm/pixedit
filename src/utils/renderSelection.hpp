@@ -4,6 +4,7 @@
 #include <vector>
 #include <SDL.h>
 #include "Canvas.hpp"
+#include "primitives/Blit.hpp"
 #include "primitives/Poly.hpp"
 #include "primitives/Rect.hpp"
 
@@ -52,6 +53,36 @@ renderSelection(Canvas& canvas,
   // Restore
   canvas | RawColorA{bkpColorA} | RawColorB{bkpColorB} | patterns::SOLID;
 }
+
+inline void
+contour(Canvas& canvas, Surface mask, SDL_Point offset = {0, 0})
+{
+  constexpr static SDL_Point borders[] = {
+    {-1, -1},
+    {0, -1},
+    {1, -1},
+    {1, 0},
+    {1, 1},
+    {0, 1},
+    {-1, 1},
+    {-1, 0},
+  };
+  for (int y = 0; y < mask.getH(); ++y) {
+    for (int x = 0; x < mask.getW(); ++x) {
+      if (!mask.getPixel(x, y)) { continue; }
+      bool isCentral = true;
+      for (auto&& b : borders) {
+        if (!mask.getPixel(x + b.x, y + b.y)) {
+          isCentral = false;
+          break;
+        }
+      }
+      if (isCentral) { continue; }
+      canvas | Point(x + offset.x, y + offset.y);
+    }
+  }
+}
+
 inline void
 renderSelection(Canvas& canvas,
                 SDL_Rect rect,
@@ -73,38 +104,25 @@ renderSelection(Canvas& canvas,
     canvas | OutlineRect{rect};
   }
 
-  constexpr SDL_Point borders[] = {
-    {-1, -1},
-    {0, -1},
-    {1, -1},
-    {1, 0},
-    {1, 1},
-    {0, 1},
-    {-1, 1},
-    {-1, 0},
-  };
-
-  if (inProgress) {
-    canvas | ColorA{freeSelectedColorA} | ColorB{freeSelectedColorB};
-  } else {
-    canvas | ColorA{selectedColorA} | ColorB{selectedColorB};
-  }
-  canvas | patterns::CHECKERED_2;
   if (mask.getW() == rect.w && mask.getH() == rect.h) {
-    for (int y = 0; y < mask.getH(); ++y) {
-      for (int x = 0; x < mask.getW(); ++x) {
-        if (!mask.getPixel(x, y)) { continue; }
-        bool isCentral = true;
-        for (auto&& b : borders) {
-          if (!mask.getPixel(x + b.x, y + b.y)) {
-            isCentral = false;
-            break;
-          }
-        }
-        if (isCentral) { continue; }
-        canvas | Point(x + rect.x, y + rect.y);
-      }
+    if (inProgress) {
+      canvas | ColorA{freeSelectedColorA} | ColorB{freeSelectedColorB};
+    } else {
+      canvas | ColorA{selectedColorA} | ColorB{selectedColorB};
     }
+    canvas | patterns::CHECKERED_2;
+    contour(canvas, mask, {rect.x, rect.y});
+  } else {
+    Surface temp = Surface::create(mask.getW(), mask.getH());
+    Canvas c{temp};
+    if (inProgress) {
+      c | ColorA{freeSelectedColorA} | ColorB{freeSelectedColorB};
+    } else {
+      c | ColorA{selectedColorA} | ColorB{selectedColorB};
+    }
+    c | patterns::CHECKERED_2;
+    contour(c, mask);
+    canvas | BlitScaled{temp, rect};
   }
   // Restore
   canvas | RawColorA{bkpColorA} | RawColorB{bkpColorB} | patterns::SOLID;

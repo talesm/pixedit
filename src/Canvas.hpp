@@ -10,11 +10,12 @@
 
 namespace pixedit {
 
+// Forward decls
 struct HorizontalLine;
-
 struct LineTo;
-
 struct OpenLineTo;
+struct Blit;
+struct BlitScaled;
 
 /// @brief A canvas where you can issue drawing commands to.
 ///
@@ -57,6 +58,8 @@ public:
   friend Canvas& operator|(Canvas& c, LineTo l);
   friend Canvas& operator|(Canvas& c, OpenLineTo l);
   friend Canvas& operator|(Canvas& c, SDL_Rect rect);
+  friend Canvas& operator|(Canvas& c, Blit blit);
+  friend Canvas& operator|(Canvas& c, BlitScaled blit);
 };
 
 constexpr Canvas&

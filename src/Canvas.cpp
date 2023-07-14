@@ -1,4 +1,5 @@
 #include "Canvas.hpp"
+#include "primitives/Blit.hpp"
 #include "primitives/Line.hpp"
 #include "utils/pixel.hpp"
 #include "utils/rasterLine.hpp"
@@ -115,6 +116,19 @@ Canvas&
 operator|(Canvas& c, SDL_Rect rect)
 {
   doBox(c.surface, c.brush, rect);
+  return c;
+}
+
+Canvas&
+operator|(Canvas& c, Blit blit)
+{
+  c.surface.blit(blit.surface, blit.pos);
+  return c;
+}
+Canvas&
+operator|(Canvas& c, BlitScaled blit)
+{
+  c.surface.blitScaled(blit.surface, blit.rect);
   return c;
 }
 
