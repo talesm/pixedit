@@ -47,7 +47,7 @@ To do
   - [ ] Selection
     - [x] Rect
       - [x] Make selection persist over cycling buffer focus
-    - [ ] Free form
+    - [x] Free form
     - [ ] Color
     - [ ] Contiguous color
 - [x] "New file" dialog
@@ -56,8 +56,8 @@ To do
   - [ ] Color palette (not palette image, just reference)*
   - [x] Color selector/Wheel
   - [x] Swap color
-  - [ ] Pen
-  - [ ] Tile
+  - [x] Pen
+  - [x] Tile
 - [ ] ~~Tabs for switching files~~
 - [ ] Menu bar
   - [x] File menu
@@ -74,14 +74,14 @@ To do
     - [x] Paste as new
     - [x] Undo/redo
   - [ ] Help/About
-- [ ] Status bar*
-  - [ ] Tool name
-  - [ ] Mouse pos
+- [x] Status bar*
+  - [x] Tool name
+  - [x] Mouse pos
 - [x] Windowed mode*
 - [ ] Finishing touches:
-  - [ ] Move show view to view menu
+  - [x] Move show view to view menu
   - [ ] Ensure maximized view preserve zoom offset
-  - [ ] SCA
+  - [ ] Selection color transparency
   - [ ] Enable save on exit
   - [ ] Control cutout color: BLANK or FILL
   - [ ] When loading, convert surface, if needed
