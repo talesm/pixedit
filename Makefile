@@ -9,6 +9,21 @@ SRC_DIRS := src external
 TEST_DIRS := test
 SCRATCH_DIR := scratch
 
+# Configurations...
+DEBUG ?= 1
+OPTIMIZE ?= 0
+ifeq ($(DEBUG), 1)
+    CFLAGS := -DDEBUG $(CFLAGS)
+    CXXFLAGS := -DDEBUG $(CXXFLAGS)
+else
+    CFLAGS := -DNDEBUG $(CFLAGS)
+    CXXFLAGS := -DNDEBUG $(CXXFLAGS)
+endif
+ifeq ($(OPTIMIZE), 1)
+    CFLAGS := -O2 $(CFLAGS)
+    CXXFLAGS := -O2 $(CXXFLAGS)
+endif
+
 # Find all the C and C++ files we want to compile
 # Note the single quotes around the * expressions. The shell will incorrectly expand these otherwise, but we want to send the * directly to the find command.
 SRCS := $(shell find $(SRC_DIRS) -name '*.cpp' -or -name '*.c' -or -name '*.s')
