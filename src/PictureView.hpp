@@ -18,13 +18,10 @@ class PictureView
   MouseState oldState{};
   SDL_Texture* preview = nullptr;
   Surface scratch;
-  Surface glassSurface;
-  Canvas glassCanvas;
 
   bool scratchEnabled = false;
   bool changed = false;
   bool editing = false;
-  bool glassEnabled = false;
 
   ToolId toolId = 0;
   std::optional<ToolId> nextToolId;
@@ -78,6 +75,7 @@ public:
   {
     if (!buffer) return false;
     cancelEdit();
+    changed = true;
     return buffer->undo();
   }
 
@@ -85,6 +83,7 @@ public:
   {
     if (!buffer) return false;
     cancelEdit();
+    changed = true;
     return buffer->redo();
   }
 
@@ -130,15 +129,6 @@ public:
     auto colorA = canvas.getRawColorA();
     auto colorB = canvas.getRawColorB();
     canvas | RawColorA{colorB} | RawColorB{colorA};
-  }
-
-  Canvas& getGlassCanvas();
-
-  constexpr bool isGlassEnabled() const { return glassEnabled; }
-  void enableGlass(bool enable = true)
-  {
-    glassEnabled = false;
-    changed = true;
   }
 
   void setSelection(Surface surface);

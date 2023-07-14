@@ -55,6 +55,7 @@ public:
   friend Canvas& operator|(Canvas& c, ColorB color);
   friend constexpr Canvas& operator|(Canvas& c, Pattern pattern);
   friend constexpr Canvas& operator|(Canvas& c, const Pen& pen);
+  friend constexpr Canvas& operator|(Canvas& c, const Brush& brush);
   friend Canvas& operator|(Canvas& c, SDL_Point p);
   friend Canvas& operator|(Canvas& c, HorizontalLine l);
   friend Canvas& operator|(Canvas& c, LineTo l);
@@ -90,6 +91,13 @@ constexpr Canvas&
 operator|(Canvas& c, const Pen& pen)
 {
   c.brush.pen = pen;
+  return c;
+}
+
+constexpr Canvas&
+operator|(Canvas& c, const Brush& brush)
+{
+  c.brush = brush;
   return c;
 }
 

@@ -12,7 +12,6 @@ namespace pixedit {
 struct SelectionFreeTool
 {
   SelectionHandTool handTool;
-  bool selecting = false;
   std::vector<SDL_Point> points;
   bool moved = false;
   bool linesMode = false;
@@ -26,14 +25,15 @@ struct SelectionFreeTool
     }
     switch (event) {
     case PictureEvent::LEFT:
-      if (selecting) {
+      if (view.isEditing()) {
         if (!moved) { break; }
         points.emplace_back(view.effectivePos());
       } else {
-        selecting = true;
+        view.beginEdit();
         points.clear();
         points.emplace_back(view.effectivePos());
-        renderSelection(view.getGlassCanvas(), points, true);
+        view.enableScratch();
+        renderSelection(view.canvas, points, true);
         linesMode = false;
       }
       moved = true;
@@ -41,52 +41,54 @@ struct SelectionFreeTool
       break;
 
     case PictureEvent::NONE:
-      if (selecting) {
+      if (view.isEditing()) {
         auto currPoint = view.effectivePos();
         auto& lastPoint = points.back();
         if (currPoint.x == lastPoint.x && currPoint.y == lastPoint.y) {
-          renderSelection(view.getGlassCanvas(), points, true);
+          view.enableScratch();
+          renderSelection(view.canvas, points, true);
           break;
         }
         moved = true;
         points.push_back(currPoint);
-        renderSelection(view.getGlassCanvas(), points, true);
+        view.enableScratch();
+        renderSelection(view.canvas, points, true);
         if (linesMode) { points.pop_back(); }
         view.previewEdit();
       }
       break;
 
     case PictureEvent::OK:
-      if (selecting) {
+      if (view.isEditing()) {
         if (moved) {
           moved = false;
           if (!linesMode) {
             if (points.size() == 1) {
               linesMode = true;
             } else {
-              renderSelection(view.getGlassCanvas(), points, false);
+              view.cancelEdit();
               finishSelection(buffer);
+              handTool(view, PictureEvent::RESET);
             }
           }
         } else {
-          renderSelection(view.getGlassCanvas(), points, false);
+          view.cancelEdit();
           finishSelection(buffer);
+          handTool(view, PictureEvent::RESET);
         }
       };
       break;
 
     case PictureEvent::RIGHT:
-      if (selecting) {
+      if (view.isEditing()) {
+        view.cancelEdit();
         points.emplace_back(view.effectivePos());
-        renderSelection(view.getGlassCanvas(), points, false);
         finishSelection(buffer);
+        handTool(view, PictureEvent::RESET);
       }
       break;
 
-    default:
-      selecting = false;
-      view.enableGlass(false);
-      break;
+    default: view.cancelEdit(); break;
     }
   }
 
@@ -111,8 +113,6 @@ struct SelectionFreeTool
 
     buffer.setSelection(
       cutoutSurface(buffer.getSurface(), rect, mask), rect, mask);
-
-    selecting = false;
     points.clear();
   }
 };

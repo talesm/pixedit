@@ -17,16 +17,15 @@ inline void
 renderSelection(Canvas& canvas, SDL_Rect rect, bool inProgress = false)
 {
   // Backup
-  auto bkpColorA = canvas.getRawColorA();
-  auto bkpColorB = canvas.getRawColorB();
+  auto bkp = canvas.getBrush();
 
-  canvas | ColorA{selectedColorA} | ColorB{selectedColorB};
+  canvas | Pen{} | ColorA{selectedColorA} | ColorB{selectedColorB};
   canvas | (inProgress ? patterns::CHECKERED_2 : patterns::CHECKERED_4);
 
   canvas | OutlineRect{rect};
 
   // Restore
-  canvas | RawColorA{bkpColorA} | RawColorB{bkpColorB} | patterns::SOLID;
+  canvas | bkp;
 }
 
 constexpr SDL_Color freeSelectedColorA{128, 0, 0, 255};
@@ -38,10 +37,9 @@ renderSelection(Canvas& canvas,
                 bool inProgress = false)
 {
   // Backup
-  auto bkpColorA = canvas.getRawColorA();
-  auto bkpColorB = canvas.getRawColorB();
+  auto bkp = canvas.getBrush();
 
-  canvas | ColorA{freeSelectedColorA} | ColorB{freeSelectedColorB};
+  canvas | Pen{} | ColorA{freeSelectedColorA} | ColorB{freeSelectedColorB};
   canvas | (inProgress ? patterns::CHECKERED_2 : patterns::CHECKERED_4);
 
   if (inProgress) {
@@ -51,7 +49,7 @@ renderSelection(Canvas& canvas,
   }
 
   // Restore
-  canvas | RawColorA{bkpColorA} | RawColorB{bkpColorB} | patterns::SOLID;
+  canvas | bkp;
 }
 
 inline void
@@ -95,8 +93,9 @@ renderSelection(Canvas& canvas,
   }
 
   // Backup
-  auto bkpColorA = canvas.getRawColorA();
-  auto bkpColorB = canvas.getRawColorB();
+  auto bkp = canvas.getBrush();
+
+  canvas | Pen{};
 
   if (!inProgress) {
     canvas | ColorA{freeSelectedColorA} | ColorB{freeSelectedColorB};
@@ -125,7 +124,7 @@ renderSelection(Canvas& canvas,
     canvas | BlitScaled{temp, rect};
   }
   // Restore
-  canvas | RawColorA{bkpColorA} | RawColorB{bkpColorB} | patterns::SOLID;
+  canvas | bkp;
 }
 
 } // namespace pixedit

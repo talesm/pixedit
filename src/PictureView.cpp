@@ -45,7 +45,6 @@ PictureView::updatePreview(SDL_Renderer* renderer)
                               buffer->getSelectionRect());
   }
   if (scratchEnabled) { previewSurface.blit(scratch); }
-  if (glassEnabled) { previewSurface.blit(glassSurface); }
   SDL_UnlockTexture(preview);
 }
 
@@ -157,6 +156,7 @@ PictureView::enableScratch(bool enable)
     scratchEnabled = false;
     return;
   }
+  if (!(enable || scratchEnabled)) { return; }
   scratchEnabled = enable;
   changed = true;
   if (!enable) {
@@ -198,7 +198,6 @@ PictureView::update(SDL_Renderer* renderer)
       updatePreview(renderer);
       return;
     }
-    glassEnabled = false;
     changed = true;
     if (tool) {
       if (editing) { cancelEdit(); }
@@ -239,10 +238,7 @@ PictureView::update(SDL_Renderer* renderer)
   } else if (oldState.middle) {
     movingMode = false;
   } else if (tool != nullptr) {
-    bool wasGlassEnabled = glassEnabled;
-    glassEnabled = false;
     tool(*this, event);
-    if (!changed) glassEnabled = wasGlassEnabled;
   } else if (event == PictureEvent::LEFT) {
     movingMode = true;
   } else if (event != PictureEvent::NONE) {
@@ -281,25 +277,6 @@ PictureView::effectivePos() const
   };
 }
 
-Canvas&
-PictureView::getGlassCanvas()
-{
-  if (!buffer) { return glassCanvas; }
-  if (glassEnabled) { return glassCanvas; }
-  glassEnabled = true;
-  changed = true;
-
-  if (glassSurface && glassSurface.getW() >= buffer->getW() &&
-      glassSurface.getH() >= buffer->getH()) {
-    glassSurface.fillRect({0, 0, buffer->getW(), buffer->getH()}, 0);
-  } else {
-    glassSurface = Surface::create(buffer->getW(), buffer->getH());
-    SDL_assert(glassSurface);
-  }
-  glassCanvas.setSurface(glassSurface);
-  return glassCanvas;
-}
-
 void
 PictureView::setSelection(Surface surface)
 {
@@ -316,7 +293,6 @@ PictureView::setSelection(Surface surface)
     if (size.y > viewport.h) {
       yy = ceil((size.y - viewport.h) / 2 / scale - offset.y);
     }
-    // = int(ceil(()));
     buffer->setSelection(surface, {xx, yy, surface.getW(), surface.getH()});
     changed = true;
     nextToolId = adjustNextToolId(toolId);
@@ -330,10 +306,8 @@ void
 PictureView::persistSelection()
 {
   if (!buffer || !buffer->hasSelection()) return;
-  cancelEdit();
   changed = true;
   buffer->persistSelection();
-  buffer->makeSnapshot();
 }
 
 void

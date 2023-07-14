@@ -11,7 +11,6 @@ namespace pixedit {
 struct SelectionRectTool
 {
   SelectionHandTool handTool;
-  bool selecting = false;
   SDL_Point lastPoint;
 
   void operator()(PictureView& view, PictureEvent event)
@@ -23,34 +22,33 @@ struct SelectionRectTool
     }
     switch (event) {
     case PictureEvent::LEFT:
-      selecting = true;
+      view.beginEdit();
       lastPoint = view.effectivePos();
-      renderSelection(view.getGlassCanvas(), {lastPoint.x, lastPoint.y, 1, 1});
+      view.enableScratch();
+      renderSelection(view.canvas, {lastPoint.x, lastPoint.y, 1, 1});
       break;
 
     case PictureEvent::NONE:
-      if (selecting) {
+      if (view.isEditing()) {
         auto currPoint = view.effectivePos();
         if (currPoint.x == lastPoint.x && currPoint.y == lastPoint.y) break;
         SDL_Rect rect = intersectFromOrigin(
           Rect::fromPoints(currPoint, lastPoint), buffer.getSize());
-        renderSelection(view.getGlassCanvas(), rect, true);
+        view.enableScratch();
+        renderSelection(view.canvas, rect, true);
       }
       break;
     case PictureEvent::OK:
-      if (selecting) {
-        selecting = false;
+      if (view.isEditing()) {
         auto currPoint = view.effectivePos();
         SDL_Rect rect = intersectFromOrigin(
           Rect::fromPoints(currPoint, lastPoint), buffer.getSize());
-        renderSelection(view.getGlassCanvas(), rect);
+        view.cancelEdit();
         buffer.setSelection(cutoutSurface(buffer.getSurface(), rect, 0), rect);
+        handTool(view, PictureEvent::RESET);
       };
       break;
-    default:
-      selecting = false;
-      view.enableGlass(false);
-      break;
+    default: view.cancelEdit(); break;
     }
   }
 };

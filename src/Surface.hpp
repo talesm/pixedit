@@ -77,6 +77,8 @@ public:
     return surface->h;
   }
 
+  constexpr Point getSize() const { return {getW(), getH()}; }
+
   constexpr void* pixel(int x, int y) const
   {
     if (!surface) return nullptr;
