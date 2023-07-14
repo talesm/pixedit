@@ -160,15 +160,15 @@ EditorApp::showPictureOptions()
     focusBufferWindow();
   }
 
-  if (ImGui::Button(
-        "Swap colors",
-        {0, ImGui::GetFrameHeightWithSpacing() + ImGui::GetFrameHeight()})) {
+  float colorAreaHeight =
+    ImGui::GetFrameHeightWithSpacing() + ImGui::GetFrameHeight();
+  if (ImGui::Button("Swap colors", {0, colorAreaHeight})) {
     view.swapColors();
     focusBufferWindow();
   }
   ImGui::SameLine();
   {
-    ImGui::BeginChild("Colors");
+    ImGui::BeginChild("Colors", {0, colorAreaHeight});
     auto colorA = componentToNormalized(view.canvas.getColorA());
     if (ImGui::ColorEdit4(
           "Color A", colorA.data(), ImGuiColorEditFlags_NoInputs)) {
@@ -182,6 +182,10 @@ EditorApp::showPictureOptions()
       focusBufferWindow();
     }
     ImGui::EndChild();
+  }
+  int penSize = view.canvas.getBrush().pen.w;
+  if (ImGui::SliderInt("Pen size", &penSize, 1, 16)) {
+    view.canvas | Pen{penSize, penSize};
   }
 }
 

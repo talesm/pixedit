@@ -47,6 +47,8 @@ public:
     return rawToComponent(brush.colorB, surface.getFormat());
   }
 
+  constexpr const Brush& getBrush() const { return brush; }
+
   friend constexpr Canvas& operator|(Canvas& c, RawColor rawColor);
   friend constexpr Canvas& operator|(Canvas& c, RawColorB rawColor);
   friend Canvas& operator|(Canvas& c, Color color);
