@@ -108,6 +108,30 @@ EditorApp::close()
   }
 }
 
+inline bool
+PatternCombo(const char* label, Pattern* pattern)
+{
+  static std::map<Uint64, const char*> pNames{
+    {patterns::SOLID.data8x8, "Solid"},
+    {patterns::CHECKERED.data8x8, "Checkered"},
+    {patterns::CHECKERED_2.data8x8, "Checkered 2x2"},
+    {patterns::CHECKERED_4.data8x8, "Checkered 4x4"},
+  };
+  bool result = false;
+  if (ImGui::BeginCombo(label, pNames[pattern->data8x8] ?: "????")) {
+    for (auto& e : pNames) {
+      bool isSelected = e.first == pattern->data8x8;
+      if (ImGui::Selectable(e.second, isSelected)) {
+        pattern->data8x8 = e.first;
+        result = true;
+      }
+      if (isSelected) { ImGui::SetItemDefaultFocus(); }
+    }
+    ImGui::EndCombo();
+  }
+  return result;
+}
+
 void
 EditorApp::showPictureOptions()
 {
@@ -173,19 +197,22 @@ EditorApp::showPictureOptions()
     if (ImGui::ColorEdit4(
           "Color A", colorA.data(), ImGuiColorEditFlags_NoInputs)) {
       view.canvas | ColorA{normalizedToComponent(colorA)};
-      focusBufferWindow();
     }
     auto colorB = componentToNormalized(view.canvas.getColorB());
     if (ImGui::ColorEdit4(
           "Color B", colorB.data(), ImGuiColorEditFlags_NoInputs)) {
       view.canvas | ColorB{normalizedToComponent(colorB)};
-      focusBufferWindow();
     }
     ImGui::EndChild();
   }
   int penSize = view.canvas.getBrush().pen.w;
   if (ImGui::SliderInt("Pen size", &penSize, 1, 16)) {
     view.canvas | Pen{penSize, penSize};
+  }
+  Pattern pattern = view.canvas.getBrush().pattern;
+  if (PatternCombo("Tile: ", &pattern)) {
+    view.canvas | pattern;
+    focusBufferWindow();
   }
 }
 
