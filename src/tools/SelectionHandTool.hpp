@@ -9,6 +9,8 @@ struct SelectionHandTool
 {
   SDL_Point lastPoint;
   bool moving = false;
+  bool scalingVertical = false;
+  bool scalingHorizontal = false;
 
   void operator()(PictureView& view, PictureEvent event)
   {
@@ -22,7 +24,13 @@ struct SelectionHandTool
     case PictureEvent::LEFT:
       lastPoint = view.effectivePos();
       if (SDL_PointInRect(&lastPoint, &rect)) {
-        moving = true;
+        if (rect.w > 1 && lastPoint.x == rect.x + rect.w - 1) {
+          scalingHorizontal = true;
+        }
+        if (rect.w > 1 && lastPoint.y == rect.y + rect.h - 1) {
+          scalingVertical = true;
+        }
+        if (!scalingHorizontal && !scalingVertical) { moving = true; }
         renderSelection(view.getGlassCanvas(), rect, buffer.getSelectionMask());
       } else {
         view.persistSelection();
@@ -38,6 +46,10 @@ struct SelectionHandTool
         lastPoint = currPoint;
         view.previewEdit();
       } else {
+        auto currPoint = view.effectivePos();
+        if (scalingHorizontal) { rect.w += currPoint.x - lastPoint.x; }
+        if (scalingVertical) { rect.h += currPoint.y - lastPoint.y; }
+        lastPoint = currPoint;
         renderSelection(view.getGlassCanvas(), rect, buffer.getSelectionMask());
       }
       break;
@@ -46,6 +58,8 @@ struct SelectionHandTool
       if (moving) {
         renderSelection(view.getGlassCanvas(), rect, buffer.getSelectionMask());
         moving = false;
+      } else if (scalingHorizontal || scalingVertical) {
+        scalingHorizontal = scalingVertical = false;
       }
       break;
     case PictureEvent::RESET: break;

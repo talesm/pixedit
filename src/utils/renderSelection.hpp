@@ -90,18 +90,20 @@ renderSelection(Canvas& canvas,
     canvas | ColorA{selectedColorA} | ColorB{selectedColorB};
   }
   canvas | patterns::CHECKERED_2;
-  for (int y = 0; y < mask.getH(); ++y) {
-    for (int x = 0; x < mask.getW(); ++x) {
-      if (!mask.getPixel(x, y)) { continue; }
-      bool isCentral = true;
-      for (auto&& b : borders) {
-        if (!mask.getPixel(x + b.x, y + b.y)) {
-          isCentral = false;
-          break;
+  if (mask.getW() == rect.w && mask.getH() == rect.h) {
+    for (int y = 0; y < mask.getH(); ++y) {
+      for (int x = 0; x < mask.getW(); ++x) {
+        if (!mask.getPixel(x, y)) { continue; }
+        bool isCentral = true;
+        for (auto&& b : borders) {
+          if (!mask.getPixel(x + b.x, y + b.y)) {
+            isCentral = false;
+            break;
+          }
         }
+        if (isCentral) { continue; }
+        canvas | Point(x + rect.x, y + rect.y);
       }
-      if (isCentral) { continue; }
-      canvas | Point(x + rect.x, y + rect.y);
     }
   }
   // Restore
