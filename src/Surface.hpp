@@ -55,7 +55,7 @@ public:
   {
     auto surface =
       SDL_CreateRGBSurfaceWithFormat(0, w, h, 8, SDL_PIXELFORMAT_INDEX8);
-    static SDL_Color colors[2] = {{255, 255, 255, 0}, {255, 255, 255, 0}};
+    static SDL_Color colors[2] = {{0, 0, 0, 0}, {255, 255, 255, 0}};
     SDL_SetPaletteColors(surface->format->palette, colors, 0, 2);
     return {surface, true};
   }

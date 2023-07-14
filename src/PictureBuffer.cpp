@@ -83,8 +83,8 @@ void
 PictureBuffer::persistSelection()
 {
   if (selectionMask) {
-    selectionMask.setColorKey(0);
-    surface.blitScaled(selectionMask, selectionRect);
+    selectionMask.setColorKey(1);
+    selectionSurface.blit(selectionMask);
   }
   surface.blitScaled(selectionSurface, selectionRect);
   clearSelection();
