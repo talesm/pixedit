@@ -1,103 +1,28 @@
-#include <iostream>
-#include <map>
+#include "EditorApp.hpp"
 #include <sstream>
-#include <string>
-#include <SDL.h>
 #include <imgui.h>
-#include "Clipboard.hpp"
 #include "FileDialogTinyfd.hpp"
-#include "ImGuiAppBase.hpp"
-#include "ToolDescription.hpp"
 #include "tools.hpp"
 
 namespace pixedit {
 
-namespace defaults {
-extern const int WINDOW_WIDTH;
-extern const int WINDOW_HEIGHT;
-extern const bool WINDOW_MAXIMIZED;
-} // namespace defaults
-
-struct EditorInitSettings
+void
+EditorApp::update()
 {
-  SDL_Point windowSz;
-  std::string filename;
-};
+  showMainMenuBar();
+  if (ImGui::Begin("Picture options")) { showPictureOptions(); }
+  ImGui::End();
+  if (!showView) { showPictureWindows(); }
+}
 
-struct ViewSettings
+void
+EditorApp::focusBufferWindow()
 {
-  SDL_Texture* texture = nullptr;
-  SDL_FPoint offset = {0};
-  float scale = 1;
-  int fileUnamedId = 0;
-  std::string filename;
-  std::string titleBuffer;
-};
-
-class EditorApp : ImGuiAppBase
-{
-  std::vector<std::shared_ptr<PictureBuffer>> buffers;
-  std::map<PictureBuffer*, ViewSettings> viewSettings;
-  int bufferIndex = -1;
-
-  Clipboard clipboard;
-
-  std::string requestModal;
-
-public:
-  EditorApp(EditorInitSettings settings);
-  using ImGuiAppBase::run;
-
-private:
-  void setupShortcuts();
-
-  void event(const SDL_Event& ev, bool imGuiMayUse) final;
-
-  void update() final
-  {
-    showMainMenuBar();
-    if (ImGui::Begin("Picture options")) { showPictureOptions(); }
-    ImGui::End();
-    if (!showView) { showPictureWindows(); }
+  if (!showView && bufferIndex >= 0) {
+    ImGui::SetWindowFocus(
+      viewSettings[view.getBuffer().get()].titleBuffer.c_str());
   }
-
-  void showNewFileDialog();
-
-  void showPictureWindows()
-  {
-    for (auto& buffer : buffers) { showPictureWindow(buffer); }
-  }
-
-  void showPictureWindow(const std::shared_ptr<PictureBuffer>& buffer);
-
-  void showMainMenuBar();
-
-  void showPictureOptions();
-
-  void appendFile(std::shared_ptr<PictureBuffer> buffer)
-  {
-    view.setBuffer(buffer);
-    view.offset = {0, 0};
-    view.scale = 1.f;
-    buffers.emplace_back(buffer);
-    bufferIndex = buffers.size() - 1;
-  }
-
-  /// Actions
-  void copy();
-  void cut();
-  void paste();
-  void pasteAsNew();
-  void close();
-
-  void focusBufferWindow()
-  {
-    if (!showView && bufferIndex >= 0) {
-      ImGui::SetWindowFocus(
-        viewSettings[view.getBuffer().get()].titleBuffer.c_str());
-    }
-  }
-};
+}
 
 EditorApp::EditorApp(EditorInitSettings settings)
   : ImGuiAppBase(settings.windowSz)
@@ -490,29 +415,4 @@ EditorApp::showNewFileDialog()
   }
 }
 
-}
-
-int
-main(int argc, char** argv)
-{
-  try {
-    if (SDL_Init(SDL_INIT_VIDEO)) throw std::runtime_error{SDL_GetError()};
-    pixedit::EditorInitSettings settings{
-      .windowSz =
-        {
-          pixedit::defaults::WINDOW_WIDTH,
-          pixedit::defaults::WINDOW_HEIGHT,
-        },
-      .filename = "../assets/samples/redball_128x128.png",
-    };
-    if (argc > 1) { settings.filename = argv[argc - 1]; }
-
-    pixedit::EditorApp app{settings};
-    return app.run();
-  } catch (std::exception& e) {
-    std::cerr << e.what() << '\n';
-  } catch (...) {
-    std::cerr << "Unknown error\n";
-  }
-  return EXIT_FAILURE;
-}
+} // namespace pixedit

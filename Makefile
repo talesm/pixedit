@@ -28,7 +28,7 @@ endif
 # Note the single quotes around the * expressions. The shell will incorrectly expand these otherwise, but we want to send the * directly to the find command.
 SRCS := $(shell find $(SRC_DIRS) -name '*.cpp' -or -name '*.c' -or -name '*.s')
 SCRATCH_SRCS := $(shell find $(SCRATCH_DIR) -name '*.cpp' -or -name '*.c' -or -name '*.s')
-NON_DEFAULT_SRCS := src/ViewerApp.cpp src/EditorApp.cpp $(SCRATCH_SRCS)
+NON_DEFAULT_SRCS := src/editorApp/main.cpp src/EditorApp.cpp $(SCRATCH_SRCS)
 TEST_SRCS := $(shell find $(TEST_DIRS) -name '*.cpp' -or -name '*.c' -or -name '*.s')
 
 # Prepends BUILD_DIR and appends .o to every src file
@@ -65,7 +65,7 @@ scratch: $(SCRATCH)
 DEFAULT_OBJS := $(filter-out $(NON_DEFAULT_OBJS),$(OBJS))
 
 # The final build step for our editor app.
-$(BUILD_DIR)/$(EXEC_EDITOR): $(DEFAULT_OBJS) $(BUILD_DIR)/src/EditorApp.cpp.o
+$(BUILD_DIR)/$(EXEC_EDITOR): $(DEFAULT_OBJS) $(BUILD_DIR)/src/editorApp/main.cpp.o
 	$(CXX) $^ -o $@ $(LDFLAGS)
 
 # The final build step for our viewer app. Removed temporarily
