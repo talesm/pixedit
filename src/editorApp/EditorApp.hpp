@@ -34,6 +34,7 @@ class EditorApp : ImGuiAppBase
 
   Clipboard clipboard;
 
+  bool focusBufferNextFrame = true;
   std::string requestModal;
 
 public:

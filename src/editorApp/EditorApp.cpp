@@ -18,10 +18,7 @@ EditorApp::update()
 void
 EditorApp::focusBufferWindow()
 {
-  if (!showView && bufferIndex >= 0) {
-    ImGui::SetWindowFocus(
-      viewSettings[view.getBuffer().get()].titleBuffer.c_str());
-  }
+  focusBufferNextFrame = true;
 }
 
 EditorApp::EditorApp(EditorInitSettings settings)
@@ -202,8 +199,7 @@ EditorApp::showPictureWindow(const std::shared_ptr<PictureBuffer>& buffer)
       }
       settings.fileUnamedId = largestUnnamedId + 1;
       std::stringstream ss;
-      ss << "New image " << settings.fileUnamedId << "##"
-         << makeTempFilename("new_image_", ".png");
+      ss << "New image " << settings.fileUnamedId << "###" << buffer.get();
       settings.titleBuffer = ss.str();
     }
   } else {
@@ -217,7 +213,7 @@ EditorApp::showPictureWindow(const std::shared_ptr<PictureBuffer>& buffer)
         settings.titleBuffer = filename;
       } else {
         std::stringstream ss;
-        ss << filename.substr(lastSlash + 1) << "##" << filename;
+        ss << filename.substr(lastSlash + 1) << "###" << buffer.get();
         settings.titleBuffer = ss.str();
       }
     }
@@ -227,6 +223,10 @@ EditorApp::showPictureWindow(const std::shared_ptr<PictureBuffer>& buffer)
   // TODO Measure title and decoration instead of guessing
   ImGui::SetNextWindowSize(ImVec2(buffer->getW() + 16, buffer->getH() + 35),
                            ImGuiCond_Once);
+  if (focusBufferNextFrame && buffer == view.getBuffer()) {
+    focusBufferNextFrame = false;
+    ImGui::SetNextWindowFocus();
+  }
   bool stayOpen = true;
   if (ImGui::Begin(settings.titleBuffer.c_str(), &stayOpen, flags)) {
     bool redraw = false;
