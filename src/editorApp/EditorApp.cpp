@@ -384,6 +384,17 @@ EditorApp::showMainMenuBar()
       ImGui::Checkbox("Maximize", &showView);
       ImGui::EndMenu();
     }
+    ImGui::Dummy({50, 0});
+    ImGui::Text("%s %dx%d",
+                getTool(view.getToolId()).name.c_str(),
+                view.state.x,
+                view.state.y);
+    if (view.getBuffer()) {
+      ImGui::Dummy({20, 0});
+      auto& b = *view.getBuffer();
+      ImGui::Text("%dx%d", b.getW(), b.getH());
+      ImGui::Text("%.2f%%", view.scale * 100);
+    }
     ImGui::EndMainMenuBar();
   }
 }
