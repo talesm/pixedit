@@ -380,7 +380,10 @@ EditorApp::showMainMenuBar()
       if (ImGui::MenuItem("Paste as new", "Ctrl+Shift+V")) { pasteAsNew(); }
       ImGui::EndMenu();
     }
-    ImGui::Checkbox("Maximize", &showView);
+    if (ImGui::BeginMenu("View")) {
+      ImGui::Checkbox("Maximize", &showView);
+      ImGui::EndMenu();
+    }
     ImGui::EndMainMenuBar();
   }
 }
