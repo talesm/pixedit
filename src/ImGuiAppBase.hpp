@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include <SDL.h>
+#include "ImGuiComponent.hpp"
 #include "PictureBuffer.hpp"
 #include "PictureView.hpp"
 #include "ShortcutManager.hpp"
@@ -17,6 +18,8 @@ struct ImGuiAppBase
 {
   SDL_Window* window = nullptr;
   SDL_Renderer* renderer = nullptr;
+  ImGuiComponent ui;
+
   ShortcutManager shortcuts;
   PictureView view;
   bool exited = false;

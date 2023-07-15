@@ -1,7 +1,5 @@
 #include "ImGuiAppBase.hpp"
 #include "imgui.h"
-#include "imgui_impl_sdl2.h"
-#include "imgui_impl_sdlrenderer.h"
 #include "utils/paths.hpp"
 
 namespace pixedit {
@@ -14,10 +12,10 @@ ImGuiAppBase::ImGuiAppBase(const SDL_Point& windowSz)
                             windowSz.y,
                             SDL_WINDOW_RESIZABLE))
   , renderer(SDL_CreateRenderer(window, -1, 0))
+  , ui(window, renderer)
   , view{{0, 0, windowSz.x, windowSz.y}}
 {
   if (!window || !renderer) { throw std::runtime_error{SDL_GetError()}; }
-  setupImGui();
 }
 
 void
@@ -56,15 +54,10 @@ ImGuiAppBase::run()
 {
   while (!exited) {
     // Update
-    for (SDL_Event ev; SDL_PollEvent(&ev);) {
-      event(ev, ImGui_ImplSDL2_ProcessEvent(&ev));
-    }
+    for (SDL_Event ev; SDL_PollEvent(&ev);) { event(ev, ui.event(ev)); }
 
-    ImGui_ImplSDLRenderer_NewFrame();
-    ImGui_ImplSDL2_NewFrame();
-    ImGui::NewFrame();
+    ui.update();
     update();
-    ImGui::ShowDemoWindow();
 
     if (showView) {
       if (!ImGui::GetIO().WantCaptureMouse && SDL_GetMouseFocus() == window) {
@@ -82,37 +75,13 @@ ImGuiAppBase::run()
 
     if (showView) { view.render(renderer); }
 
-    ImGui::Render();
-    ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
+    ui.render();
 
     SDL_RenderPresent(renderer);
     SDL_Delay(10);
   }
-  ImGui::DestroyContext(nullptr);
   SDL_Quit();
   return EXIT_SUCCESS;
-}
-
-void
-ImGuiAppBase::setupImGui()
-{
-  IMGUI_CHECKVERSION();
-  ImGui::CreateContext();
-  ImGuiIO& io = ImGui::GetIO();
-  static std::string defaultIni = getPrefPath() + "imgui.ini";
-  io.IniFilename = defaultIni.c_str();
-  // io.ConfigFlags |=
-  //   ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
-  io.ConfigFlags |=
-    ImGuiConfigFlags_NavEnableGamepad; // Enable Gamepad Controls
-
-  // Setup Dear ImGui style
-  // ImGui::StyleColorsDark();
-  // ImGui::StyleColorsLight();
-
-  // Setup Platform/Renderer backends
-  ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
-  ImGui_ImplSDLRenderer_Init(renderer);
 }
 
 } // namespace pixedit
