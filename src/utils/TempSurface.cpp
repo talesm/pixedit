@@ -3,15 +3,16 @@
 #include <filesystem>
 #include <sstream>
 #include <stdexcept>
+#include "paths.hpp"
 
 namespace pixedit {
 
 std::string
 makeTempFilename(std::string_view prefix, std::string_view suffix)
 {
-  unsigned suffixNumber = time(nullptr) ^ clock();
+  unsigned randomContent = time(nullptr) ^ clock();
   std::stringstream ss;
-  ss << prefix << std::hex << suffixNumber << suffix;
+  ss << getPrefPath() << prefix << std::hex << randomContent << suffix;
   return ss.str();
 }
 

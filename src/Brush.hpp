@@ -4,11 +4,9 @@
 #include <SDL.h>
 #include "Pattern.hpp"
 #include "Pen.hpp"
+#include "utils/Color.hpp"
 
 namespace pixedit {
-
-/// @brief Raw color type
-using RawColor = Uint32;
 
 /// @brief The drawing state
 struct Brush

@@ -44,7 +44,11 @@ struct SelectionRectTool
         SDL_Rect rect = intersectFromOrigin(
           Rect::fromPoints(currPoint, lastPoint), buffer.getSize());
         view.cancelEdit();
-        buffer.setSelection(cutoutSurface(buffer.getSurface(), rect, 0), rect);
+        auto fillColor = view.canvas.getColorB();
+        if (!view.fillSelectedOut) fillColor.a = 0;
+        buffer.setSelection(cutoutSurface(buffer.getSurface(), rect, fillColor),
+                            rect);
+        view.setTransparent(view.isTransparent());
         handTool(view, PictureEvent::RESET);
       };
       break;

@@ -6,6 +6,10 @@
 
 namespace pixedit {
 
+namespace defaults {
+extern const bool ASK_SAVE_ON_CLOSE;
+} // namespace defaults
+
 void
 EditorApp::update()
 {
@@ -24,10 +28,19 @@ EditorApp::focusBufferWindow()
 EditorApp::EditorApp(EditorInitSettings settings)
   : ImGuiAppBase(settings.windowSz)
 {
-  auto buffer = std::make_shared<PictureBuffer>(settings.filename);
-  view.setBuffer(buffer);
-  buffers.emplace_back(buffer);
-  bufferIndex = buffers.size() - 1;
+  std::shared_ptr<PictureBuffer> buffer;
+  if (!settings.filename.empty() ||
+      (settings.pictureSz.x > 0 && settings.pictureSz.y > 0)) {
+    if (!settings.filename.empty()) {
+      buffer = std::make_shared<PictureBuffer>(settings.filename);
+    } else {
+      buffer = std::make_shared<PictureBuffer>(
+        "", Surface::create(settings.pictureSz.x, settings.pictureSz.y));
+    }
+    view.setBuffer(buffer);
+    buffers.emplace_back(buffer);
+    bufferIndex = buffers.size() - 1;
+  }
 
   setupShortcuts();
 
@@ -41,6 +54,11 @@ void
 EditorApp::event(const SDL_Event& ev, bool imGuiMayUse)
 {
   switch (ev.type) {
+  case SDL_QUIT:
+    if (buffers.empty() || !defaults::ASK_SAVE_ON_CLOSE) break;
+    exiting = true;
+    close(false);
+    return;
   case SDL_DROPFILE:
     if (ImGui::GetIO().WantCaptureMouse) break;
     appendFile(std::make_shared<PictureBuffer>(ev.drop.file));
@@ -91,16 +109,18 @@ EditorApp::pasteAsNew()
 }
 
 void
-EditorApp::close()
+EditorApp::close(bool force)
 {
   if (buffers.empty()) {
     exited = true;
+  } else if (!force && buffers[bufferIndex]->isDirty() &&
+             defaults::ASK_SAVE_ON_CLOSE) {
+    requestModal = "Confirm exit";
   } else {
     buffers.erase(buffers.begin() + bufferIndex);
     if (bufferIndex >= int(buffers.size())) { bufferIndex -= 1; }
     if (bufferIndex < 0) {
       view.setBuffer(nullptr);
-      view.update(nullptr);
     } else {
       viewSettings.erase(view.getBuffer().get());
       if (showView) { view.setBuffer(buffers[bufferIndex]); }
@@ -132,6 +152,39 @@ PatternCombo(const char* label, Pattern* pattern)
   return result;
 }
 
+static void
+showAboutDialog()
+{
+  ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+  ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+  if (ImGui::BeginPopupModal(
+        "About", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+    ImGui::Text("Pixedit version: DEVELOPMENT");
+    ImGui::Separator();
+    ImGui::TextWrapped(
+      "A simple and customizable pixel art focused image editor");
+    ImGui::Text("Homepage: ");
+    ImGui::SameLine();
+    static const char url[] = "https://github.com/jungleowl2/pixedit";
+    if (ImGui::SmallButton(url)) { ImGui::SetClipboardText(url); }
+    if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort) &&
+        ImGui::BeginTooltip()) {
+      ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+      ImGui::TextUnformatted("Click to copy url to clipboard");
+      ImGui::PopTextWrapPos();
+      ImGui::EndTooltip();
+    }
+
+    ImGui::Spacing();
+    ImGui::Separator();
+    if (ImGui::Button("Ok", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+      ImGui::CloseCurrentPopup();
+    }
+    ImGui::SetItemDefaultFocus();
+    ImGui::EndPopup();
+  }
+}
+
 void
 EditorApp::showPictureOptions()
 {
@@ -140,6 +193,8 @@ EditorApp::showPictureOptions()
     requestModal.clear();
   }
   showNewFileDialog();
+  showConfirmExitDialog();
+  showAboutDialog();
 
   ImGui::BeginDisabled(showView == false);
   if (ImGui::BeginCombo("File",
@@ -151,7 +206,16 @@ EditorApp::showPictureOptions()
       bool selected = bufferIndex == i;
       if (ImGui::Selectable(b->getFilename().c_str(), selected)) {
         bufferIndex = i;
-        view.setBuffer(buffers[bufferIndex]);
+        if (bufferIndex >= 0) {
+          auto& settings = viewSettings[view.getBuffer().get()];
+          settings.offset = view.offset;
+          settings.scale = view.scale;
+        }
+        auto nextBuffer = buffers[bufferIndex];
+        auto& settings = viewSettings[nextBuffer.get()];
+        view.setBuffer(std::move(nextBuffer));
+        view.offset = settings.offset;
+        view.scale = settings.scale;
       }
       if (selected) { ImGui::SetItemDefaultFocus(); }
       ++i;
@@ -213,6 +277,14 @@ EditorApp::showPictureOptions()
   if (PatternCombo("Tile: ", &pattern)) {
     view.canvas | pattern;
     focusBufferWindow();
+  }
+  if (ImGui::CollapsingHeader("Selection", ImGuiTreeNodeFlags_DefaultOpen)) {
+    bool transparent = view.isTransparent();
+    if (ImGui::Checkbox("Transparent", &transparent)) {
+      view.setTransparent(transparent);
+      focusBufferWindow();
+    }
+    ImGui::Checkbox("Fill selected out region", &view.fillSelectedOut);
   }
 }
 
@@ -415,6 +487,10 @@ EditorApp::showMainMenuBar()
       ImGui::Checkbox("Maximize", &showView);
       ImGui::EndMenu();
     }
+    if (ImGui::BeginMenu("Help")) {
+      if (ImGui::MenuItem("About")) { requestModal = "About"; }
+      ImGui::EndMenu();
+    }
     ImGui::Dummy({50, 0});
     ImGui::Text("%s %dx%d",
                 getTool(view.getToolId()).name.c_str(),
@@ -457,6 +533,37 @@ EditorApp::showNewFileDialog()
     ImGui::SameLine();
     if (ImGui::Button("Cancel", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
     ImGui::EndPopup();
+  }
+}
+void
+EditorApp::showConfirmExitDialog()
+{
+  ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+  ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+  if (ImGui::BeginPopupModal(
+        "Confirm exit", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+    ImGui::Text("Image unsaved changes will be lost?");
+    ImGui::Text("File: %s", view.getBuffer()->getFilename().c_str());
+    ImGui::Separator();
+
+    if (ImGui::Button("Close",
+                      ImVec2(ImGui::GetContentRegionAvail().x * .45f, 0))) {
+      close(true);
+      if (exiting) {
+        close();
+      } else {
+        ImGui::CloseCurrentPopup();
+      }
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Cancel", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+      ImGui::CloseCurrentPopup();
+      exiting = false;
+    }
+    ImGui::SetItemDefaultFocus();
+    ImGui::EndPopup();
+  } else if (exiting) {
+    close();
   }
 }
 

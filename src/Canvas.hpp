@@ -16,6 +16,11 @@ struct LineTo;
 struct OpenLineTo;
 struct Blit;
 struct BlitScaled;
+struct ColorB;
+struct RawColorB;
+
+/// @brief Sets color
+using RawColorA = RawColor;
 
 /// @brief A canvas where you can issue drawing commands to.
 ///
@@ -71,6 +76,12 @@ operator|(Canvas& c, RawColor rawColor)
   c.brush.colorA = rawColor;
   return c;
 }
+
+/// @brief Sets secondary color
+struct RawColorB
+{
+  RawColor color;
+};
 
 constexpr Canvas&
 operator|(Canvas& c, RawColorB rawColor)

@@ -37,4 +37,24 @@
 #define PIXEDIT_ASK_SAVE_ON_CLOSE 1
 #endif // PIXEDIT_ASK_SAVE_ON_CLOSE
 
+// The default file to load (Use "" for none)
+#ifndef PIXEDIT_INITIAL_FILENAME
+#define PIXEDIT_INITIAL_FILENAME ""
+#endif // PIXEDIT_INITIAL_FILENAME
+
+// The blank file size (only used if PIXEDIT_INITIAL_FILENAME is "")
+#ifndef PIXEDIT_INITIAL_SIZE
+#define PIXEDIT_INITIAL_SIZE 128, 128
+#endif // PIXEDIT_INITIAL_SIZE
+
+// Default org name for configuring user directory
+#ifndef PIXEDIT_ORG_NAME
+#define PIXEDIT_ORG_NAME "jungleOwl2"
+#endif // PIXEDIT_ORG_NAME
+
+// Default program name for configuring user directory
+#ifndef PIXEDIT_APP_NAME
+#define PIXEDIT_APP_NAME "Pixedit"
+#endif // PIXEDIT_APP_NAME
+
 #endif /* PIXEDIT_SRC_DEFAULTS_INCLUDED */

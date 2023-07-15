@@ -2,6 +2,7 @@
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_sdlrenderer.h"
+#include "utils/paths.hpp"
 
 namespace pixedit {
 
@@ -98,7 +99,8 @@ ImGuiAppBase::setupImGui()
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
   ImGuiIO& io = ImGui::GetIO();
-  (void)io;
+  static std::string defaultIni = getPrefPath() + "imgui.ini";
+  io.IniFilename = defaultIni.c_str();
   // io.ConfigFlags |=
   //   ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
   io.ConfigFlags |=

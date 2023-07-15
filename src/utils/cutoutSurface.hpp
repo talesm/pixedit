@@ -2,6 +2,7 @@
 #define PIXEDIT_SRC_UTILS_CUTOUT_SURFACE_INCLUDED
 
 #include <SDL.h>
+#include "Color.hpp"
 #include "Surface.hpp"
 
 namespace pixedit {
@@ -34,22 +35,26 @@ copySurface(Surface surface, SDL_Rect rect)
 }
 
 inline Surface
-cutoutSurface(Surface surface, const SDL_Rect& rect, Uint32 replaceColor)
+cutoutSurface(Surface surface, const SDL_Rect& rect, Color replaceColor)
 {
   if (!surface) { return nullptr; }
   auto cutout = copySurface(surface, rect);
-  surface.fillRect(rect, replaceColor);
+  surface.fillRect(rect, surface.mapColor(replaceColor));
   return cutout;
 }
 
 inline Surface
-cutoutSurface(Surface surface, const SDL_Rect& rect, Surface mask)
+cutoutSurface(Surface surface,
+              const SDL_Rect& rect,
+              Surface mask,
+              Color replaceColor)
 {
   if (!surface) { return nullptr; }
   auto cutout = copySurface(surface, rect);
   mask.setColorKey(1);
   cutout.blit(mask);
   mask.setColorKey(0);
+  mask.setColorIndex(1, replaceColor);
   surface.blit(mask, {rect.x, rect.y});
   return cutout;
 }

@@ -83,8 +83,16 @@ void
 PictureBuffer::persistSelection()
 {
   if (selectionMask) {
+    selectionMask.setColorIndex(0, {0, 0, 0, 0});
     selectionMask.setColorKey(1);
     selectionSurface.blit(selectionMask);
+    if (!selectionSurface.getColorKey() &&
+        selectionSurface.getBlendMode() != SDL_BLENDMODE_BLEND) {
+      selectionMask.setColorKey(0);
+      selectionMask.setColorIndex(1, {0, 0, 0, 255});
+      surface.blitScaled(selectionMask, selectionRect);
+      selectionSurface.setBlendMode(SDL_BLENDMODE_ADD);
+    }
   }
   surface.blitScaled(selectionSurface, selectionRect);
   clearSelection();

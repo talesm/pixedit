@@ -44,14 +44,14 @@ To do
   - [x] Flood fill
   - [x] Pick color
   - [ ] Text* (using existing ImGui engine)
-  - [ ] Selection
+  - [x] Selection
     - [x] Rect
       - [x] Make selection persist over cycling buffer focus
     - [x] Free form
-    - [ ] Color
-    - [ ] Contiguous color
+    - [ ] Color*
+    - [ ] Contiguous color*
 - [x] "New file" dialog
-- [ ] "Exit confirmation" dialog
+- [x] "Exit confirmation" dialog
 - [ ] Options
   - [ ] Color palette (not palette image, just reference)*
   - [x] Color selector/Wheel
@@ -59,7 +59,7 @@ To do
   - [x] Pen
   - [x] Tile
 - [ ] ~~Tabs for switching files~~
-- [ ] Menu bar
+- [x] Menu bar
   - [x] File menu
     - [x] New
     - [x] Load 
@@ -73,23 +73,21 @@ To do
     - [x] Paste
     - [x] Paste as new
     - [x] Undo/redo
-  - [ ] Help/About
+  - [x] Help/About
 - [x] Status bar*
   - [x] Tool name
   - [x] Mouse pos
 - [x] Windowed mode*
-- [ ] Finishing touches:
+- [x] Finishing touches:
   - [x] Move show view to view menu
-  - [ ] Ensure maximized view preserve zoom offset
-  - [ ] Selection color transparency
-  - [ ] Enable save on exit
-  - [ ] Control cutout color: BLANK or FILL
-  - [ ] When loading, convert surface, if needed
-  - [ ] Path configuration
+  - [x] Ensure maximized view preserve zoom offset
+  - [x] Selection color transparency
+  - [x] Enable save on exit
+  - [x] Control cutout color: BLANK or FILL
+  - [x] Path configuration
     - Temporary files (user dir)
     - Somehow do the same for ImGui
-  - [ ] Configure default blank image
-  - [ ] Update title with filename, dirty "*"
+  - [x] Configure default blank image
 
 Wishlist
 --------

@@ -6,6 +6,27 @@
 
 namespace pixedit {
 
+Surface
+Surface::clone() const
+{
+  if (!surface) { return nullptr; }
+  return cloneWith(surface->format);
+}
+
+Surface
+Surface::cloneWith(SDL_PixelFormatEnum format) const
+{
+  if (!surface) { return nullptr; }
+  return {SDL_ConvertSurfaceFormat(surface, format, 0), true};
+}
+
+Surface
+Surface::cloneWith(const SDL_PixelFormat* format) const
+{
+  if (!surface) { return nullptr; }
+  return {SDL_ConvertSurface(surface, format, 0), true};
+}
+
 bool
 Surface::save(const std::string& filename) const
 {
@@ -21,7 +42,7 @@ Surface::save(const std::string& filename) const
   }
   if (filename.ends_with(".txt")) {
     std::ofstream out(filename);
-    dump::surface(out, *this, 80, true);
+    dump::surface(out, cloneWith(DEFAULT_FORMAT), 80, true);
     return out.good();
   }
   return false;

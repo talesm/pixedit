@@ -67,13 +67,17 @@ struct SelectionFreeTool
               linesMode = true;
             } else {
               view.cancelEdit();
-              finishSelection(buffer);
+              auto fillColor = view.canvas.getColorB();
+              if (!view.fillSelectedOut) fillColor.a = 0;
+              finishSelection(buffer, view.isTransparent(), fillColor);
               handTool(view, PictureEvent::RESET);
             }
           }
         } else {
           view.cancelEdit();
-          finishSelection(buffer);
+          auto fillColor = view.canvas.getColorB();
+          if (!view.fillSelectedOut) fillColor.a = 0;
+          finishSelection(buffer, view.isTransparent(), fillColor);
           handTool(view, PictureEvent::RESET);
         }
       };
@@ -83,7 +87,9 @@ struct SelectionFreeTool
       if (view.isEditing()) {
         view.cancelEdit();
         points.emplace_back(view.effectivePos());
-        finishSelection(buffer);
+        auto fillColor = view.canvas.getColorB();
+        if (!view.fillSelectedOut) fillColor.a = 0;
+        finishSelection(buffer, view.isTransparent(), fillColor);
         handTool(view, PictureEvent::RESET);
       }
       break;
@@ -92,7 +98,7 @@ struct SelectionFreeTool
     }
   }
 
-  void finishSelection(PictureBuffer& buffer)
+  void finishSelection(PictureBuffer& buffer, bool transparent, Color fillColor)
   {
     SDL_Point p0 = points[0], p1 = points[0];
     for (auto& p : points) {
@@ -111,8 +117,11 @@ struct SelectionFreeTool
     Canvas c{mask};
     c | RawColorA{1} | FillPoly{points};
 
-    buffer.setSelection(
-      cutoutSurface(buffer.getSurface(), rect, mask), rect, mask);
+    auto selectionSurface =
+      cutoutSurface(buffer.getSurface(), rect, mask, fillColor);
+    selectionSurface.setBlendMode(transparent ? SDL_BLENDMODE_BLEND
+                                              : SDL_BLENDMODE_NONE);
+    buffer.setSelection(selectionSurface, rect, mask);
     points.clear();
   }
 };

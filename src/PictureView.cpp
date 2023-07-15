@@ -41,8 +41,17 @@ PictureView::updatePreview(SDL_Renderer* renderer)
   previewSurface.fillRect(dstRect, 0);
   previewSurface.blit(buffer->getSurface());
   if (buffer->hasSelection()) {
+    auto selection = buffer->getSelectionSurface();
+    auto mask = buffer->getSelectionMask();
+    if (mask && !transparent) {
+      mask.setColorKey(1);
+      mask.setColorIndex(0, canvas.getColorB());
+      selection.blit(mask);
+      selection.setColorKey(canvas.getColorB());
+    }
     previewSurface.blitScaled(buffer->getSelectionSurface(),
                               buffer->getSelectionRect());
+    if (mask && !transparent) { selection.unsetColorKey(); }
   }
   if (scratchEnabled) { previewSurface.blit(scratch); }
   SDL_UnlockTexture(preview);
@@ -262,6 +271,28 @@ PictureView::update(SDL_Renderer* renderer)
   if (changed) { updatePreview(renderer); }
 }
 
+void
+PictureView::setTransparent(bool value)
+{
+  transparent = value;
+  if (!buffer->hasSelection()) { return; }
+  auto selection = buffer->getSelectionSurface();
+  if (transparent) {
+    if (selection.getFormat()->Amask) {
+      selection.setBlendMode(SDL_BLENDMODE_BLEND);
+    } else {
+      selection.setColorKey(canvas.getColorB());
+    }
+  } else {
+    if (selection.getFormat()->Amask) {
+      selection.setBlendMode(SDL_BLENDMODE_NONE);
+    } else {
+      selection.unsetColorKey();
+    }
+  }
+  changed = true;
+}
+
 SDL_Point
 PictureView::effectivePos() const
 {
@@ -294,6 +325,7 @@ PictureView::setSelection(Surface surface)
       yy = ceil((size.y - viewport.h) / 2 / scale - offset.y);
     }
     buffer->setSelection(surface, {xx, yy, surface.getW(), surface.getH()});
+    setTransparent(transparent);
     changed = true;
     nextToolId = adjustNextToolId(toolId);
   } else if (buffer->hasSelection()) {

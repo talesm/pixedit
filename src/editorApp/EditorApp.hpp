@@ -14,6 +14,7 @@ struct EditorInitSettings
 {
   SDL_Point windowSz;
   std::string filename;
+  SDL_Point pictureSz;
 };
 
 struct ViewSettings
@@ -34,6 +35,7 @@ class EditorApp : ImGuiAppBase
 
   Clipboard clipboard;
 
+  bool exiting = false;
   bool focusBufferNextFrame = true;
   std::string requestModal;
 
@@ -49,6 +51,8 @@ private:
   void update() final;
 
   void showNewFileDialog();
+
+  void showConfirmExitDialog();
 
   void showPictureWindows()
   {
@@ -75,7 +79,7 @@ private:
   void cut();
   void paste();
   void pasteAsNew();
-  void close();
+  void close(bool force = false);
 
   void focusBufferWindow();
 };

@@ -15,4 +15,9 @@ extern const int XCLIP = CLIPBOARD_XCLIP;
 extern const int CLIPBOARD_MANAGER = PIXEDIT_CLIPBOARD_MANAGER;
 extern const bool ASK_SAVE_ON_CLOSE = PIXEDIT_ASK_SAVE_ON_CLOSE;
 
+extern const char INITIAL_FILENAME[] = PIXEDIT_INITIAL_FILENAME;
+extern const int INITIAL_SIZE[2] = {PIXEDIT_INITIAL_SIZE};
+extern const char ORG_NAME[] = PIXEDIT_ORG_NAME;
+extern const char APP_NAME[] = PIXEDIT_APP_NAME;
+
 } // namespace pixedit::defaults

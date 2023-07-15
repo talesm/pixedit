@@ -4,6 +4,7 @@
 #include <optional>
 #include <string>
 #include <SDL.h>
+#include "utils/Color.hpp"
 #include "utils/pixel.hpp"
 #include "utils/rect.hpp"
 #include "utils/safeGetFormat.hpp"
@@ -43,10 +44,18 @@ public:
     return *this;
   }
 
+  Surface clone() const;
+
+  Surface cloneWith(SDL_PixelFormatEnum format) const;
+
+  Surface cloneWith(const SDL_PixelFormat* format) const;
+
+  static constexpr SDL_PixelFormatEnum DEFAULT_FORMAT = SDL_PIXELFORMAT_ABGR32;
+
   static Surface create(int w, int h)
   {
     return {
-      SDL_CreateRGBSurfaceWithFormat(0, w, h, 32, SDL_PIXELFORMAT_ABGR32),
+      SDL_CreateRGBSurfaceWithFormat(0, w, h, 32, DEFAULT_FORMAT),
       true,
     };
   }
@@ -163,7 +172,23 @@ public:
     return {};
   }
   void setColorKey(Uint32 color) { SDL_SetColorKey(surface, true, color); }
+  void setColorKey(Color color)
+  {
+    if (!surface) return;
+    setColorKey(
+      SDL_MapRGBA(surface->format, color.r, color.g, color.b, color.a));
+  }
   void unsetColorKey() { SDL_SetColorKey(surface, false, 0); }
+
+  void setColorIndex(int index, SDL_Color color)
+  {
+    SDL_SetPaletteColors(surface->format->palette, &color, index, 1);
+  }
+
+  Uint32 mapColor(Color c) const
+  {
+    return SDL_MapRGBA(getFormat(), c.r, c.g, c.b, c.a);
+  }
 };
 
 } // namespace pixedit

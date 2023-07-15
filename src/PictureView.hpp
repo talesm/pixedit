@@ -22,6 +22,7 @@ class PictureView
   bool scratchEnabled = false;
   bool changed = false;
   bool editing = false;
+  bool transparent = true;
 
   ToolId toolId = 0;
   std::optional<ToolId> nextToolId;
@@ -36,6 +37,7 @@ public:
   float scale{1.f};
   MouseState state{};
   Canvas canvas;
+  bool fillSelectedOut = false;
 
   PictureView(const SDL_Rect& viewport)
     : viewport(viewport)
@@ -110,6 +112,10 @@ public:
   ToolId getToolId() { return toolId; }
 
   void setToolId(ToolId id) { nextToolId = id; }
+
+  constexpr bool isTransparent() { return transparent; }
+
+  void setTransparent(bool value);
 
   SDL_Point effectivePos() const;
 
