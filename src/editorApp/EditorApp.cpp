@@ -1,5 +1,6 @@
 #include "EditorApp.hpp"
 #include <sstream>
+#include <stdexcept>
 #include <imgui.h>
 #include "FileDialogTinyfd.hpp"
 #include "tools.hpp"
@@ -25,8 +26,32 @@ EditorApp::focusBufferWindow()
   focusBufferNextFrame = true;
 }
 
+static SDL_Window*
+makeWindow(SDL_Point windowSz)
+{
+  auto window = SDL_CreateWindow("Pixedit viewer",
+                                 SDL_WINDOWPOS_UNDEFINED,
+                                 SDL_WINDOWPOS_UNDEFINED,
+                                 windowSz.x,
+                                 windowSz.y,
+                                 SDL_WINDOW_RESIZABLE);
+  if (!window) { throw std::runtime_error{SDL_GetError()}; }
+  return window;
+}
+
+static SDL_Renderer*
+makeRenderer(SDL_Window* window)
+{
+  auto renderer = SDL_CreateRenderer(window, -1, 0);
+  if (!renderer) { throw std::runtime_error{SDL_GetError()}; }
+  return renderer;
+}
+
 EditorApp::EditorApp(EditorInitSettings settings)
-  : ImGuiAppBase(settings.windowSz)
+  : window(makeWindow(settings.windowSz))
+  , renderer(makeRenderer(window))
+  , ui(window, renderer)
+  , view{{0, 30, settings.windowSz.x, settings.windowSz.y}}
 {
   std::shared_ptr<PictureBuffer> buffer;
   if (!settings.filename.empty() ||
@@ -50,15 +75,66 @@ EditorApp::EditorApp(EditorInitSettings settings)
   focusBufferWindow();
 }
 
+int
+EditorApp::run()
+{
+  while (!exited) {
+    // Update
+    for (SDL_Event ev; SDL_PollEvent(&ev);) { event(ev, ui.event(ev)); }
+
+    ui.update();
+    update();
+
+    if (showView) {
+      if (!ImGui::GetIO().WantCaptureMouse && SDL_GetMouseFocus() == window) {
+        auto buttonState = SDL_GetMouseState(&view.state.x, &view.state.y);
+        view.state.left = buttonState & SDL_BUTTON_LMASK;
+        view.state.middle = buttonState & SDL_BUTTON_MMASK;
+        view.state.right = buttonState & SDL_BUTTON_RMASK;
+      };
+      view.update(renderer);
+    }
+
+    /// Render
+    SDL_SetRenderDrawColor(renderer, 60, 60, 60, 255);
+    SDL_RenderClear(renderer);
+
+    if (showView) { view.render(renderer); }
+
+    ui.render();
+
+    SDL_RenderPresent(renderer);
+    SDL_Delay(10);
+  }
+  SDL_Quit();
+  return EXIT_SUCCESS;
+}
+
 void
 EditorApp::event(const SDL_Event& ev, bool imGuiMayUse)
 {
   switch (ev.type) {
   case SDL_QUIT:
-    if (buffers.empty() || !defaults::ASK_SAVE_ON_CLOSE) break;
+    if (buffers.empty() || !defaults::ASK_SAVE_ON_CLOSE) {
+      exited = true;
+      break;
+    }
     exiting = true;
     close(false);
     return;
+  case SDL_WINDOWEVENT:
+    switch (ev.window.event) {
+    case SDL_WINDOWEVENT_SIZE_CHANGED:
+      view.setViewport({0, 0, ev.window.data1, ev.window.data2});
+      break;
+    default: break;
+    }
+    break;
+  case SDL_MOUSEWHEEL:
+    if (ImGui::GetIO().WantCaptureMouse || !showView) break;
+    view.state.wheelX += ev.wheel.x;
+    view.state.wheelY += ev.wheel.y;
+    break;
   case SDL_DROPFILE:
     if (ImGui::GetIO().WantCaptureMouse) break;
     appendFile(std::make_shared<PictureBuffer>(ev.drop.file));
@@ -74,7 +150,6 @@ EditorApp::event(const SDL_Event& ev, bool imGuiMayUse)
   }
   default: break;
   }
-  return ImGuiAppBase::event(ev, imGuiMayUse);
 }
 
 inline void

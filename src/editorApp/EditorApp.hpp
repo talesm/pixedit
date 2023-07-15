@@ -4,7 +4,8 @@
 #include <string>
 #include <SDL.h>
 #include "Clipboard.hpp"
-#include "ImGuiAppBase.hpp"
+#include "ImGuiComponent.hpp"
+#include "PictureView.hpp"
 #include "ShortcutManager.hpp"
 #include "utils/rect.hpp"
 
@@ -28,8 +29,16 @@ struct ViewSettings
   std::string titleBuffer;
 };
 
-class EditorApp : ImGuiAppBase
+class EditorApp
 {
+  SDL_Window* window = nullptr;
+  SDL_Renderer* renderer = nullptr;
+  ImGuiComponent ui;
+
+  PictureView view;
+  bool exited = false;
+  bool showView = false;
+
   std::vector<std::shared_ptr<PictureBuffer>> buffers;
   std::map<PictureBuffer*, ViewSettings> viewSettings;
   int bufferIndex = -1;
@@ -43,14 +52,15 @@ class EditorApp : ImGuiAppBase
 
 public:
   EditorApp(EditorInitSettings settings);
-  using ImGuiAppBase::run;
+
+  int run();
 
 private:
   void setupShortcuts();
 
-  void event(const SDL_Event& ev, bool imGuiMayUse) final;
+  void event(const SDL_Event& ev, bool imGuiMayUse);
 
-  void update() final;
+  void update();
 
   void showNewFileDialog();
 
