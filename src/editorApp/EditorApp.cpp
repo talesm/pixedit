@@ -63,7 +63,15 @@ EditorApp::event(const SDL_Event& ev, bool imGuiMayUse)
     if (ImGui::GetIO().WantCaptureMouse) break;
     appendFile(std::make_shared<PictureBuffer>(ev.drop.file));
     break;
-
+  case SDL_KEYDOWN: {
+    if (ImGui::GetIO().WantCaptureKeyboard) break;
+    auto mod = ev.key.keysym.mod;
+    shortcuts.exec({.key = ev.key.keysym.sym,
+                    .ctrl = (mod & KMOD_CTRL) != 0,
+                    .alt = (mod & KMOD_ALT) != 0,
+                    .shift = (mod & KMOD_SHIFT) != 0});
+    break;
+  }
   default: break;
   }
   return ImGuiAppBase::event(ev, imGuiMayUse);

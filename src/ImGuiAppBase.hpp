@@ -10,7 +10,6 @@
 #include "ImGuiComponent.hpp"
 #include "PictureBuffer.hpp"
 #include "PictureView.hpp"
-#include "ShortcutManager.hpp"
 
 namespace pixedit {
 
@@ -20,7 +19,6 @@ struct ImGuiAppBase
   SDL_Renderer* renderer = nullptr;
   ImGuiComponent ui;
 
-  ShortcutManager shortcuts;
   PictureView view;
   bool exited = false;
   bool showView = false;

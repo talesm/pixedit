@@ -5,6 +5,7 @@
 #include <SDL.h>
 #include "Clipboard.hpp"
 #include "ImGuiAppBase.hpp"
+#include "ShortcutManager.hpp"
 #include "utils/rect.hpp"
 
 namespace pixedit {
@@ -34,6 +35,7 @@ class EditorApp : ImGuiAppBase
   int bufferIndex = -1;
 
   Clipboard clipboard;
+  ShortcutManager shortcuts;
 
   bool exiting = false;
   bool focusBufferNextFrame = true;

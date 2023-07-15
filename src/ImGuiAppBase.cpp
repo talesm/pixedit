@@ -36,15 +36,6 @@ ImGuiAppBase::event(const SDL_Event& ev, bool imGuiMayUse)
     view.state.wheelX += ev.wheel.x;
     view.state.wheelY += ev.wheel.y;
     break;
-  case SDL_KEYDOWN: {
-    if (ImGui::GetIO().WantCaptureKeyboard) break;
-    auto mod = ev.key.keysym.mod;
-    shortcuts.exec({.key = ev.key.keysym.sym,
-                    .ctrl = (mod & KMOD_CTRL) != 0,
-                    .alt = (mod & KMOD_ALT) != 0,
-                    .shift = (mod & KMOD_SHIFT) != 0});
-    break;
-  }
   default: break;
   }
 }
