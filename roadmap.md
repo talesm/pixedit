@@ -52,7 +52,7 @@ To do
     - [ ] Contiguous color*
 - [x] "New file" dialog
 - [x] "Exit confirmation" dialog
-- [ ] Options
+- [x] Options
   - [ ] Color palette (not palette image, just reference)*
   - [x] Color selector/Wheel
   - [x] Swap color

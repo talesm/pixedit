@@ -3,7 +3,7 @@ PixEdit
 
 A simple and customizable pixel art focused image editor
 
-TODO: Screen shot
+![Screenshot](screenshot1.png)
 
 Goals
 -----
@@ -16,15 +16,22 @@ Goals
 
 See [roadmap](roadmap.md) for how we plan to do this.
 
-Screenshots
------------
-
-TODO
 
 License
 -------
 
 We use [GPL 2 License](LICENCE.md).
+
+Build
+-----
+
+To build, make sure you have SDL2 and SDL2_image installed and visible on path. Then run `make`, with desired options. We suggest:
+
+```shell
+$ make -j 10 OPTIMIZE=1 DEBUG=0
+```
+
+If successful, the executable can be found as build/pixedit.
 
 Credits
 -------
