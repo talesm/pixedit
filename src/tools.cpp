@@ -1,4 +1,5 @@
 #include "tools.hpp"
+#include <unordered_map>
 #include "tools/FloodFillTool.hpp"
 #include "tools/FreeHandTool.hpp"
 #include "tools/LinesTool.hpp"
@@ -16,26 +17,44 @@ const std::vector<ToolDescription>&
 getTools()
 {
   static const std::vector<ToolDescription> tools{
-    {"Move", tools::MOVE, [] { return nullptr; }},
-    {"Zoom", tools::ZOOM, [] { return ZoomTool{}; }},
-    {"Pen", tools::FREE_HAND, [] { return FreeHandTool{}; }},
-    {"Lines", tools::LINES, [] { return LinesTool{}; }},
-    {"Flood fill", tools::FLOOD_FILL, [] { return FloodFillTool{}; }},
-    {"Outline rect", tools::OUTLINE_RECT, [] { return RectTool{true}; }},
-    {"Filled rect", tools::FILLED_RECT, [] { return RectTool{false}; }},
-    {"Outline oval", tools::OUTLINE_OVAL, [] { return OvalTool{true}; }},
-    {"Filled oval", tools::FILLED_OVAL, [] { return OvalTool{false}; }},
-    {"Outline poly", tools::OUTLINE_POLY, [] { return PolyTool{true}; }},
-    {"Filled poly", tools::FILLED_POLY, [] { return PolyTool{false}; }},
+    {"Move", NameId(tools::MOVE), [] { return nullptr; }},
+    {"Zoom", NameId(tools::ZOOM), [] { return ZoomTool{}; }},
+    {"Pen", NameId(tools::FREE_HAND), [] { return FreeHandTool{}; }},
+    {"Lines", NameId(tools::LINES), [] { return LinesTool{}; }},
+    {"Flood fill", NameId(tools::FLOOD_FILL), [] { return FloodFillTool{}; }},
+    {"Outline rect",
+     NameId(tools::OUTLINE_RECT),
+     [] { return RectTool{true}; }},
+    {"Filled rect", NameId(tools::FILLED_RECT), [] { return RectTool{false}; }},
+    {"Outline oval",
+     NameId(tools::OUTLINE_OVAL),
+     [] { return OvalTool{true}; }},
+    {"Filled oval", NameId(tools::FILLED_OVAL), [] { return OvalTool{false}; }},
+    {"Outline poly",
+     NameId(tools::OUTLINE_POLY),
+     [] { return PolyTool{true}; }},
+    {"Filled poly", NameId(tools::FILLED_POLY), [] { return PolyTool{false}; }},
     {.name = "Rect select",
-     .id = tools::RECT_SELECT,
+     .id = NameId(tools::RECT_SELECT),
      .build = [] { return SelectionRectTool{}; },
      .flags = ToolDescription::ENABLE_SELECTION},
     {.name = "Free form select",
-     .id = tools::FREE_HAND_SELECT,
+     .id = NameId(tools::FREE_HAND_SELECT),
      .build = [] { return SelectionFreeTool{}; },
      .flags = ToolDescription::ENABLE_SELECTION},
   };
   return tools;
 }
+
+const ToolDescription&
+getTool(IdRef id)
+{
+  static auto tools = [] {
+    std::unordered_map<IdRef, ToolDescription> tools;
+    for (auto& t : getTools()) { tools.emplace(t.id, t); }
+    return tools;
+  }();
+  return tools.at(id);
+}
+
 } // namespace pixedit

@@ -11,28 +11,24 @@ namespace pixedit {
 const std::vector<ToolDescription>&
 getTools();
 
-inline const ToolDescription&
-getTool(ToolId id)
-{
-  // FIXME this is not safe
-  return getTools().at(id);
-}
+const ToolDescription&
+getTool(IdRef id);
 
 namespace tools {
 
-constexpr ToolId MOVE = 0;
-constexpr ToolId ZOOM = 1;
-constexpr ToolId FREE_HAND = 2;
-constexpr ToolId LINES = 3;
-constexpr ToolId FLOOD_FILL = 4;
-constexpr ToolId OUTLINE_RECT = 5;
-constexpr ToolId FILLED_RECT = 6;
-constexpr ToolId OUTLINE_OVAL = 7;
-constexpr ToolId FILLED_OVAL = 8;
-constexpr ToolId OUTLINE_POLY = 9;
-constexpr ToolId FILLED_POLY = 10;
-constexpr ToolId RECT_SELECT = 11;
-constexpr ToolId FREE_HAND_SELECT = 12;
+constexpr Id MOVE = "Move";
+constexpr Id ZOOM = "Zoom";
+constexpr Id FREE_HAND = "Free-hand";
+constexpr Id LINES = "Lines";
+constexpr Id FLOOD_FILL = "Flood fill";
+constexpr Id OUTLINE_RECT = "Rect:outline";
+constexpr Id FILLED_RECT = "Rect:filled";
+constexpr Id OUTLINE_OVAL = "Oval:outline";
+constexpr Id FILLED_OVAL = "Oval:filled";
+constexpr Id OUTLINE_POLY = "Poly:outline";
+constexpr Id FILLED_POLY = "Poly:filled";
+constexpr Id RECT_SELECT = "Select:rect";
+constexpr Id FREE_HAND_SELECT = "Select:free-hand";
 } // namespace tools
 
 } // namespace pixedit

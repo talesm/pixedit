@@ -24,8 +24,8 @@ class PictureView
   bool editing = false;
   bool transparent = true;
 
-  ToolId toolId = 0;
-  std::optional<ToolId> nextToolId;
+  Id toolId = "Move";
+  std::optional<IdRef> nextToolId;
   Tool tool = nullptr;
 
   bool movingMode = false;
@@ -110,9 +110,9 @@ public:
     return scale = effectiveScale();
   }
 
-  ToolId getToolId() { return toolId; }
+  Id getToolId() { return toolId; }
 
-  void setToolId(ToolId id) { nextToolId = id; }
+  void setToolId(IdRef id) { nextToolId = id; }
 
   constexpr bool isTransparent() { return transparent; }
 

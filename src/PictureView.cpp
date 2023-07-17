@@ -193,12 +193,12 @@ PictureView::enableScratch(bool enable)
   }
 }
 
-inline std::optional<ToolId>
-adjustNextToolId(ToolId toolId)
+inline std::optional<IdRef>
+adjustNextToolId(IdRef toolId)
 {
   if (getTool(toolId).flags & ToolDescription::ENABLE_SELECTION) { return {}; }
   for (auto& tool : getTools()) {
-    if (tool.flags & ToolDescription::ENABLE_SELECTION) { return tool.id; }
+    if (tool.flags & ToolDescription::ENABLE_SELECTION) { return Id{tool.id}; }
   }
   return {};
 }
@@ -207,10 +207,11 @@ void
 PictureView::update(SDL_Renderer* renderer)
 {
   if (nextToolId) {
-    toolId = nextToolId.value();
-    nextToolId.reset();
     if (tool) { tool(*this, PictureEvent::DETACHED); }
-    tool = getTool(toolId).build();
+    auto& toolDesc = getTool(*nextToolId);
+    toolId = toolDesc.id;
+    nextToolId.reset();
+    tool = toolDesc.build();
   }
   if (buffer != newBuffer) {
     if (!buffer) {

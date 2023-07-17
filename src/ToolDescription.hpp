@@ -4,6 +4,7 @@
 #include <functional>
 #include <string>
 #include <SDL.h>
+#include "Id.hpp"
 
 namespace pixedit {
 
@@ -22,16 +23,13 @@ enum class PictureEvent
   DETACHED, ///< @brief When the state must be set back to initial
 };
 
-/// @brief Represents an unique id for a tool
-using ToolId = int;
-
 /// @brief Represents a tool instance
 using Tool = std::function<void(PictureView& view, PictureEvent event)>;
 
 struct ToolDescription
 {
   std::string name;
-  ToolId id;
+  NameId id;
   std::function<Tool()> build;
   Uint32 flags = 0;
 
