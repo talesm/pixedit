@@ -242,7 +242,7 @@ showAboutDialog()
   ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
   if (ImGui::BeginPopupModal(
         "About", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-    ImGui::Text("Pixedit version: DEVELOPMENT");
+    ImGui::Text("Pixedit version: v0.1.0-AuspiciousAmber (Alpha)");
     ImGui::Separator();
     ImGui::TextWrapped(
       "A simple and customizable pixel art focused image editor");

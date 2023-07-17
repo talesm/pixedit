@@ -1,7 +1,7 @@
 Changelog
 =========
 
-V0.1.0-AuspiciousAmber (Alpha)
+v0.1.0-AuspiciousAmber (Alpha)
 ------------------------------
 
 This a table stakes version with good enough versions of most commonly intersection of image editor features.
