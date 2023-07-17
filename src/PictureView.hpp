@@ -31,6 +31,7 @@ class PictureView
   bool movingMode = false;
   SDL_Color checkerColors[2] = {{200, 200, 200, 255}, {150, 150, 150, 255}};
   int checkerSize = 16;
+  bool grid = true;
 
 public:
   SDL_FPoint offset{0};
@@ -141,6 +142,9 @@ public:
   void persistSelection();
 
   void pickColorUnderMouse();
+
+  constexpr bool isGridEnabled() const { return grid; }
+  constexpr void enableGrid(bool value) { grid = value; }
 
 private:
   void updatePreview(SDL_Renderer* renderer);

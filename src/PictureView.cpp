@@ -156,6 +156,17 @@ PictureView::render(SDL_Renderer* renderer) const
   renderCheckerBoard(
     renderer, dstRect, checkerSize, checkerColors[0], checkerColors[1]);
   SDL_RenderCopyF(renderer, preview, &srcRect, &dstRect);
+  if (grid && scale >= 3) {
+    SDL_SetRenderDrawColor(renderer, 127, 127, 127, 255);
+    float yLimit = dstRect.y + scaledSz.y;
+    float xLimit = dstRect.x + scaledSz.x;
+    for (float yy = dstRect.y + scale - 1; yy < yLimit; yy += scale) {
+      SDL_RenderDrawLineF(renderer, dstRect.x, yy, xLimit - 1, yy);
+    }
+    for (float xx = dstRect.x + scale - 1; xx < xLimit; xx += scale) {
+      SDL_RenderDrawLineF(renderer, xx, dstRect.y, xx, yLimit - 1);
+    }
+  }
 }
 
 void

@@ -525,6 +525,10 @@ EditorApp::setupShortcuts()
 
   // Swap colors
   shortcuts.set({.key = SDLK_x, .alt = true}, [&] { view.swapColors(); });
+
+  // grid
+  shortcuts.set({.key = SDLK_g, .alt = true},
+                [&] { view.enableGrid(!view.isGridEnabled()); });
 }
 
 void
@@ -568,6 +572,10 @@ EditorApp::showMainMenuBar()
     }
     if (ImGui::BeginMenu("View")) {
       ImGui::Checkbox("Maximize", &showView);
+      bool gridEnabled = view.isGridEnabled();
+      if (ImGui::Checkbox("Show grid", &gridEnabled)) {
+        view.enableGrid(gridEnabled);
+      }
       ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("Help")) {
