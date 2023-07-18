@@ -3,6 +3,7 @@
 
 #include <string>
 #include <SDL.h>
+#include "Action.hpp"
 #include "Clipboard.hpp"
 #include "ImGuiComponent.hpp"
 #include "PictureView.hpp"
@@ -44,6 +45,7 @@ class EditorApp
   int bufferIndex = -1;
 
   Clipboard clipboard;
+  ActionManager actions;
   ShortcutManager shortcuts;
 
   bool exiting = false;
@@ -56,6 +58,8 @@ public:
   int run();
 
 private:
+  void setupActions();
+
   void setupShortcuts();
 
   void event(const SDL_Event& ev, bool imGuiMayUse);

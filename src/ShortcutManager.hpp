@@ -4,6 +4,7 @@
 #include <map>
 #include <ostream>
 #include <SDL_keyboard.h>
+#include "Id.hpp"
 
 namespace pixedit {
 
@@ -35,16 +36,15 @@ operator<<(std::ostream& out, const Shortcut& sc)
 
 struct ShortcutManager
 {
-  std::map<Shortcut, std::function<void()>> shortcuts;
+  std::map<Shortcut, IdOwn> shortcuts;
 
-  void set(Shortcut sc, std::function<void()> cmd) { shortcuts[sc] = cmd; }
+  void set(Shortcut sc, Id action) { shortcuts[sc] = IdOwn{action}; }
   void unset(Shortcut sc) { shortcuts.erase(sc); }
-  bool exec(Shortcut sc) const
+  std::optional<Id> get(Shortcut sc) const
   {
     auto it = shortcuts.find(sc);
-    if (it == shortcuts.end()) return false;
-    it->second();
-    return true;
+    if (it == shortcuts.end()) return {};
+    return it->second;
   }
 };
 

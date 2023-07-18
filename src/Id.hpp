@@ -8,7 +8,7 @@
 namespace pixedit {
 
 using Id = std::string_view;
-using NameId = std::string;
+using IdOwn = std::string;
 
 struct IdRef
 {
@@ -16,7 +16,7 @@ struct IdRef
 
   constexpr IdRef() = default;
   IdRef(Id id);
-  IdRef(NameId id)
+  IdRef(IdOwn id)
     : IdRef(Id(id)){};
 };
 

@@ -29,7 +29,7 @@ using Tool = std::function<void(PictureView& view, PictureEvent event)>;
 struct ToolDescription
 {
   std::string name;
-  NameId id;
+  IdOwn id;
   std::function<Tool()> build;
   Uint32 flags = 0;
 

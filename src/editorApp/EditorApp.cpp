@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <imgui.h>
 #include "FileDialogTinyfd.hpp"
+#include "actions.hpp"
 #include "tools.hpp"
 
 namespace pixedit {
@@ -47,11 +48,19 @@ makeRenderer(SDL_Window* window)
   return renderer;
 }
 
+static Uint32
+EDITOR_EVENT()
+{
+  static Uint32 event = SDL_RegisterEvents(1);
+  return event;
+}
+
 EditorApp::EditorApp(EditorInitSettings settings)
   : window(makeWindow(settings.windowSz))
   , renderer(makeRenderer(window))
   , ui(window, renderer)
   , view{{0, 30, settings.windowSz.x, settings.windowSz.y}}
+  , actions{EDITOR_EVENT()}
 {
   std::shared_ptr<PictureBuffer> buffer;
   if (!settings.filename.empty() ||
@@ -67,6 +76,7 @@ EditorApp::EditorApp(EditorInitSettings settings)
     bufferIndex = buffers.size() - 1;
   }
 
+  setupActions();
   setupShortcuts();
 
   view.canvas | ColorA{0, 0, 0, 255};
@@ -142,13 +152,15 @@ EditorApp::event(const SDL_Event& ev, bool imGuiMayUse)
   case SDL_KEYDOWN: {
     if (ImGui::GetIO().WantCaptureKeyboard) break;
     auto mod = ev.key.keysym.mod;
-    shortcuts.exec({.key = ev.key.keysym.sym,
-                    .ctrl = (mod & KMOD_CTRL) != 0,
-                    .alt = (mod & KMOD_ALT) != 0,
-                    .shift = (mod & KMOD_SHIFT) != 0});
+    if (auto action = shortcuts.get({.key = ev.key.keysym.sym,
+                                     .ctrl = (mod & KMOD_CTRL) != 0,
+                                     .alt = (mod & KMOD_ALT) != 0,
+                                     .shift = (mod & KMOD_SHIFT) != 0})) {
+      pushAction(*action);
+    }
     break;
   }
-  default: break;
+  default: actions.check(ev.user); break;
   }
 }
 
@@ -490,24 +502,15 @@ EditorApp::showPictureWindow(const std::shared_ptr<PictureBuffer>& buffer)
 }
 
 void
-EditorApp::setupShortcuts()
+EditorApp::setupActions()
 {
-  shortcuts.set({.key = SDLK_n, .ctrl = true},
-                [&] { requestModal = "New image"; });
-  shortcuts.set({.key = SDLK_o, .ctrl = true}, [&] {
+  actions.set(actions::PIC_NEW, [&] { requestModal = "New image"; });
+  actions.set(actions::PIC_OPEN, [&] {
     auto buffer = loadFromFileDialog("./");
     if (buffer) { appendFile(buffer); };
   });
-  shortcuts.set({.key = SDLK_ESCAPE}, [&] { view.persistSelection(); });
-  shortcuts.set({.key = SDLK_DELETE}, [&] { view.setSelection(nullptr); });
-  shortcuts.set({.key = SDLK_c, .ctrl = true}, [&] { copy(); });
-  shortcuts.set({.key = SDLK_x, .ctrl = true}, [&] { cut(); });
-  shortcuts.set({.key = SDLK_v, .ctrl = true}, [&] { paste(); });
-  shortcuts.set({.key = SDLK_v, .ctrl = true, .shift = true},
-                [&] { pasteAsNew(); });
-  shortcuts.set({.key = SDLK_w, .ctrl = true}, [&] { close(); });
-  shortcuts.set({.key = SDLK_F4, .ctrl = true}, [&] { close(); });
-  shortcuts.set({.key = SDLK_s, .ctrl = true}, [&] {
+  actions.set(actions::PIC_CLOSE, [&] { close(); });
+  actions.set(actions::PIC_SAVE, [&] {
     if (buffers.empty() || bufferIndex < 0) return;
     if (view.getBuffer()->getFilename().empty()) {
       saveWithFileDialog(*view.getBuffer());
@@ -515,20 +518,50 @@ EditorApp::setupShortcuts()
       view.getBuffer()->save();
     }
   });
-  shortcuts.set({.key = SDLK_s, .ctrl = true, .shift = true}, [&] {
+  actions.set(actions::PIC_SAVE_AS, [&] {
     if (buffers.empty() || bufferIndex < 0) return;
     saveWithFileDialog(*view.getBuffer());
   });
-  shortcuts.set({.key = SDLK_z, .ctrl = true}, [&] { view.undo(); });
+  actions.set(actions::SELECTION_PERSIST, [&] { view.persistSelection(); });
+  actions.set(actions::SELECTION_DELETE, [&] { view.setSelection(nullptr); });
+  actions.set(actions::CLIP_COPY, [&] { copy(); });
+  actions.set(actions::CLIP_CUT, [&] { cut(); });
+  actions.set(actions::CLIP_PASTE, [&] { paste(); });
+  actions.set(actions::CLIP_PASTE_NEW, [&] { pasteAsNew(); });
+
+  actions.set(actions::HISTORY_UNDO, [&] { view.undo(); });
+  actions.set(actions::HISTORY_REDO, [&] { view.redo(); });
+  actions.set(actions::EDITOR_COLOR_SWAP, [&] { view.swapColors(); });
+  actions.set(actions::VIEW_GRID_TOGGLE,
+              [&] { view.enableGrid(!view.isGridEnabled()); });
+}
+
+void
+EditorApp::setupShortcuts()
+{
+  shortcuts.set({.key = SDLK_n, .ctrl = true}, actions::PIC_NEW);
+  shortcuts.set({.key = SDLK_o, .ctrl = true}, actions::PIC_OPEN);
+  shortcuts.set({.key = SDLK_ESCAPE}, actions::SELECTION_PERSIST);
+  shortcuts.set({.key = SDLK_DELETE}, actions::SELECTION_DELETE);
+  shortcuts.set({.key = SDLK_c, .ctrl = true}, actions::CLIP_COPY);
+  shortcuts.set({.key = SDLK_x, .ctrl = true}, actions::CLIP_CUT);
+  shortcuts.set({.key = SDLK_v, .ctrl = true}, actions::CLIP_PASTE);
+  shortcuts.set({.key = SDLK_v, .ctrl = true, .shift = true},
+                actions::CLIP_PASTE_NEW);
+  shortcuts.set({.key = SDLK_w, .ctrl = true}, actions::PIC_CLOSE);
+  shortcuts.set({.key = SDLK_F4, .ctrl = true}, actions::PIC_CLOSE);
+  shortcuts.set({.key = SDLK_s, .ctrl = true}, actions::PIC_SAVE);
+  shortcuts.set({.key = SDLK_s, .ctrl = true, .shift = true},
+                actions::PIC_SAVE_AS);
+  shortcuts.set({.key = SDLK_z, .ctrl = true}, actions::HISTORY_UNDO);
   shortcuts.set({.key = SDLK_z, .ctrl = true, .shift = true},
-                [&] { view.redo(); });
+                actions::HISTORY_REDO);
 
   // Swap colors
-  shortcuts.set({.key = SDLK_x, .alt = true}, [&] { view.swapColors(); });
+  shortcuts.set({.key = SDLK_x, .alt = true}, actions::EDITOR_COLOR_SWAP);
 
   // grid
-  shortcuts.set({.key = SDLK_g, .alt = true},
-                [&] { view.enableGrid(!view.isGridEnabled()); });
+  shortcuts.set({.key = SDLK_g, .alt = true}, actions::VIEW_GRID_TOGGLE);
 }
 
 void
@@ -557,7 +590,7 @@ EditorApp::showMainMenuBar()
         close();
       }
       ImGui::Separator();
-      if (ImGui::MenuItem("Exit")) { exited = true; }
+      if (ImGui::MenuItem("Exit")) { pushAction(actions::QUIT); }
       ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("Edit")) {
