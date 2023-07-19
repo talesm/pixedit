@@ -6,88 +6,29 @@ Here we have the our building strategy.
 Version Goals
 -------------
 
-- [ ] **v0.1 Table stakes**: Open/Save PNG and BMP, 24/32 bits, multiple images. Color selection and pseudo palette. Basic tools, copy and paste;
+- [x] **v0.1 Table stakes**: Open/Save PNG and BMP, 24/32 bits, multiple images. Color selection and pseudo palette. Basic tools, copy and paste;
 - [ ] **v0.2 Magic sauce**: Layers and animation, import/export, extension hooks for loader/save, effects, etc;
 - [ ] **v0.3 Glyphs**: Tiling and text support;
 
 To do
 -----
 
-- [x] View image
-  - [x] Load from drop
-  - [x] Load C+o
-  - [x] Save C+S | C+s
-  - [x] Close C+w
-  - [x] Multiple files
-  - [x] Zoom (C+wheel)
-  - [x] Pan (C+click)
-- [x] History
-  - [x] Undo
-  - [x] Redo
-  - [x] Cancel action
-- [x] Clipboard
-  - [x] Copy
-  - [x] Copy selection
-  - [x] Paste
-  - [x] Paste as new
-  - [x] Internal* (as fallback??)
-  - [x] X based support
-  - [x] Paste image on current offset
+- [ ] Design format *.pix
+- [ ] Implement *.pix for single image
+- [ ] Layers
+  - [ ] Implement Layer window
+  - [ ] Implement *.pix for layered image
+- [ ] Animation
+  - [ ] Implement Animation timeline
+  - [ ] Implement Animation options
+  - [ ] Implement *.pix for animated
 - [ ] Tools
-  - [x] Zoom
-  - [x] Move
-  - [x] Free hand
-  - [x] Lines
-  - [x] Rectangle
-  - [x] Polygon
-  - [x] Ellipsis*
-  - [x] Flood fill
-  - [x] Pick color
   - [ ] Text* (using existing ImGui engine)
-  - [x] Selection
-    - [x] Rect
-      - [x] Make selection persist over cycling buffer focus
-    - [x] Free form
-    - [ ] Color*
-    - [ ] Contiguous color*
-- [x] "New file" dialog
-- [x] "Exit confirmation" dialog
-- [x] Options
-  - [ ] Color palette (not palette image, just reference)*
-  - [x] Color selector/Wheel
-  - [x] Swap color
-  - [x] Pen
-  - [x] Tile
-- [ ] ~~Tabs for switching files~~
-- [x] Menu bar
-  - [x] File menu
-    - [x] New
-    - [x] Load 
-    - [x] Save
-    - [x] Save as 
-    - [x] Close
-    - [x] Exit
-    - [ ] ~~Last files~~
-  - [x] Edit menu
-    - [x] Copy
-    - [x] Paste
-    - [x] Paste as new
-    - [x] Undo/redo
-  - [x] Help/About
-- [x] Status bar*
-  - [x] Tool name
-  - [x] Mouse pos
-- [x] Windowed mode*
-- [x] Finishing touches:
-  - [x] Move show view to view menu
-  - [x] Ensure maximized view preserve zoom offset
-  - [x] Selection color transparency
-  - [x] Enable save on exit
-  - [x] Control cutout color: BLANK or FILL
-  - [x] Path configuration
-    - Temporary files (user dir)
-    - Somehow do the same for ImGui
-  - [x] Configure default blank image
+  - [ ] Color selection*
+  - [ ] Contiguous color selection*
+- [ ] Options
+  - [ ] Color palette window (not palette image, just reference)*
+- [ ] Create glass surface and better looking scale hooks
 
 Wishlist
 --------
