@@ -21,12 +21,6 @@ EditorApp::update()
   if (!showView) { showPictureWindows(); }
 }
 
-void
-EditorApp::focusBufferWindow()
-{
-  focusBufferNextFrame = true;
-}
-
 static SDL_Window*
 makeWindow(SDL_Point windowSz)
 {
@@ -82,7 +76,7 @@ EditorApp::EditorApp(EditorInitSettings settings)
   view.canvas | ColorA{0, 0, 0, 255};
   view.canvas | ColorB{255, 255, 255, 255};
   view.setToolId(tools::FREE_HAND);
-  focusBufferWindow();
+  pushAction(actions::EDITOR_FOCUS_PICTURE);
 }
 
 int
@@ -130,7 +124,7 @@ EditorApp::event(const SDL_Event& ev, bool imGuiMayUse)
       break;
     }
     exiting = true;
-    close(false);
+    pushAction(actions::PIC_CLOSE);
     return;
   case SDL_WINDOWEVENT:
     switch (ev.window.event) {
@@ -162,45 +156,6 @@ EditorApp::event(const SDL_Event& ev, bool imGuiMayUse)
   }
   default: actions.check(ev.user); break;
   }
-}
-
-inline void
-EditorApp::copy()
-{
-  if (!view.getBuffer()) return;
-  auto& buffer = *view.getBuffer();
-  auto selectionSurface = buffer.getSelectionSurface();
-  clipboard.set(selectionSurface ?: buffer.getSurface());
-}
-
-inline void
-EditorApp::cut()
-{
-  if (!view.getBuffer()) return;
-  auto& buffer = *view.getBuffer();
-  if (!buffer.hasSelection()) return;
-  clipboard.set(buffer.getSelectionSurface());
-  view.setSelection(nullptr);
-}
-
-void
-EditorApp::paste()
-{
-  auto& buffer = view.getBuffer();
-  if (!buffer) {
-    pasteAsNew();
-    return;
-  }
-  auto surface = clipboard.get();
-  if (!surface) return;
-  view.setSelection(surface);
-}
-void
-EditorApp::pasteAsNew()
-{
-  auto surface = clipboard.get();
-  if (!surface) return; // TODO Error?
-  appendFile(std::make_shared<PictureBuffer>("", surface));
 }
 
 void
@@ -324,7 +279,7 @@ EditorApp::showPictureOptions()
     for (auto& tool : getTools()) {
       if (ImGui::RadioButton(tool.name.c_str(), tool.id == currId)) {
         view.setToolId(tool.id);
-        focusBufferWindow();
+        pushAction(actions::EDITOR_FOCUS_PICTURE);
       }
     }
   }
@@ -333,21 +288,21 @@ EditorApp::showPictureOptions()
   if (ImGui::Button("Reset##offset")) { view.offset = {0}; }
   if (ImGui::ArrowButton("Decrease zoom", ImGuiDir_Left)) {
     view.scale /= 2;
-    focusBufferWindow();
+    pushAction(actions::EDITOR_FOCUS_PICTURE);
   }
   ImGui::SameLine();
   ImGui::Text("%g%%", view.scale * 100);
   ImGui::SameLine();
   if (ImGui::ArrowButton("Increase zoom", ImGuiDir_Right)) {
     view.scale *= 2;
-    focusBufferWindow();
+    pushAction(actions::EDITOR_FOCUS_PICTURE);
   }
 
   float colorAreaHeight =
     ImGui::GetFrameHeightWithSpacing() + ImGui::GetFrameHeight();
   if (ImGui::Button("Swap colors", {0, colorAreaHeight})) {
     view.swapColors();
-    focusBufferWindow();
+    pushAction(actions::EDITOR_FOCUS_PICTURE);
   }
   ImGui::SameLine();
   {
@@ -371,13 +326,13 @@ EditorApp::showPictureOptions()
   Pattern pattern = view.canvas.getBrush().pattern;
   if (PatternCombo("Tile: ", &pattern)) {
     view.canvas | pattern;
-    focusBufferWindow();
+    pushAction(actions::EDITOR_FOCUS_PICTURE);
   }
   if (ImGui::CollapsingHeader("Selection", ImGuiTreeNodeFlags_DefaultOpen)) {
     bool transparent = view.isTransparent();
     if (ImGui::Checkbox("Transparent", &transparent)) {
       view.setTransparent(transparent);
-      focusBufferWindow();
+      pushAction(actions::EDITOR_FOCUS_PICTURE);
     }
     ImGui::Checkbox("Fill selected out region", &view.fillSelectedOut);
   }
@@ -497,7 +452,7 @@ EditorApp::showPictureWindow(const std::shared_ptr<PictureBuffer>& buffer)
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     draw_list->AddImage(settings.texture, canvasP0, canvasP1);
   }
-  if (!stayOpen) { close(); }
+  if (!stayOpen) { pushAction(actions::PIC_CLOSE); }
   ImGui::End();
 }
 
@@ -524,16 +479,42 @@ EditorApp::setupActions()
   });
   actions.set(actions::SELECTION_PERSIST, [&] { view.persistSelection(); });
   actions.set(actions::SELECTION_DELETE, [&] { view.setSelection(nullptr); });
-  actions.set(actions::CLIP_COPY, [&] { copy(); });
-  actions.set(actions::CLIP_CUT, [&] { cut(); });
-  actions.set(actions::CLIP_PASTE, [&] { paste(); });
-  actions.set(actions::CLIP_PASTE_NEW, [&] { pasteAsNew(); });
+  actions.set(actions::CLIP_COPY, [&] {
+    if (!view.getBuffer()) return;
+    auto& buffer = *view.getBuffer();
+    auto selectionSurface = buffer.getSelectionSurface();
+    clipboard.set(selectionSurface ?: buffer.getSurface());
+  });
+  actions.set(actions::CLIP_CUT, [&] {
+    if (!view.getBuffer()) return;
+    auto& buffer = *view.getBuffer();
+    if (!buffer.hasSelection()) return;
+    clipboard.set(buffer.getSelectionSurface());
+    view.setSelection(nullptr);
+  });
+  actions.set(actions::CLIP_PASTE, [&] {
+    auto& buffer = view.getBuffer();
+    if (!buffer) {
+      pushAction(actions::CLIP_PASTE_NEW);
+      return;
+    }
+    auto surface = clipboard.get();
+    if (!surface) return;
+    view.setSelection(surface);
+  });
+  actions.set(actions::CLIP_PASTE_NEW, [&] {
+    auto surface = clipboard.get();
+    if (!surface) return; // TODO Error?
+    appendFile(std::make_shared<PictureBuffer>("", surface));
+  });
 
   actions.set(actions::HISTORY_UNDO, [&] { view.undo(); });
   actions.set(actions::HISTORY_REDO, [&] { view.redo(); });
   actions.set(actions::EDITOR_COLOR_SWAP, [&] { view.swapColors(); });
   actions.set(actions::VIEW_GRID_TOGGLE,
               [&] { view.enableGrid(!view.isGridEnabled()); });
+  actions.set(actions::EDITOR_FOCUS_PICTURE,
+              [&] { focusBufferNextFrame = true; });
 }
 
 void
@@ -564,43 +545,48 @@ EditorApp::setupShortcuts()
   shortcuts.set({.key = SDLK_g, .alt = true}, actions::VIEW_GRID_TOGGLE);
 }
 
+static void
+showFileMenuContent(bool hasBuffer)
+{
+  if (ImGui::MenuItem("New")) { pushAction(actions::PIC_NEW); }
+  if (ImGui::MenuItem("Open", "Ctrl+O")) { pushAction(actions::PIC_OPEN); }
+  if (ImGui::MenuItem("Save", "Ctrl+S")) { pushAction(actions::PIC_SAVE); }
+  if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S")) {
+    pushAction(actions::PIC_SAVE_AS);
+  }
+  if (ImGui::MenuItem("Close File", "Ctrl+F4", nullptr, hasBuffer)) {
+    pushAction(actions::PIC_CLOSE);
+  }
+  ImGui::Separator();
+  if (ImGui::MenuItem("Exit")) { pushAction(actions::QUIT); }
+}
+
+static void
+showEditMenuContent()
+{
+  if (ImGui::MenuItem("Undo", "Ctrl+Z")) { pushAction(actions::HISTORY_UNDO); }
+  if (ImGui::MenuItem("Redo", "Ctrl+Shift+Z")) {
+    pushAction(actions::HISTORY_REDO);
+  }
+  ImGui::Separator();
+  if (ImGui::MenuItem("Cut", "Ctrl+X")) { pushAction(actions::CLIP_CUT); }
+  if (ImGui::MenuItem("Copy", "Ctrl+C")) { pushAction(actions::CLIP_COPY); }
+  if (ImGui::MenuItem("Paste", "Ctrl+V")) { pushAction(actions::CLIP_PASTE); }
+  if (ImGui::MenuItem("Paste as new", "Ctrl+Shift+V")) {
+    pushAction(actions::CLIP_PASTE_NEW);
+  }
+}
+
 void
 EditorApp::showMainMenuBar()
 {
   if (ImGui::BeginMainMenuBar()) {
     if (ImGui::BeginMenu("File")) {
-      if (ImGui::MenuItem("New")) { requestModal = "New image"; }
-      if (ImGui::MenuItem("Open", "Ctrl+O")) {
-        auto buffer = loadFromFileDialog("./");
-        if (buffer) { appendFile(buffer); };
-      }
-      if (ImGui::MenuItem("Save", "Ctrl+S")) {
-        if (buffers.empty() || bufferIndex < 0) return;
-        if (view.getBuffer()->getFilename().empty()) {
-          saveWithFileDialog(*view.getBuffer());
-        } else {
-          view.getBuffer()->save();
-        }
-      }
-      if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S")) {
-        if (buffers.empty() || bufferIndex < 0) return;
-        saveWithFileDialog(*view.getBuffer());
-      }
-      if (ImGui::MenuItem("Close File", "Ctrl+F4", nullptr, !buffers.empty())) {
-        close();
-      }
-      ImGui::Separator();
-      if (ImGui::MenuItem("Exit")) { pushAction(actions::QUIT); }
+      showFileMenuContent(!buffers.empty());
       ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("Edit")) {
-      if (ImGui::MenuItem("Undo", "Ctrl+Z")) { view.undo(); }
-      if (ImGui::MenuItem("Redo", "Ctrl+Shift+Z")) { view.redo(); }
-      ImGui::Separator();
-      if (ImGui::MenuItem("Cut", "Ctrl+X")) { cut(); }
-      if (ImGui::MenuItem("Copy", "Ctrl+C")) { copy(); }
-      if (ImGui::MenuItem("Paste", "Ctrl+V")) { paste(); }
-      if (ImGui::MenuItem("Paste as new", "Ctrl+Shift+V")) { pasteAsNew(); }
+      showEditMenuContent();
       ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("View")) {
@@ -674,7 +660,7 @@ EditorApp::showConfirmExitDialog()
                       ImVec2(ImGui::GetContentRegionAvail().x * .45f, 0))) {
       close(true);
       if (exiting) {
-        close();
+        pushAction(actions::PIC_CLOSE);
       } else {
         ImGui::CloseCurrentPopup();
       }
@@ -687,7 +673,7 @@ EditorApp::showConfirmExitDialog()
     ImGui::SetItemDefaultFocus();
     ImGui::EndPopup();
   } else if (exiting) {
-    close();
+    pushAction(actions::PIC_CLOSE);
   }
 }
 

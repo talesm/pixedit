@@ -91,13 +91,7 @@ private:
   }
 
   /// Actions
-  void copy();
-  void cut();
-  void paste();
-  void pasteAsNew();
   void close(bool force = false);
-
-  void focusBufferWindow();
 };
 
 } // namespace pixedit

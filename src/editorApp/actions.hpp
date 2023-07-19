@@ -25,6 +25,7 @@ constexpr Id HISTORY_REDO{"history.redo"};
 constexpr Id VIEW_GRID_TOGGLE{"view.grid.toggle"};
 
 constexpr Id EDITOR_COLOR_SWAP{"editor.color.swap"};
+constexpr Id EDITOR_FOCUS_PICTURE{"editor.focus.picture"};
 } // namespace pixedit::actions
 
 #endif /* PIXEDIT_SRC_EDITOR_APP_ACTIONS_INCLUDED */
