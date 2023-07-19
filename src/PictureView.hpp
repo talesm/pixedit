@@ -40,7 +40,7 @@ public:
   Canvas canvas;
   bool fillSelectedOut = false;
 
-  PictureView(const SDL_Rect& viewport)
+  PictureView(const SDL_Rect& viewport = {0})
     : viewport(viewport)
   {
   }

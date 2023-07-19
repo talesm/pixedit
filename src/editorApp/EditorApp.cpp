@@ -15,10 +15,20 @@ extern const bool ASK_SAVE_ON_CLOSE;
 void
 EditorApp::update()
 {
+  if (maximizeView) {
+    if (!ImGui::GetIO().WantCaptureMouse && SDL_GetMouseFocus() == window) {
+      auto buttonState = SDL_GetMouseState(&view.state.x, &view.state.y);
+      view.state.left = buttonState & SDL_BUTTON_LMASK;
+      view.state.middle = buttonState & SDL_BUTTON_MMASK;
+      view.state.right = buttonState & SDL_BUTTON_RMASK;
+    };
+    picture.update(&view, renderer, pictureViewport);
+  }
+  ui.update();
   showMainMenuBar();
   if (ImGui::Begin("Picture options")) { showPictureOptions(); }
   ImGui::End();
-  if (!showView) { showPictureWindows(); }
+  if (!maximizeView) { showPictureWindows(); }
 }
 
 static SDL_Window*
@@ -53,7 +63,8 @@ EditorApp::EditorApp(EditorInitSettings settings)
   : window(makeWindow(settings.windowSz))
   , renderer(makeRenderer(window))
   , ui(window, renderer)
-  , view{{0, 30, settings.windowSz.x, settings.windowSz.y}}
+  , pictureViewport{0, 0, settings.windowSz.x, settings.windowSz.y}
+  , view{pictureViewport}
   , actions{EDITOR_EVENT()}
 {
   std::shared_ptr<PictureBuffer> buffer;
@@ -86,24 +97,13 @@ EditorApp::run()
     // Update
     for (SDL_Event ev; SDL_PollEvent(&ev);) { event(ev, ui.event(ev)); }
 
-    ui.update();
     update();
-
-    if (showView) {
-      if (!ImGui::GetIO().WantCaptureMouse && SDL_GetMouseFocus() == window) {
-        auto buttonState = SDL_GetMouseState(&view.state.x, &view.state.y);
-        view.state.left = buttonState & SDL_BUTTON_LMASK;
-        view.state.middle = buttonState & SDL_BUTTON_MMASK;
-        view.state.right = buttonState & SDL_BUTTON_RMASK;
-      };
-      view.update(renderer);
-    }
 
     /// Render
     SDL_SetRenderDrawColor(renderer, 60, 60, 60, 255);
     SDL_RenderClear(renderer);
 
-    if (showView) { view.render(renderer); }
+    if (maximizeView) { picture.render(&view, renderer, pictureViewport); }
 
     ui.render();
 
@@ -129,13 +129,14 @@ EditorApp::event(const SDL_Event& ev, bool imGuiMayUse)
   case SDL_WINDOWEVENT:
     switch (ev.window.event) {
     case SDL_WINDOWEVENT_SIZE_CHANGED:
-      view.setViewport({0, 0, ev.window.data1, ev.window.data2});
+      pictureViewport.w = ev.window.data1 - pictureViewport.x;
+      pictureViewport.h = ev.window.data2 - pictureViewport.y;
       break;
     default: break;
     }
     break;
   case SDL_MOUSEWHEEL:
-    if (ImGui::GetIO().WantCaptureMouse || !showView) break;
+    if (ImGui::GetIO().WantCaptureMouse || !maximizeView) break;
     view.state.wheelX += ev.wheel.x;
     view.state.wheelY += ev.wheel.y;
     break;
@@ -172,8 +173,8 @@ EditorApp::close(bool force)
     if (bufferIndex < 0) {
       view.setBuffer(nullptr);
     } else {
-      viewSettings.erase(view.getBuffer().get());
-      if (showView) { view.setBuffer(buffers[bufferIndex]); }
+      viewSettings.erase(view.getBuffer());
+      if (maximizeView) { view.setBuffer(buffers[bufferIndex]); }
     }
   }
 }
@@ -246,7 +247,7 @@ EditorApp::showPictureOptions()
   showConfirmExitDialog();
   showAboutDialog();
 
-  ImGui::BeginDisabled(showView == false);
+  ImGui::BeginDisabled(maximizeView == false);
   if (ImGui::BeginCombo("File",
                         bufferIndex < 0
                           ? "None"
@@ -257,15 +258,15 @@ EditorApp::showPictureOptions()
       if (ImGui::Selectable(b->getFilename().c_str(), selected)) {
         bufferIndex = i;
         if (bufferIndex >= 0) {
-          auto& settings = viewSettings[view.getBuffer().get()];
-          settings.offset = view.offset;
-          settings.scale = view.scale;
+          auto& settings = viewSettings[view.getBuffer()];
+          settings.view.offset = view.offset;
+          settings.view.scale = view.scale;
         }
         auto nextBuffer = buffers[bufferIndex];
-        auto& settings = viewSettings[nextBuffer.get()];
+        auto& settings = viewSettings[nextBuffer];
         view.setBuffer(std::move(nextBuffer));
-        view.offset = settings.offset;
-        view.scale = settings.scale;
+        view.offset = settings.view.offset;
+        view.scale = settings.view.scale;
       }
       if (selected) { ImGui::SetItemDefaultFocus(); }
       ++i;
@@ -301,37 +302,40 @@ EditorApp::showPictureOptions()
   float colorAreaHeight =
     ImGui::GetFrameHeightWithSpacing() + ImGui::GetFrameHeight();
   if (ImGui::Button("Swap colors", {0, colorAreaHeight})) {
-    view.swapColors();
+    pushAction(actions::EDITOR_COLOR_SWAP);
     pushAction(actions::EDITOR_FOCUS_PICTURE);
   }
   ImGui::SameLine();
   {
     ImGui::BeginChild("Colors", {0, colorAreaHeight});
-    auto colorA = componentToNormalized(view.canvas.getColorA());
+    auto colorA = componentToNormalized(picture.getColorA());
     if (ImGui::ColorEdit4(
           "Color A", colorA.data(), ImGuiColorEditFlags_NoInputs)) {
-      view.canvas | ColorA{normalizedToComponent(colorA)};
+      picture.setColorA(normalizedToComponent(colorA));
     }
-    auto colorB = componentToNormalized(view.canvas.getColorB());
+    auto colorB = componentToNormalized(picture.getColorB());
     if (ImGui::ColorEdit4(
           "Color B", colorB.data(), ImGuiColorEditFlags_NoInputs)) {
-      view.canvas | ColorB{normalizedToComponent(colorB)};
+      picture.setColorA(normalizedToComponent(colorB));
     }
     ImGui::EndChild();
   }
-  int penSize = view.canvas.getBrush().pen.w;
+  auto brush = picture.getBrush();
+  int penSize = brush.pen.w;
   if (ImGui::SliderInt("Pen size", &penSize, 1, 16)) {
-    view.canvas | Pen{penSize, penSize};
+    brush.pen = Pen{penSize, penSize};
+    picture.setBrush(brush);
   }
-  Pattern pattern = view.canvas.getBrush().pattern;
+  Pattern pattern = brush.pattern;
   if (PatternCombo("Tile: ", &pattern)) {
-    view.canvas | pattern;
+    brush.pattern = pattern;
+    picture.setBrush(brush);
     pushAction(actions::EDITOR_FOCUS_PICTURE);
   }
   if (ImGui::CollapsingHeader("Selection", ImGuiTreeNodeFlags_DefaultOpen)) {
-    bool transparent = view.isTransparent();
+    bool transparent = picture.isTransparent();
     if (ImGui::Checkbox("Transparent", &transparent)) {
-      view.setTransparent(transparent);
+      picture.setTransparent(transparent);
       pushAction(actions::EDITOR_FOCUS_PICTURE);
     }
     ImGui::Checkbox("Fill selected out region", &view.fillSelectedOut);
@@ -341,7 +345,7 @@ EditorApp::showPictureOptions()
 void
 EditorApp::showPictureWindow(const std::shared_ptr<PictureBuffer>& buffer)
 {
-  auto& settings = viewSettings[buffer.get()];
+  auto& settings = viewSettings[buffer];
   if (buffer->getFilename().empty()) {
     if (settings.fileUnamedId == 0) {
       int largestUnnamedId = 0;
@@ -352,7 +356,9 @@ EditorApp::showPictureWindow(const std::shared_ptr<PictureBuffer>& buffer)
       }
       settings.fileUnamedId = largestUnnamedId + 1;
       std::stringstream ss;
-      ss << "New image " << settings.fileUnamedId << "###" << buffer.get();
+      ss << "New image " << settings.fileUnamedId;
+      settings.filename = ss.str();
+      ss << "###" << buffer.get();
       settings.titleBuffer = ss.str();
     }
   } else {
@@ -406,6 +412,7 @@ EditorApp::showPictureWindow(const std::shared_ptr<PictureBuffer>& buffer)
 
     ImGuiIO& io = ImGui::GetIO();
 
+    auto& view = settings.view;
     if (ImGui::IsWindowFocused()) {
       ImGui::InvisibleButton("Canvas",
                              canvasSz,
@@ -425,28 +432,13 @@ EditorApp::showPictureWindow(const std::shared_ptr<PictureBuffer>& buffer)
       }
     }
     if (ImGui::IsWindowFocused() || redraw) {
-      if (redraw) {
-        std::swap(view.scale, settings.scale);
-        std::swap(view.offset, settings.offset);
-      }
       view.setBuffer(buffer);
       SDL_SetRenderTarget(renderer, settings.texture);
       SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
       SDL_RenderClear(renderer);
-      auto vp = view.getViewport();
-      view.setViewport({0, 0, int(canvasSz.x), int(canvasSz.y)});
-      view.update(renderer);
-      view.render(renderer);
+      picture.update(&view, renderer, {0, 0, int(canvasSz.x), int(canvasSz.y)});
+      picture.render(&view, renderer, {0, 0, int(canvasSz.x), int(canvasSz.y)});
 
-      if (ImGui::IsWindowFocused()) {
-        settings.scale = view.scale;
-        settings.offset = view.offset;
-      } else {
-        std::swap(view.scale, settings.scale);
-        std::swap(view.offset, settings.offset);
-      }
-
-      view.setViewport(vp);
       SDL_SetRenderTarget(renderer, nullptr);
     }
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
@@ -590,7 +582,7 @@ EditorApp::showMainMenuBar()
       ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("View")) {
-      ImGui::Checkbox("Maximize", &showView);
+      ImGui::Checkbox("Maximize", &maximizeView);
       bool gridEnabled = view.isGridEnabled();
       if (ImGui::Checkbox("Show grid", &gridEnabled)) {
         view.enableGrid(gridEnabled);
@@ -653,7 +645,17 @@ EditorApp::showConfirmExitDialog()
   if (ImGui::BeginPopupModal(
         "Confirm exit", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
     ImGui::Text("Image unsaved changes will be lost?");
-    ImGui::Text("File: %s", view.getBuffer()->getFilename().c_str());
+    const char* cstr = "";
+    if (bufferIndex >= 0) {
+      auto buffer = buffers[bufferIndex];
+      if (buffer && !buffer->getFilename().empty()) {
+        cstr = buffer->getFilename().c_str();
+      } else {
+        auto& settings = viewSettings[buffer];
+        cstr = settings.filename.c_str();
+      }
+    }
+    ImGui::Text("File: %s", cstr);
     ImGui::Separator();
 
     if (ImGui::Button("Close",

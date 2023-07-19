@@ -6,6 +6,7 @@
 #include "Action.hpp"
 #include "Clipboard.hpp"
 #include "ImGuiComponent.hpp"
+#include "PictureManager.hpp"
 #include "PictureView.hpp"
 #include "ShortcutManager.hpp"
 #include "utils/rect.hpp"
@@ -22,9 +23,8 @@ struct EditorInitSettings
 
 struct ViewSettings
 {
+  PictureView view;
   SDL_Texture* texture = nullptr;
-  SDL_FPoint offset = {0};
-  float scale = 1;
   int fileUnamedId = 0;
   std::string filename;
   std::string titleBuffer;
@@ -36,12 +36,14 @@ class EditorApp
   SDL_Renderer* renderer = nullptr;
   ImGuiComponent ui;
 
+  PictureManager picture;
+  Rect pictureViewport;
   PictureView view;
   bool exited = false;
-  bool showView = false;
+  bool maximizeView = false;
 
   std::vector<std::shared_ptr<PictureBuffer>> buffers;
-  std::map<PictureBuffer*, ViewSettings> viewSettings;
+  std::map<std::shared_ptr<PictureBuffer>, ViewSettings> viewSettings;
   int bufferIndex = -1;
 
   Clipboard clipboard;

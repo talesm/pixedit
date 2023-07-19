@@ -287,7 +287,7 @@ void
 PictureView::setTransparent(bool value)
 {
   transparent = value;
-  if (!buffer->hasSelection()) { return; }
+  if (!buffer || !buffer->hasSelection()) { return; }
   auto selection = buffer->getSelectionSurface();
   if (transparent) {
     if (selection.getFormat()->Amask) {
