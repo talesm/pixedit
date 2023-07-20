@@ -2,9 +2,9 @@
 #define PIXEDIT_SRC_TOOLS_SELECTION_RECT_TOOL_INCLUDED
 
 #include "SelectionHandTool.hpp"
-#include "renderSelection.hpp"
 #include "utils/cutoutSurface.hpp"
 #include "utils/rect.hpp"
+#include "utils/renderSelection.hpp"
 
 namespace pixedit {
 

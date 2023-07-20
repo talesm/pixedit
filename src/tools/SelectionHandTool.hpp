@@ -2,7 +2,7 @@
 #define PIXEDIT_SRC_TOOLS_SELECTION_HAND_TOOL_INCLUDED
 
 #include <array>
-#include "renderSelection.hpp"
+#include "utils/renderSelection.hpp"
 
 namespace pixedit {
 

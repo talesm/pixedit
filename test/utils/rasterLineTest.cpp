@@ -1,7 +1,7 @@
-#include "rasterLine.hpp"
+#include "catch.hpp"
+#include "utils/rasterLine.hpp"
 #include <tuple>
 #include <vector>
-#include "../catch.hpp"
 
 using namespace pixedit;
 

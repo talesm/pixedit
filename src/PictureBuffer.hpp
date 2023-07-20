@@ -5,7 +5,7 @@
 #include <string>
 #include <SDL.h>
 #include "Surface.hpp"
-#include "TempSurface.hpp"
+#include "utils/TempSurface.hpp"
 
 namespace pixedit {
 /**

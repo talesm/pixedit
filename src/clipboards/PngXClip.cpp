@@ -1,6 +1,6 @@
 #include "PngXClip.hpp"
 #include <cstdlib>
-#include "TempSurface.hpp"
+#include "utils/TempSurface.hpp"
 
 namespace pixedit {
 
