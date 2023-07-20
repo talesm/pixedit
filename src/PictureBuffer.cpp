@@ -1,11 +1,32 @@
 #include "PictureBuffer.hpp"
 #include "loaders.hpp"
+#include "savers.hpp"
 
 namespace pixedit {
 
 namespace defaults {
 extern const unsigned HISTORY_MAX;
 } // namespace defaults
+
+bool
+PictureFile::load(PictureBuffer& buffer)
+{
+  auto b = (loader) ? loader(name) : loadBuffer(name);
+  if (!b) return false;
+  loader = b->getFile().loader;
+  buffer.setSurface(b->getSurface());
+  return true;
+}
+
+bool
+PictureFile::save(const PictureBuffer& buffer)
+{
+  if (!saver) {
+    saver = savers::get(saverForFile(name));
+    if (!saver) return {};
+  }
+  return saver(&buffer, name);
+}
 
 std::unique_ptr<PictureBuffer>
 PictureBuffer::load(const std::string& filename)
@@ -17,23 +38,26 @@ bool
 PictureBuffer::save(bool force)
 {
   if (!force && lastSave == historyPoint) return false;
-  if (!saveCopy(filename)) return false;
+  if (!file.save(*this)) return false;
   lastSave = historyPoint;
   return true;
 }
 bool
 PictureBuffer::saveAs(const std::string& filename)
 {
-  std::string backup = std::move(this->filename);
-  this->filename = filename;
-  if (save(true)) return true;
-  std::swap(this->filename, backup);
+  auto backup = std::move(file);
+  file = PictureFile{filename};
+  if (save(true)) {
+    if (file.saver == backup.saver) { file.loader = backup.loader; }
+    return true;
+  }
+  std::swap(file, backup);
   return false;
 }
 bool
 PictureBuffer::saveCopy(const std::string& filename)
 {
-  return surface.save(filename);
+  return saveBuffer(*this, filename);
 }
 
 void

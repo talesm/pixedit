@@ -1,13 +1,14 @@
-#include "PixReader.hpp"
 #include "catch.hpp"
+#include "utils/PixReader.hpp"
 
 using namespace pixedit;
 
 TEST_CASE("SimplestFile", "[PixReader]")
 {
-  Uint8 fileData[] = {'R', 'I', 'F', 'F', 28,  0,   0, 0, 'P', 'I', 'X', ' ',
-                      'F', 'M', 'T', ' ', 6,   0,   0, 0, 1,   0,   1,   0,
-                      8,   1,   'D', 'A', 'T', 'A', 1, 0, 0,   0,   1,   0};
+  Uint8 fileData[] = {'R', 'I', 'F', 'F', 30,  0,   0, 0,    'P', 'I',
+                      'X', ' ', 'F', 'M', 'T', ' ', 8, 0,    0,   0,
+                      1,   0,   1,   0,   1,   8,   0, 0x13, 'D', 'A',
+                      'T', 'A', 1,   0,   0,   0,   1, 0};
   PictureFormat format;
   std::vector<Uint8> pixels;
   auto callback = [&](PictureFormat f, std::span<Uint8> ps) {
@@ -18,18 +19,18 @@ TEST_CASE("SimplestFile", "[PixReader]")
   auto rw = SDL_RWFromConstMem(fileData, sizeof(fileData));
   REQUIRE(readPixImage(rw, callback) == true);
   SDL_RWclose(rw);
-  CHECK(format.bitsPerPixel == 8);
+  CHECK(SDL_BITSPERPIXEL(format.pixel) == 8);
   CHECK(format.w == 1);
   CHECK(format.h == 1);
-  CHECK(format.flags == 1);
   CHECK(pixels.size() == 1);
   REQUIRE(pixels.at(0) == 1);
 }
 TEST_CASE("SimplestFile32", "[PixReader]")
 {
-  Uint8 fileData[] = {'R', 'I', 'F', 'F', 30, 0, 0, 0, 'P', 'I', 'X', ' ', 'F',
-                      'M', 'T', ' ', 6,   0,  0, 0, 1, 0,   1,   0,   32,  1,
-                      'D', 'A', 'T', 'A', 4,  0, 0, 0, 255, 127, 63,  255};
+  Uint8 fileData[] = {'R', 'I', 'F', 'F', 32,  0,    0,    0,    'P', 'I',
+                      'X', ' ', 'F', 'M', 'T', ' ',  8,    0,    0,   0,
+                      1,   0,   1,   0,   4,   0x20, 0x76, 0x16, 'D', 'A',
+                      'T', 'A', 4,   0,   0,   0,    255,  127,  63,  255};
   PictureFormat format;
   std::vector<Uint8> pixels;
   auto callback = [&](PictureFormat f, std::span<Uint8> ps) {
@@ -40,10 +41,9 @@ TEST_CASE("SimplestFile32", "[PixReader]")
   auto rw = SDL_RWFromConstMem(fileData, sizeof(fileData));
   REQUIRE(readPixImage(rw, callback) == true);
   SDL_RWclose(rw);
-  CHECK(format.bitsPerPixel == 32);
+  CHECK(SDL_BITSPERPIXEL(format.pixel) == 32);
   CHECK(format.w == 1);
   CHECK(format.h == 1);
-  CHECK(format.flags == 1);
   CHECK(pixels.size() == 4);
   REQUIRE(pixels.at(0) == 255);
   REQUIRE(pixels.at(1) == 127);
@@ -53,9 +53,10 @@ TEST_CASE("SimplestFile32", "[PixReader]")
 
 TEST_CASE("Invalid image file", "[PixReader]")
 {
-  char fileData[] = {'R', 'I', 'F', 'F', 28,  0,   0, 0, 'P', 'I', 'X', ' ',
-                     'F', 'M', 'T', ' ', 6,   0,   0, 0, 1,   0,   1,   0,
-                     8,   1,   'D', 'A', 'T', 'A', 1, 0, 0,   0,   0,   0};
+  Uint8 fileData[] = {'R', 'I', 'F', 'F', 30,  0,   0, 0,    'P', 'I',
+                      'X', ' ', 'F', 'M', 'T', ' ', 8, 0,    0,   0,
+                      1,   0,   1,   0,   1,   8,   0, 0x13, 'D', 'A',
+                      'T', 'A', 1,   0,   0,   0,   1, 0};
   SDL_RWops* rw = nullptr;
   SECTION("Empty")
   {
@@ -83,12 +84,6 @@ TEST_CASE("Invalid image file", "[PixReader]")
   SECTION("Non FMT")
   {
     fileData[13] = 'O';
-    rw = SDL_RWFromConstMem(fileData, sizeof(fileData));
-    REQUIRE_FALSE(readPixImage(rw, [&](auto f, auto ps) {}));
-  }
-  SECTION("Wrong variant")
-  {
-    fileData[25] = 2;
     rw = SDL_RWFromConstMem(fileData, sizeof(fileData));
     REQUIRE_FALSE(readPixImage(rw, [&](auto f, auto ps) {}));
   }

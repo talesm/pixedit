@@ -5,7 +5,7 @@ It is [RIFF derived](https://en.wikipedia.org/wiki/Resource_Interchange_File_For
 It has "RIFF" on bytes 0 to 3 and  "PIX " on 8 to 11 (Byte eleven is a space '0x20').
 It also has a tag "FMT " that is structured as follows:
 
-<table>
+<table border>
   <tr>
     <th>0</th>
     <th>1</th>
@@ -21,21 +21,27 @@ It also has a tag "FMT " that is structured as follows:
     <th>11</th>
     <th>12</th>
     <th>13</th>
+    <th>14</th>
+    <th>15</th>
+    <th>16</th>
+    <th>17</th>
+    <th>18</th>
+    <th>19</th>
   </tr>
 <tr>
-  <td colspan=4 align=center>'F' 'M' 'T' '\x20'</td>
-  <td colspan=4 align=center>6</td>
+  <td colspan=4 align=center>'FMT '</td>
+  <td colspan=4 align=center>8 or 12</td>
   <td colspan=2 align=center>width</td>
   <td colspan=2 align=center>height</td>
-  <td align=center title="bits per pixel">bpp</td>
-  <td align=center>variant</td>
+  <td colspan=4 align=center title="SDL_PixelFormat">format</td>
+  <td colspan=4 align=center title="SDL_PixelFormat"><i>variant</i></td>
 </tr>
 <table>
 
 Variant | Tags                  | Meaning 
 ------- | --------------------- | -------
 0       | All tags              | Bleeding edge
-1       | FMT, DATA, CKEY, PALT | Still image without layers
+1       | FMT, DATA, CKEY, PALT | Still image without layers (default if no variant field present)
 3       | _1_ + LAYR, LOPT      | Still image with layers
 5       | _1_ + FRME, FPS       | Animated image without layers
 7       | _3_ + _5_             | Animated image with layers
