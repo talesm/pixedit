@@ -1,4 +1,5 @@
 #include "PictureBuffer.hpp"
+#include "loaders.hpp"
 
 namespace pixedit {
 
@@ -6,10 +7,10 @@ namespace defaults {
 extern const unsigned HISTORY_MAX;
 } // namespace defaults
 
-PictureBuffer::PictureBuffer(std::string filename)
-  : PictureBuffer(filename, Surface::load(filename))
+std::unique_ptr<PictureBuffer>
+PictureBuffer::load(const std::string& filename)
 {
-  lastSave = history.begin();
+  return loadBuffer(filename);
 }
 
 bool

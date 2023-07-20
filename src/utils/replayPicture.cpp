@@ -94,12 +94,12 @@ struct CommandEvaluator
       eval(fin);
       allowLoad = allowLoadBkp;
     } else {
-      PictureBuffer b{filename};
-      if (!b.getSurface()) {
+      auto b = PictureBuffer::load(filename);
+      if (!b || !b->getSurface()) {
         std::cerr << SDL_GetError();
         return false;
       }
-      setSurface(b.getSurface());
+      setSurface(b->getSurface());
     }
     return true;
   }

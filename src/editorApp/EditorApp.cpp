@@ -71,7 +71,7 @@ EditorApp::EditorApp(EditorInitSettings settings)
   if (!settings.filename.empty() ||
       (settings.pictureSz.x > 0 && settings.pictureSz.y > 0)) {
     if (!settings.filename.empty()) {
-      buffer = std::make_shared<PictureBuffer>(settings.filename);
+      buffer = PictureBuffer::load(settings.filename);
     } else {
       buffer = std::make_shared<PictureBuffer>(
         "", Surface::create(settings.pictureSz.x, settings.pictureSz.y));
@@ -142,7 +142,7 @@ EditorApp::event(const SDL_Event& ev, bool imGuiMayUse)
     break;
   case SDL_DROPFILE:
     if (ImGui::GetIO().WantCaptureMouse) break;
-    appendFile(std::make_shared<PictureBuffer>(ev.drop.file));
+    appendFile(PictureBuffer::load(ev.drop.file));
     break;
   case SDL_KEYDOWN: {
     if (ImGui::GetIO().WantCaptureKeyboard) break;
@@ -497,7 +497,7 @@ EditorApp::setupActions()
   actions.set(actions::CLIP_PASTE_NEW, [&] {
     auto surface = clipboard.get();
     if (!surface) return; // TODO Error?
-    appendFile(std::make_shared<PictureBuffer>("", surface));
+    appendFile(std::make_shared<PictureBuffer>("", surface, true));
   });
 
   actions.set(actions::HISTORY_UNDO, [&] { view.undo(); });

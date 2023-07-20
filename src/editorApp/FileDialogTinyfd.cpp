@@ -15,7 +15,7 @@ loadFromFileDialog(const std::string& initialPath)
                           "Image files",
                           false);
   if (!filename) { return nullptr; }
-  return std::make_shared<PictureBuffer>(filename);
+  return PictureBuffer::load(filename);
 }
 
 bool

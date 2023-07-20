@@ -3,7 +3,6 @@
 #include <SDL_image.h>
 #include "loaders.hpp"
 #include "utils/dumpSurface.hpp"
-#include "utils/replayPicture.hpp"
 
 namespace pixedit {
 

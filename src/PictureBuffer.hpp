@@ -2,6 +2,7 @@
 #define PIXEDIT_SRC_PICTURE_BUFFER_INCLUDED
 
 #include <list>
+#include <memory>
 #include <string>
 #include <SDL.h>
 #include "Surface.hpp"
@@ -25,13 +26,17 @@ private:
 
 public:
   PictureBuffer() = default;
-  PictureBuffer(std::string filename);
-  PictureBuffer(std::string filename, Surface surface)
+  PictureBuffer(std::string filename, Surface surface, bool dirty = false)
     : filename(std::move(filename))
     , surface(surface)
   {
-    if (surface) { makeSnapshot(); }
+    if (surface) {
+      makeSnapshot();
+      if (!dirty) { lastSave = history.begin(); }
+    }
   }
+
+  static std::unique_ptr<PictureBuffer> load(const std::string& filename);
 
   /// @brief True if this needs saving
   bool isDirty() const { return lastSave != historyPoint; }
