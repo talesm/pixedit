@@ -13,7 +13,7 @@ Version Goals
 To do
 -----
 
-- [ ] Design format *.pix
+- [x] Design format *.pix
 - [ ] Implement *.pix for single image
 - [ ] Layers
   - [ ] Implement Layer window
