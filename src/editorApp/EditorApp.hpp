@@ -54,6 +54,20 @@ class EditorApp
   bool focusBufferNextFrame = true;
   std::string requestModal;
 
+  std::shared_ptr<PictureBuffer> currentBuffer()
+  {
+    if (bufferIndex < 0 || buffers.empty()) return nullptr;
+    return buffers[bufferIndex];
+  }
+
+  PictureView& currentView()
+  {
+    if (!maximizeView && currentBuffer()) {
+      return viewSettings[currentBuffer()].view;
+    }
+    return view;
+  }
+
 public:
   EditorApp(EditorInitSettings settings);
 

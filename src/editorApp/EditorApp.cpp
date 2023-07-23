@@ -76,7 +76,7 @@ EditorApp::EditorApp(EditorInitSettings settings)
       buffer = std::make_shared<PictureBuffer>(
         "", Surface::create(settings.pictureSz.x, settings.pictureSz.y));
     }
-    view.setBuffer(buffer);
+    currentView().setBuffer(buffer);
     buffers.emplace_back(buffer);
     bufferIndex = buffers.size() - 1;
   }
@@ -84,9 +84,9 @@ EditorApp::EditorApp(EditorInitSettings settings)
   setupActions();
   setupShortcuts();
 
-  view.canvas | ColorA{0, 0, 0, 255};
-  view.canvas | ColorB{255, 255, 255, 255};
-  view.setToolId(tools::FREE_HAND);
+  currentView().canvas | ColorA{0, 0, 0, 255};
+  currentView().canvas | ColorB{255, 255, 255, 255};
+  currentView().setToolId(tools::FREE_HAND);
   pushAction(actions::EDITOR_FOCUS_PICTURE);
 }
 
@@ -164,17 +164,17 @@ EditorApp::close(bool force)
 {
   if (buffers.empty()) {
     exited = true;
-  } else if (!force && buffers[bufferIndex]->isDirty() &&
+  } else if (!force && currentBuffer()->isDirty() &&
              defaults::ASK_SAVE_ON_CLOSE) {
     requestModal = "Confirm exit";
   } else {
+    viewSettings.erase(currentBuffer());
     buffers.erase(buffers.begin() + bufferIndex);
     if (bufferIndex >= int(buffers.size())) { bufferIndex -= 1; }
     if (bufferIndex < 0) {
       view.setBuffer(nullptr);
     } else {
-      viewSettings.erase(view.getBuffer());
-      if (maximizeView) { view.setBuffer(buffers[bufferIndex]); }
+      view.setBuffer(currentBuffer());
     }
   }
 }
@@ -248,21 +248,20 @@ EditorApp::showPictureOptions()
   showAboutDialog();
 
   ImGui::BeginDisabled(maximizeView == false);
-  if (ImGui::BeginCombo("File",
-                        bufferIndex < 0
-                          ? "None"
-                          : buffers[bufferIndex]->getFilename().c_str())) {
+  if (ImGui::BeginCombo(
+        "File",
+        bufferIndex < 0 ? "None" : currentBuffer()->getFilename().c_str())) {
     int i = 0;
     for (auto& b : buffers) {
       bool selected = bufferIndex == i;
       if (ImGui::Selectable(b->getFilename().c_str(), selected)) {
         bufferIndex = i;
         if (bufferIndex >= 0) {
-          auto& settings = viewSettings[view.getBuffer()];
+          auto& settings = viewSettings[currentBuffer()];
           settings.view.offset = view.offset;
           settings.view.scale = view.scale;
         }
-        auto nextBuffer = buffers[bufferIndex];
+        auto nextBuffer = currentBuffer();
         auto& settings = viewSettings[nextBuffer];
         view.setBuffer(std::move(nextBuffer));
         view.offset = settings.view.offset;
@@ -276,26 +275,26 @@ EditorApp::showPictureOptions()
   ImGui::EndDisabled();
 
   if (ImGui::CollapsingHeader("Tools", ImGuiTreeNodeFlags_DefaultOpen)) {
-    auto currId = view.getToolId();
+    auto currId = currentView().getToolId();
     for (auto& tool : getTools()) {
       if (ImGui::RadioButton(tool.name.c_str(), tool.id == currId)) {
-        view.setToolId(tool.id);
+        currentView().setToolId(tool.id);
         pushAction(actions::EDITOR_FOCUS_PICTURE);
       }
     }
   }
-  ImGui::DragFloat2("##offset", &view.offset.x, 1.f, -10000, +10000);
+  ImGui::DragFloat2("##offset", &currentView().offset.x, 1.f, -10000, +10000);
   ImGui::SameLine();
-  if (ImGui::Button("Reset##offset")) { view.offset = {0}; }
+  if (ImGui::Button("Reset##offset")) { currentView().offset = {0}; }
   if (ImGui::ArrowButton("Decrease zoom", ImGuiDir_Left)) {
-    view.scale /= 2;
+    currentView().scale /= 2;
     pushAction(actions::EDITOR_FOCUS_PICTURE);
   }
   ImGui::SameLine();
-  ImGui::Text("%g%%", view.scale * 100);
+  ImGui::Text("%g%%", currentView().scale * 100);
   ImGui::SameLine();
   if (ImGui::ArrowButton("Increase zoom", ImGuiDir_Right)) {
-    view.scale *= 2;
+    currentView().scale *= 2;
     pushAction(actions::EDITOR_FOCUS_PICTURE);
   }
 
@@ -338,7 +337,7 @@ EditorApp::showPictureOptions()
       picture.setTransparent(transparent);
       pushAction(actions::EDITOR_FOCUS_PICTURE);
     }
-    ImGui::Checkbox("Fill selected out region", &view.fillSelectedOut);
+    ImGui::Checkbox("Fill selected out region", &currentView().fillSelectedOut);
   }
 }
 
@@ -382,7 +381,7 @@ EditorApp::showPictureWindow(const std::shared_ptr<PictureBuffer>& buffer)
   // TODO Measure title and decoration instead of guessing
   ImGui::SetNextWindowSize(ImVec2(buffer->getW() + 16, buffer->getH() + 35),
                            ImGuiCond_Once);
-  if (focusBufferNextFrame && buffer == view.getBuffer()) {
+  if (focusBufferNextFrame && buffer == currentBuffer()) {
     focusBufferNextFrame = false;
     ImGui::SetNextWindowFocus();
   }
@@ -459,40 +458,42 @@ EditorApp::setupActions()
   actions.set(actions::PIC_CLOSE, [&] { close(); });
   actions.set(actions::PIC_SAVE, [&] {
     if (buffers.empty() || bufferIndex < 0) return;
-    if (view.getBuffer()->getFilename().empty()) {
-      saveWithFileDialog(*view.getBuffer());
+    if (currentBuffer()->getFilename().empty()) {
+      saveWithFileDialog(*currentBuffer());
     } else {
-      view.getBuffer()->save();
+      currentBuffer()->save();
     }
   });
   actions.set(actions::PIC_SAVE_AS, [&] {
     if (buffers.empty() || bufferIndex < 0) return;
-    saveWithFileDialog(*view.getBuffer());
+    saveWithFileDialog(*currentBuffer());
   });
-  actions.set(actions::SELECTION_PERSIST, [&] { view.persistSelection(); });
-  actions.set(actions::SELECTION_DELETE, [&] { view.setSelection(nullptr); });
+  actions.set(actions::SELECTION_PERSIST,
+              [&] { currentView().persistSelection(); });
+  actions.set(actions::SELECTION_DELETE,
+              [&] { currentView().setSelection(nullptr); });
   actions.set(actions::CLIP_COPY, [&] {
-    if (!view.getBuffer()) return;
-    auto& buffer = *view.getBuffer();
+    if (!currentBuffer()) return;
+    auto& buffer = *currentBuffer();
     auto selectionSurface = buffer.getSelectionSurface();
     clipboard.set(selectionSurface ?: buffer.getSurface());
   });
   actions.set(actions::CLIP_CUT, [&] {
-    if (!view.getBuffer()) return;
-    auto& buffer = *view.getBuffer();
+    if (!currentBuffer()) return;
+    auto& buffer = *currentBuffer();
     if (!buffer.hasSelection()) return;
     clipboard.set(buffer.getSelectionSurface());
-    view.setSelection(nullptr);
+    currentView().setSelection(nullptr);
   });
   actions.set(actions::CLIP_PASTE, [&] {
-    auto& buffer = view.getBuffer();
+    auto buffer = currentBuffer();
     if (!buffer) {
       pushAction(actions::CLIP_PASTE_NEW);
       return;
     }
     auto surface = clipboard.get();
     if (!surface) return;
-    view.setSelection(surface);
+    currentView().setSelection(surface);
   });
   actions.set(actions::CLIP_PASTE_NEW, [&] {
     auto surface = clipboard.get();
@@ -500,11 +501,12 @@ EditorApp::setupActions()
     appendFile(std::make_shared<PictureBuffer>("", surface, true));
   });
 
-  actions.set(actions::HISTORY_UNDO, [&] { view.undo(); });
-  actions.set(actions::HISTORY_REDO, [&] { view.redo(); });
-  actions.set(actions::EDITOR_COLOR_SWAP, [&] { view.swapColors(); });
-  actions.set(actions::VIEW_GRID_TOGGLE,
-              [&] { view.enableGrid(!view.isGridEnabled()); });
+  actions.set(actions::HISTORY_UNDO, [&] { currentView().undo(); });
+  actions.set(actions::HISTORY_REDO, [&] { currentView().redo(); });
+  actions.set(actions::EDITOR_COLOR_SWAP, [&] { currentView().swapColors(); });
+  actions.set(actions::VIEW_GRID_TOGGLE, [&] {
+    currentView().enableGrid(!currentView().isGridEnabled());
+  });
   actions.set(actions::EDITOR_FOCUS_PICTURE,
               [&] { focusBufferNextFrame = true; });
 }
@@ -583,9 +585,9 @@ EditorApp::showMainMenuBar()
     }
     if (ImGui::BeginMenu("View")) {
       ImGui::Checkbox("Maximize", &maximizeView);
-      bool gridEnabled = view.isGridEnabled();
+      bool gridEnabled = currentView().isGridEnabled();
       if (ImGui::Checkbox("Show grid", &gridEnabled)) {
-        view.enableGrid(gridEnabled);
+        currentView().enableGrid(gridEnabled);
       }
       ImGui::EndMenu();
     }
@@ -595,14 +597,14 @@ EditorApp::showMainMenuBar()
     }
     ImGui::Dummy({50, 0});
     ImGui::Text("%s %dx%d",
-                getTool(view.getToolId()).name.c_str(),
-                view.state.x,
-                view.state.y);
-    if (view.getBuffer()) {
+                getTool(currentView().getToolId()).name.c_str(),
+                currentView().state.x,
+                currentView().state.y);
+    if (currentBuffer()) {
       ImGui::Dummy({20, 0});
-      auto& b = *view.getBuffer();
+      auto& b = *currentBuffer();
       ImGui::Text("%dx%d", b.getW(), b.getH());
-      ImGui::Text("%.2f%%", view.scale * 100);
+      ImGui::Text("%.2f%%", currentView().scale * 100);
     }
     ImGui::EndMainMenuBar();
   }
@@ -647,7 +649,7 @@ EditorApp::showConfirmExitDialog()
     ImGui::Text("Image unsaved changes will be lost?");
     const char* cstr = "";
     if (bufferIndex >= 0) {
-      auto buffer = buffers[bufferIndex];
+      auto buffer = currentBuffer();
       if (buffer && !buffer->getFilename().empty()) {
         cstr = buffer->getFilename().c_str();
       } else {
