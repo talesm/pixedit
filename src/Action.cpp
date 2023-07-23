@@ -12,6 +12,21 @@ getManagers()
   return managers;
 }
 
+static void
+prepareEvent(Uint32 type, Sint32 code, std::string_view param)
+{
+  SDL_Event ev;
+  SDL_zero(ev);
+  ev.type = type;
+  ev.user.code = code;
+  if (!param.empty()) {
+    auto strParam = new char[param.size() + 1];
+    std::copy(param.begin(), param.end(), strParam);
+    ev.user.data1 = strParam;
+  }
+  SDL_PushEvent(&ev);
+}
+
 void
 pushAction(Id action)
 {
@@ -25,12 +40,17 @@ pushAction(Id action)
   for (auto m : getManagers()) {
     auto it = m->actions.find(action);
     if (it != m->actions.end()) {
-      SDL_Event ev;
-      SDL_zero(ev);
-      ev.type = m->type;
-      ev.user.code = it->second.code;
-      SDL_PushEvent(&ev);
+      prepareEvent(m->type, it->second.code, {});
       return;
+    }
+    for (auto colonPos = action.find_last_of(':');
+         colonPos != std::string::npos && colonPos > 0;
+         colonPos = action.find_last_of(':', colonPos - 1)) {
+      auto jt = m->actions.find(action.substr(0, colonPos));
+      if (jt != m->actions.end()) {
+        prepareEvent(m->type, it->second.code, action.substr(colonPos + 1));
+        return;
+      }
     }
   }
   throw std::runtime_error{"Invalid action" + std::string{action}};
@@ -70,6 +90,12 @@ ActionManager::operator=(ActionManager rhs)
 void
 ActionManager::set(Id id, Action action)
 {
+  set(id, [action = std::move(action)](auto _) { action(); });
+}
+
+void
+ActionManager::set(Id id, ActionWithParameter action)
+{
   Sint32 nextCode = 0;
   for (int i = 1; i != -1; ++i) {
     if (!codeToId.contains(i)) {
@@ -98,8 +124,10 @@ ActionManager::check(const SDL_UserEvent& ev)
 {
   for (auto m : getManagers()) {
     if (ev.type == m->type) {
+      auto strParam = static_cast<char*>(ev.data1);
       auto id = m->codeToId.at(ev.code);
-      m->actions[id].action();
+      m->actions[id].action(strParam ?: Id{});
+      delete strParam;
       return true;
     }
   }

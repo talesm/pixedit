@@ -14,6 +14,7 @@ constexpr Id QUIT{"quit"};
 } // namespace actions
 
 using Action = std::function<void()>;
+using ActionWithParameter = std::function<void(std::string_view)>;
 
 /**
  * Request action to be performed
@@ -28,7 +29,7 @@ class ActionManager
   struct ActionDescription
   {
     IdOwn name;
-    Action action;
+    ActionWithParameter action;
     Sint32 code;
   };
 
@@ -43,6 +44,7 @@ public:
   ActionManager& operator=(ActionManager rhs);
 
   void set(Id id, Action action);
+  void set(Id id, ActionWithParameter action);
   void unset(Id id);
 
   static bool check(const SDL_UserEvent& ev);
