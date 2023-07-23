@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 #include <SDL.h>
+#include "PictureFile.hpp"
 #include "Surface.hpp"
 #include "utils/TempSurface.hpp"
 
@@ -15,7 +16,7 @@ namespace pixedit {
 class PictureBuffer
 {
 private:
-  std::string filename;
+  PictureFile file;
   Surface surface;
   std::list<TempSurface> history;
   std::list<TempSurface>::iterator historyPoint = history.end();
@@ -27,7 +28,10 @@ private:
 public:
   PictureBuffer() = default;
   PictureBuffer(std::string filename, Surface surface, bool dirty = false)
-    : filename(std::move(filename))
+    : PictureBuffer(PictureFile{filename}, std::move(surface), dirty){};
+
+  PictureBuffer(PictureFile file, Surface surface, bool dirty = false)
+    : file(std::move(file))
     , surface(surface)
   {
     if (surface) {
@@ -55,9 +59,13 @@ public:
 
   bool redo();
 
-  constexpr const std::string& getFilename() const { return filename; }
+  constexpr const std::string& getFilename() const { return file.name; }
+
+  constexpr const PictureFile& getFile() const { return file; }
 
   Surface getSurface() const { return surface; }
+
+  void setSurface(Surface value) { surface = value; }
 
   int getW() const { return surface.getW(); }
   int getH() const { return surface.getH(); }

@@ -1,72 +1,28 @@
 #include "loaders.hpp"
 #include <fstream>
+#include <unordered_map>
 #include <vector>
 #include <SDL_image.h>
 #include "PictureBuffer.hpp"
-#include "PixReader.hpp"
 #include "Surface.hpp"
+#include "utils/PixReader.hpp"
 #include "utils/replayPicture.hpp"
 
 namespace pixedit {
 
 static const std::vector<Id>&
-getDefaultLoaders()
+getDefaultLoaderIds()
 {
   static std::vector<Id> ids{loaders::PIX, loaders::SDL2_IMAGE, loaders::TEXT};
   return ids;
-}
-
-std::unique_ptr<PictureBuffer>
-loadBuffer(const std::string& filename, Id loader)
-{
-  auto s = loadSurface(filename, loader);
-  if (!s) { return nullptr; }
-  return std::make_unique<PictureBuffer>(filename, std::move(s));
-}
-
-static Surface
-makePixSurface(const PictureFormat& format, std::span<Uint8> data)
-{
-  SDL_PixelFormatEnum pixelFormat;
-  switch (format.bitsPerPixel) {
-  case 32: pixelFormat = SDL_PIXELFORMAT_ABGR32; break;
-  case 24: pixelFormat = SDL_PIXELFORMAT_BGR24; break;
-  case 16: pixelFormat = SDL_PIXELFORMAT_BGR565; break;
-  case 8: pixelFormat = SDL_PIXELFORMAT_INDEX8; break;
-  default: return nullptr;
-  }
-  SDL_Surface* s = SDL_CreateRGBSurfaceWithFormat(
-    0, format.w, format.h, format.bitsPerPixel, pixelFormat);
-  if (!s) { return nullptr; }
-  if (SDL_ISPIXELFORMAT_INDEXED(pixelFormat)) {
-    SDL_Color grayscale[256];
-    for (int i = 0; i < 256; ++i) {
-      grayscale[i] = {Uint8(i), Uint8(i), Uint8(i), 255};
-    }
-
-    SDL_SetPaletteColors(s->format->palette, grayscale, 0, 256);
-  }
-  auto bytesPerPixel = s->format->BytesPerPixel;
-  Uint8* pixels = static_cast<Uint8*>(s->pixels);
-  auto it = data.begin();
-  for (int y = 0; y < format.h; ++y) {
-    auto end = it + bytesPerPixel * format.w;
-    std::copy(it, end, pixels);
-    it = end;
-    pixels += s->pitch;
-  }
-  return {s, true};
 }
 
 static Surface
 doLoadSurface(const std::string& filename, Id loader)
 {
   if (loader == loaders::PIX) {
-    Surface s;
     SDL_RWops* rw = SDL_RWFromFile(filename.c_str(), "rb");
-    readPixImage(rw, [&s](const PictureFormat& format, std::span<Uint8> data) {
-      s = makePixSurface(format, data);
-    });
+    Surface s{readPixImage(rw), true};
     SDL_RWclose(rw);
     return s;
   }
@@ -79,12 +35,49 @@ doLoadSurface(const std::string& filename, Id loader)
   }
   return nullptr;
 }
+#define makeLoaderWrapper(id)                                                  \
+  static std::unique_ptr<PictureBuffer> loadBuffer_##id(                       \
+    const std::string& filename)                                               \
+  {                                                                            \
+    auto s = doLoadSurface(filename, loaders::id);                             \
+    if (!s) { return nullptr; }                                                \
+    return std::make_unique<PictureBuffer>(                                    \
+      PictureFile{filename, loadBuffer_##id, nullptr}, s, false);              \
+  }
+
+makeLoaderWrapper(PIX);
+makeLoaderWrapper(SDL2_IMAGE);
+makeLoaderWrapper(TEXT);
+
+std::unique_ptr<PictureBuffer>
+loadBuffer(const std::string& filename, Id loader)
+{
+  static std::unordered_map<IdRef, Loader> loaders{
+    {loaders::PIX, loadBuffer_PIX},
+    {loaders::SDL2_IMAGE, loadBuffer_SDL2_IMAGE},
+    {loaders::TEXT, loadBuffer_TEXT},
+  };
+  if (loader.empty()) {
+    for (Id id : getDefaultLoaderIds()) {
+      auto s = doLoadSurface(filename, id);
+      if (s) {
+        return std::make_unique<PictureBuffer>(
+          PictureFile{filename, loaders[id], nullptr}, std::move(s));
+      }
+    }
+    return nullptr;
+  }
+  auto s = loadSurface(filename, loader);
+  if (!s) { return nullptr; }
+  return std::make_unique<PictureBuffer>(
+    PictureFile{filename, loaders[loader], nullptr}, std::move(s));
+}
 
 Surface
 loadSurface(const std::string& filename, Id loader)
 {
   if (loader.empty()) {
-    for (Id id : getDefaultLoaders()) {
+    for (Id id : getDefaultLoaderIds()) {
       auto s = doLoadSurface(filename, id);
       if (s) { return s; }
     }
