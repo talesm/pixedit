@@ -12,23 +12,92 @@ namespace defaults {
 extern const bool ASK_SAVE_ON_CLOSE;
 } // namespace defaults
 
-void
-EditorApp::update()
+struct ViewSettings
 {
-  if (maximizeView) {
-    if (!ImGui::GetIO().WantCaptureMouse && SDL_GetMouseFocus() == window) {
-      auto buttonState = SDL_GetMouseState(&view.state.x, &view.state.y);
-      view.state.left = buttonState & SDL_BUTTON_LMASK;
-      view.state.middle = buttonState & SDL_BUTTON_MMASK;
-      view.state.right = buttonState & SDL_BUTTON_RMASK;
+  PictureView view;
+  SDL_Texture* texture = nullptr;
+  int fileUnamedId = 0;
+  std::string filename;
+  std::string titleBuffer;
+};
+
+struct EditorState
+{
+  SDL_Window* window = nullptr;
+  SDL_Renderer* renderer = nullptr;
+  ImGuiComponent ui;
+
+  PictureManager picture;
+  Rect pictureViewport;
+  PictureView view;
+  bool exited = false;
+  bool maximizeView = false;
+
+  std::vector<std::shared_ptr<PictureBuffer>> buffers;
+  std::map<std::shared_ptr<PictureBuffer>, ViewSettings> viewSettings;
+  int bufferIndex = -1;
+
+  Clipboard clipboard;
+  ActionManager actions;
+  ShortcutManager shortcuts;
+
+  bool exiting = false;
+  bool focusBufferNextFrame = true;
+  std::string requestModal;
+};
+
+static EditorState* ctx = nullptr;
+
+static void
+setupActions();
+static void
+setupShortcuts();
+static void
+event(const SDL_Event& ev, bool imGuiMayUse);
+static void
+update();
+static void
+showNewFileDialog();
+static void
+showConfirmExitDialog();
+static void
+showPictureWindows();
+static void
+showPictureWindow(const std::shared_ptr<PictureBuffer>& buffer);
+static void
+showMainMenuBar();
+static void
+showPictureOptions();
+static void
+appendFile(std::shared_ptr<PictureBuffer> buffer);
+
+/// Actions
+static void
+close(bool force = false);
+static std::shared_ptr<PictureBuffer>
+currentBuffer();
+static PictureView&
+currentView();
+
+void
+update()
+{
+  if (ctx->maximizeView) {
+    if (!ImGui::GetIO().WantCaptureMouse &&
+        SDL_GetMouseFocus() == ctx->window) {
+      auto buttonState =
+        SDL_GetMouseState(&ctx->view.state.x, &ctx->view.state.y);
+      ctx->view.state.left = buttonState & SDL_BUTTON_LMASK;
+      ctx->view.state.middle = buttonState & SDL_BUTTON_MMASK;
+      ctx->view.state.right = buttonState & SDL_BUTTON_RMASK;
     };
-    picture.update(&view, renderer, pictureViewport);
+    ctx->picture.update(&ctx->view, ctx->renderer, ctx->pictureViewport);
   }
-  ui.update();
+  ctx->ui.update();
   showMainMenuBar();
   if (ImGui::Begin("Picture options")) { showPictureOptions(); }
   ImGui::End();
-  if (!maximizeView) { showPictureWindows(); }
+  if (!ctx->maximizeView) { showPictureWindows(); }
 }
 
 static SDL_Window*
@@ -60,13 +129,20 @@ EDITOR_EVENT()
 }
 
 EditorApp::EditorApp(EditorInitSettings settings)
-  : window(makeWindow(settings.windowSz))
-  , renderer(makeRenderer(window))
-  , ui(window, renderer)
-  , pictureViewport{0, 0, settings.windowSz.x, settings.windowSz.y}
-  , view{pictureViewport}
-  , actions{EDITOR_EVENT()}
 {
+  SDL_assert_always(ctx == nullptr);
+  if (SDL_Init(SDL_INIT_VIDEO)) throw std::runtime_error{SDL_GetError()};
+  auto window = makeWindow(settings.windowSz);
+  auto renderer = makeRenderer(window);
+  Rect pictureViewport = {0, 0, settings.windowSz.x, settings.windowSz.y};
+  ctx = new EditorState{
+    .window{window},
+    .renderer{renderer},
+    .ui{window, renderer},
+    .pictureViewport{pictureViewport},
+    .view{pictureViewport},
+    .actions{EDITOR_EVENT()},
+  };
   std::shared_ptr<PictureBuffer> buffer;
   if (!settings.filename.empty() ||
       (settings.pictureSz.x > 0 && settings.pictureSz.y > 0)) {
@@ -77,8 +153,8 @@ EditorApp::EditorApp(EditorInitSettings settings)
         "", Surface::create(settings.pictureSz.x, settings.pictureSz.y));
     }
     currentView().setBuffer(buffer);
-    buffers.emplace_back(buffer);
-    bufferIndex = buffers.size() - 1;
+    ctx->buffers.emplace_back(buffer);
+    ctx->bufferIndex = ctx->buffers.size() - 1;
   }
 
   setupActions();
@@ -90,55 +166,63 @@ EditorApp::EditorApp(EditorInitSettings settings)
   pushAction(actions::EDITOR_FOCUS_PICTURE);
 }
 
+EditorApp::~EditorApp()
+{
+  delete ctx;
+  ctx = nullptr;
+  SDL_Quit();
+}
+
 int
 EditorApp::run()
 {
-  while (!exited) {
+  while (!ctx->exited) {
     // Update
-    for (SDL_Event ev; SDL_PollEvent(&ev);) { event(ev, ui.event(ev)); }
+    for (SDL_Event ev; SDL_PollEvent(&ev);) { event(ev, ctx->ui.event(ev)); }
 
     update();
 
     /// Render
-    SDL_SetRenderDrawColor(renderer, 60, 60, 60, 255);
-    SDL_RenderClear(renderer);
+    SDL_SetRenderDrawColor(ctx->renderer, 60, 60, 60, 255);
+    SDL_RenderClear(ctx->renderer);
 
-    if (maximizeView) { picture.render(&view, renderer, pictureViewport); }
+    if (ctx->maximizeView) {
+      ctx->picture.render(&ctx->view, ctx->renderer, ctx->pictureViewport);
+    }
 
-    ui.render();
+    ctx->ui.render();
 
-    SDL_RenderPresent(renderer);
+    SDL_RenderPresent(ctx->renderer);
     SDL_Delay(10);
   }
-  SDL_Quit();
   return EXIT_SUCCESS;
 }
 
 void
-EditorApp::event(const SDL_Event& ev, bool imGuiMayUse)
+event(const SDL_Event& ev, bool imGuiMayUse)
 {
   switch (ev.type) {
   case SDL_QUIT:
-    if (buffers.empty() || !defaults::ASK_SAVE_ON_CLOSE) {
-      exited = true;
+    if (ctx->buffers.empty() || !defaults::ASK_SAVE_ON_CLOSE) {
+      ctx->exited = true;
       break;
     }
-    exiting = true;
+    ctx->exiting = true;
     pushAction(actions::PIC_CLOSE);
     return;
   case SDL_WINDOWEVENT:
     switch (ev.window.event) {
     case SDL_WINDOWEVENT_SIZE_CHANGED:
-      pictureViewport.w = ev.window.data1 - pictureViewport.x;
-      pictureViewport.h = ev.window.data2 - pictureViewport.y;
+      ctx->pictureViewport.w = ev.window.data1 - ctx->pictureViewport.x;
+      ctx->pictureViewport.h = ev.window.data2 - ctx->pictureViewport.y;
       break;
     default: break;
     }
     break;
   case SDL_MOUSEWHEEL:
-    if (ImGui::GetIO().WantCaptureMouse || !maximizeView) break;
-    view.state.wheelX += ev.wheel.x;
-    view.state.wheelY += ev.wheel.y;
+    if (ImGui::GetIO().WantCaptureMouse || !ctx->maximizeView) break;
+    ctx->view.state.wheelX += ev.wheel.x;
+    ctx->view.state.wheelY += ev.wheel.y;
     break;
   case SDL_DROPFILE:
     if (ImGui::GetIO().WantCaptureMouse) break;
@@ -147,34 +231,34 @@ EditorApp::event(const SDL_Event& ev, bool imGuiMayUse)
   case SDL_KEYDOWN: {
     if (ImGui::GetIO().WantCaptureKeyboard) break;
     auto mod = ev.key.keysym.mod;
-    if (auto action = shortcuts.get({.key = ev.key.keysym.sym,
-                                     .ctrl = (mod & KMOD_CTRL) != 0,
-                                     .alt = (mod & KMOD_ALT) != 0,
-                                     .shift = (mod & KMOD_SHIFT) != 0})) {
+    if (auto action = ctx->shortcuts.get({.key = ev.key.keysym.sym,
+                                          .ctrl = (mod & KMOD_CTRL) != 0,
+                                          .alt = (mod & KMOD_ALT) != 0,
+                                          .shift = (mod & KMOD_SHIFT) != 0})) {
       pushAction(*action);
     }
     break;
   }
-  default: actions.check(ev.user); break;
+  default: ctx->actions.check(ev.user); break;
   }
 }
 
 void
-EditorApp::close(bool force)
+close(bool force)
 {
-  if (buffers.empty()) {
-    exited = true;
+  if (ctx->buffers.empty()) {
+    ctx->exited = true;
   } else if (!force && currentBuffer()->isDirty() &&
              defaults::ASK_SAVE_ON_CLOSE) {
-    requestModal = "Confirm exit";
+    ctx->requestModal = "Confirm exit";
   } else {
-    viewSettings.erase(currentBuffer());
-    buffers.erase(buffers.begin() + bufferIndex);
-    if (bufferIndex >= int(buffers.size())) { bufferIndex -= 1; }
-    if (bufferIndex < 0) {
-      view.setBuffer(nullptr);
+    ctx->viewSettings.erase(currentBuffer());
+    ctx->buffers.erase(ctx->buffers.begin() + ctx->bufferIndex);
+    if (ctx->bufferIndex >= int(ctx->buffers.size())) { ctx->bufferIndex -= 1; }
+    if (ctx->bufferIndex < 0) {
+      ctx->view.setBuffer(nullptr);
     } else {
-      view.setBuffer(currentBuffer());
+      ctx->view.setBuffer(currentBuffer());
     }
   }
 }
@@ -237,35 +321,36 @@ showAboutDialog()
 }
 
 void
-EditorApp::showPictureOptions()
+showPictureOptions()
 {
-  if (!requestModal.empty()) {
-    ImGui::OpenPopup(requestModal.c_str());
-    requestModal.clear();
+  if (!ctx->requestModal.empty()) {
+    ImGui::OpenPopup(ctx->requestModal.c_str());
+    ctx->requestModal.clear();
   }
   showNewFileDialog();
   showConfirmExitDialog();
   showAboutDialog();
 
-  ImGui::BeginDisabled(maximizeView == false);
-  if (ImGui::BeginCombo(
-        "File",
-        bufferIndex < 0 ? "None" : currentBuffer()->getFilename().c_str())) {
+  ImGui::BeginDisabled(ctx->maximizeView == false);
+  if (ImGui::BeginCombo("File",
+                        ctx->bufferIndex < 0
+                          ? "None"
+                          : currentBuffer()->getFilename().c_str())) {
     int i = 0;
-    for (auto& b : buffers) {
-      bool selected = bufferIndex == i;
+    for (auto& b : ctx->buffers) {
+      bool selected = ctx->bufferIndex == i;
       if (ImGui::Selectable(b->getFilename().c_str(), selected)) {
-        bufferIndex = i;
-        if (bufferIndex >= 0) {
-          auto& settings = viewSettings[currentBuffer()];
-          settings.view.offset = view.offset;
-          settings.view.scale = view.scale;
+        ctx->bufferIndex = i;
+        if (ctx->bufferIndex >= 0) {
+          auto& settings = ctx->viewSettings[currentBuffer()];
+          settings.view.offset = ctx->view.offset;
+          settings.view.scale = ctx->view.scale;
         }
         auto nextBuffer = currentBuffer();
-        auto& settings = viewSettings[nextBuffer];
-        view.setBuffer(std::move(nextBuffer));
-        view.offset = settings.view.offset;
-        view.scale = settings.view.scale;
+        auto& settings = ctx->viewSettings[nextBuffer];
+        ctx->view.setBuffer(std::move(nextBuffer));
+        ctx->view.offset = settings.view.offset;
+        ctx->view.scale = settings.view.scale;
       }
       if (selected) { ImGui::SetItemDefaultFocus(); }
       ++i;
@@ -307,34 +392,34 @@ EditorApp::showPictureOptions()
   ImGui::SameLine();
   {
     ImGui::BeginChild("Colors", {0, colorAreaHeight});
-    auto colorA = componentToNormalized(picture.getColorA());
+    auto colorA = componentToNormalized(ctx->picture.getColorA());
     if (ImGui::ColorEdit4(
           "Color A", colorA.data(), ImGuiColorEditFlags_NoInputs)) {
-      picture.setColorA(normalizedToComponent(colorA));
+      ctx->picture.setColorA(normalizedToComponent(colorA));
     }
-    auto colorB = componentToNormalized(picture.getColorB());
+    auto colorB = componentToNormalized(ctx->picture.getColorB());
     if (ImGui::ColorEdit4(
           "Color B", colorB.data(), ImGuiColorEditFlags_NoInputs)) {
-      picture.setColorA(normalizedToComponent(colorB));
+      ctx->picture.setColorA(normalizedToComponent(colorB));
     }
     ImGui::EndChild();
   }
-  auto brush = picture.getBrush();
+  auto brush = ctx->picture.getBrush();
   int penSize = brush.pen.w;
   if (ImGui::SliderInt("Pen size", &penSize, 1, 16)) {
     brush.pen = Pen{penSize, penSize};
-    picture.setBrush(brush);
+    ctx->picture.setBrush(brush);
   }
   Pattern pattern = brush.pattern;
   if (PatternCombo("Tile: ", &pattern)) {
     brush.pattern = pattern;
-    picture.setBrush(brush);
+    ctx->picture.setBrush(brush);
     pushAction(actions::EDITOR_FOCUS_PICTURE);
   }
   if (ImGui::CollapsingHeader("Selection", ImGuiTreeNodeFlags_DefaultOpen)) {
-    bool transparent = picture.isTransparent();
+    bool transparent = ctx->picture.isTransparent();
     if (ImGui::Checkbox("Transparent", &transparent)) {
-      picture.setTransparent(transparent);
+      ctx->picture.setTransparent(transparent);
       pushAction(actions::EDITOR_FOCUS_PICTURE);
     }
     ImGui::Checkbox("Fill selected out region", &currentView().fillSelectedOut);
@@ -342,13 +427,19 @@ EditorApp::showPictureOptions()
 }
 
 void
-EditorApp::showPictureWindow(const std::shared_ptr<PictureBuffer>& buffer)
+showPictureWindows()
 {
-  auto& settings = viewSettings[buffer];
+  for (auto& buffer : ctx->buffers) { showPictureWindow(buffer); }
+}
+
+void
+showPictureWindow(const std::shared_ptr<PictureBuffer>& buffer)
+{
+  auto& settings = ctx->viewSettings[buffer];
   if (buffer->getFilename().empty()) {
     if (settings.fileUnamedId == 0) {
       int largestUnnamedId = 0;
-      for (auto& s : viewSettings) {
+      for (auto& s : ctx->viewSettings) {
         if (s.second.fileUnamedId > largestUnnamedId) {
           largestUnnamedId = s.second.fileUnamedId;
         }
@@ -381,8 +472,8 @@ EditorApp::showPictureWindow(const std::shared_ptr<PictureBuffer>& buffer)
   // TODO Measure title and decoration instead of guessing
   ImGui::SetNextWindowSize(ImVec2(buffer->getW() + 16, buffer->getH() + 35),
                            ImGuiCond_Once);
-  if (focusBufferNextFrame && buffer == currentBuffer()) {
-    focusBufferNextFrame = false;
+  if (ctx->focusBufferNextFrame && buffer == currentBuffer()) {
+    ctx->focusBufferNextFrame = false;
     ImGui::SetNextWindowFocus();
   }
   bool stayOpen = true;
@@ -397,7 +488,7 @@ EditorApp::showPictureWindow(const std::shared_ptr<PictureBuffer>& buffer)
       if (settings.texture == nullptr || picW != canvasSz.x ||
           picH != canvasSz.y) {
         SDL_DestroyTexture(settings.texture);
-        settings.texture = SDL_CreateTexture(renderer,
+        settings.texture = SDL_CreateTexture(ctx->renderer,
                                              SDL_PIXELFORMAT_ABGR32,
                                              SDL_TEXTUREACCESS_TARGET,
                                              canvasSz.x,
@@ -432,13 +523,15 @@ EditorApp::showPictureWindow(const std::shared_ptr<PictureBuffer>& buffer)
     }
     if (ImGui::IsWindowFocused() || redraw) {
       view.setBuffer(buffer);
-      SDL_SetRenderTarget(renderer, settings.texture);
-      SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-      SDL_RenderClear(renderer);
-      picture.update(&view, renderer, {0, 0, int(canvasSz.x), int(canvasSz.y)});
-      picture.render(&view, renderer, {0, 0, int(canvasSz.x), int(canvasSz.y)});
+      SDL_SetRenderTarget(ctx->renderer, settings.texture);
+      SDL_SetRenderDrawColor(ctx->renderer, 0, 0, 0, 0);
+      SDL_RenderClear(ctx->renderer);
+      ctx->picture.update(
+        &view, ctx->renderer, {0, 0, int(canvasSz.x), int(canvasSz.y)});
+      ctx->picture.render(
+        &view, ctx->renderer, {0, 0, int(canvasSz.x), int(canvasSz.y)});
 
-      SDL_SetRenderTarget(renderer, nullptr);
+      SDL_SetRenderTarget(ctx->renderer, nullptr);
     }
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     draw_list->AddImage(settings.texture, canvasP0, canvasP1);
@@ -448,16 +541,17 @@ EditorApp::showPictureWindow(const std::shared_ptr<PictureBuffer>& buffer)
 }
 
 void
-EditorApp::setupActions()
+setupActions()
 {
-  actions.set(actions::PIC_NEW, [&] { requestModal = "New image"; });
+  auto& actions = ctx->actions;
+  actions.set(actions::PIC_NEW, [&] { ctx->requestModal = "New image"; });
   actions.set(actions::PIC_OPEN, [&] {
     auto buffer = loadFromFileDialog("./");
     if (buffer) { appendFile(buffer); };
   });
   actions.set(actions::PIC_CLOSE, [&] { close(); });
   actions.set(actions::PIC_SAVE, [&] {
-    if (buffers.empty() || bufferIndex < 0) return;
+    if (ctx->buffers.empty() || ctx->bufferIndex < 0) return;
     if (currentBuffer()->getFilename().empty()) {
       saveWithFileDialog(*currentBuffer());
     } else {
@@ -465,7 +559,7 @@ EditorApp::setupActions()
     }
   });
   actions.set(actions::PIC_SAVE_AS, [&] {
-    if (buffers.empty() || bufferIndex < 0) return;
+    if (ctx->buffers.empty() || ctx->bufferIndex < 0) return;
     saveWithFileDialog(*currentBuffer());
   });
   actions.set(actions::SELECTION_PERSIST,
@@ -476,13 +570,13 @@ EditorApp::setupActions()
     if (!currentBuffer()) return;
     auto& buffer = *currentBuffer();
     auto selectionSurface = buffer.getSelectionSurface();
-    clipboard.set(selectionSurface ?: buffer.getSurface());
+    ctx->clipboard.set(selectionSurface ?: buffer.getSurface());
   });
   actions.set(actions::CLIP_CUT, [&] {
     if (!currentBuffer()) return;
     auto& buffer = *currentBuffer();
     if (!buffer.hasSelection()) return;
-    clipboard.set(buffer.getSelectionSurface());
+    ctx->clipboard.set(buffer.getSelectionSurface());
     currentView().setSelection(nullptr);
   });
   actions.set(actions::CLIP_PASTE, [&] {
@@ -491,12 +585,12 @@ EditorApp::setupActions()
       pushAction(actions::CLIP_PASTE_NEW);
       return;
     }
-    auto surface = clipboard.get();
+    auto surface = ctx->clipboard.get();
     if (!surface) return;
     currentView().setSelection(surface);
   });
   actions.set(actions::CLIP_PASTE_NEW, [&] {
-    auto surface = clipboard.get();
+    auto surface = ctx->clipboard.get();
     if (!surface) return; // TODO Error?
     appendFile(std::make_shared<PictureBuffer>("", surface, true));
   });
@@ -508,12 +602,13 @@ EditorApp::setupActions()
     currentView().enableGrid(!currentView().isGridEnabled());
   });
   actions.set(actions::EDITOR_FOCUS_PICTURE,
-              [&] { focusBufferNextFrame = true; });
+              [&] { ctx->focusBufferNextFrame = true; });
 }
 
 void
-EditorApp::setupShortcuts()
+setupShortcuts()
 {
+  auto& shortcuts = ctx->shortcuts;
   shortcuts.set({.key = SDLK_n, .ctrl = true}, actions::PIC_NEW);
   shortcuts.set({.key = SDLK_o, .ctrl = true}, actions::PIC_OPEN);
   shortcuts.set({.key = SDLK_ESCAPE}, actions::SELECTION_PERSIST);
@@ -572,11 +667,11 @@ showEditMenuContent()
 }
 
 void
-EditorApp::showMainMenuBar()
+showMainMenuBar()
 {
   if (ImGui::BeginMainMenuBar()) {
     if (ImGui::BeginMenu("File")) {
-      showFileMenuContent(!buffers.empty());
+      showFileMenuContent(!ctx->buffers.empty());
       ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("Edit")) {
@@ -584,7 +679,7 @@ EditorApp::showMainMenuBar()
       ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("View")) {
-      ImGui::Checkbox("Maximize", &maximizeView);
+      ImGui::Checkbox("Maximize", &ctx->maximizeView);
       bool gridEnabled = currentView().isGridEnabled();
       if (ImGui::Checkbox("Show grid", &gridEnabled)) {
         currentView().enableGrid(gridEnabled);
@@ -592,7 +687,7 @@ EditorApp::showMainMenuBar()
       ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("Help")) {
-      if (ImGui::MenuItem("About")) { requestModal = "About"; }
+      if (ImGui::MenuItem("About")) { ctx->requestModal = "About"; }
       ImGui::EndMenu();
     }
     ImGui::Dummy({50, 0});
@@ -611,7 +706,7 @@ EditorApp::showMainMenuBar()
 }
 
 void
-EditorApp::showNewFileDialog()
+showNewFileDialog()
 {
   ImVec2 center = ImGui::GetMainViewport()->GetCenter();
   ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
@@ -640,7 +735,7 @@ EditorApp::showNewFileDialog()
   }
 }
 void
-EditorApp::showConfirmExitDialog()
+showConfirmExitDialog()
 {
   ImVec2 center = ImGui::GetMainViewport()->GetCenter();
   ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
@@ -648,12 +743,12 @@ EditorApp::showConfirmExitDialog()
         "Confirm exit", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
     ImGui::Text("Image unsaved changes will be lost?");
     const char* cstr = "";
-    if (bufferIndex >= 0) {
+    if (ctx->bufferIndex >= 0) {
       auto buffer = currentBuffer();
       if (buffer && !buffer->getFilename().empty()) {
         cstr = buffer->getFilename().c_str();
       } else {
-        auto& settings = viewSettings[buffer];
+        auto& settings = ctx->viewSettings[buffer];
         cstr = settings.filename.c_str();
       }
     }
@@ -663,7 +758,7 @@ EditorApp::showConfirmExitDialog()
     if (ImGui::Button("Close",
                       ImVec2(ImGui::GetContentRegionAvail().x * .45f, 0))) {
       close(true);
-      if (exiting) {
+      if (ctx->exiting) {
         pushAction(actions::PIC_CLOSE);
       } else {
         ImGui::CloseCurrentPopup();
@@ -672,13 +767,39 @@ EditorApp::showConfirmExitDialog()
     ImGui::SameLine();
     if (ImGui::Button("Cancel", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
       ImGui::CloseCurrentPopup();
-      exiting = false;
+      ctx->exiting = false;
     }
     ImGui::SetItemDefaultFocus();
     ImGui::EndPopup();
-  } else if (exiting) {
+  } else if (ctx->exiting) {
     pushAction(actions::PIC_CLOSE);
   }
+}
+
+void
+appendFile(std::shared_ptr<PictureBuffer> buffer)
+{
+  ctx->view.setBuffer(buffer);
+  ctx->view.offset = {0, 0};
+  ctx->view.scale = 1.f;
+  ctx->buffers.emplace_back(buffer);
+  ctx->bufferIndex = ctx->buffers.size() - 1;
+}
+
+std::shared_ptr<PictureBuffer>
+currentBuffer()
+{
+  if (ctx->bufferIndex < 0 || ctx->buffers.empty()) return nullptr;
+  return ctx->buffers[ctx->bufferIndex];
+}
+
+PictureView&
+currentView()
+{
+  if (!ctx->maximizeView && currentBuffer()) {
+    return ctx->viewSettings[currentBuffer()].view;
+  }
+  return ctx->view;
 }
 
 } // namespace pixedit

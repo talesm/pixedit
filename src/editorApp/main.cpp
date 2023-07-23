@@ -16,7 +16,6 @@ main(int argc, char** argv)
 {
   using namespace pixedit;
   try {
-    if (SDL_Init(SDL_INIT_VIDEO)) throw std::runtime_error{SDL_GetError()};
     EditorInitSettings settings{
       .windowSz =
         {
