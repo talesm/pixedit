@@ -4,12 +4,12 @@ project(pixeditor VERSION 0.1)
 set(CMAKE_CXX_STANDARD 20)
 
 # pixedit
-file(GLOB PIXEDIT_SOURCES src/editorApp/*.cpp src/editorApp/*.hpp)
+file(GLOB PIXEDIT_SOURCES CONFIGURE_DEPENDS src/editorApp/*.cpp src/editorApp/*.hpp)
 add_executable(pixedit ${PIXEDIT_SOURCES})
 target_link_libraries(pixedit PRIVATE pix imgui tinyfiledialogs)
 
 # libpix
-file(GLOB PIX_SOURCES 
+file(GLOB PIX_SOURCES CONFIGURE_DEPENDS
     src/*.cpp
     src/*.hpp
     src/clipboards/*.cpp
@@ -38,7 +38,7 @@ target_include_directories(SDL_2 INTERFACE ${SDL_2_INCLUDE_DIR})
 target_link_libraries(SDL_2 INTERFACE SDL2 SDL2_image)
 
 # pixtest
-file(GLOB_RECURSE PIXTEST_SOURCES test/*.cpp)
+file(GLOB_RECURSE PIXTEST_SOURCES CONFIGURE_DEPENDS test/*.cpp)
 add_executable(pixtest ${PIXTEST_SOURCES})
 target_include_directories(pixtest PUBLIC test/)
 target_link_libraries(pixtest PRIVATE pix)
@@ -53,7 +53,7 @@ target_link_libraries(imgui PRIVATE SDL_2)
 add_library(tinyfiledialogs external/tinyfiledialogs/tinyfiledialogs.c external/tinyfiledialogs/tinyfiledialogs.h)
 target_include_directories(tinyfiledialogs PUBLIC external/tinyfiledialogs/)
 
-file(GLOB SCRATCH_SOURCES scratch/*.cpp)
+file(GLOB SCRATCH_SOURCES CONFIGURE_DEPENDS scratch/*.cpp)
 foreach(SCRATCH_SRC ${SCRATCH_SOURCES})
     get_filename_component(SCRATCH_APP ${SCRATCH_SRC} NAME_WE)
     message(${SCRATCH_APP})
