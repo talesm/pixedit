@@ -2,6 +2,7 @@
 #define PIXEDIT_SRC_SHORTCUT_MANAGER_INCLUDED
 
 #include <map>
+#include <optional>
 #include <ostream>
 #include <SDL_keyboard.h>
 #include "Id.hpp"

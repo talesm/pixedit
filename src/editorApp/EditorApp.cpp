@@ -3,7 +3,9 @@
 #include <stdexcept>
 #include <imgui.h>
 #include "FileDialogTinyfd.hpp"
+#include "PluginManager.hpp"
 #include "actions.hpp"
+#include "shortcutPlugin.hpp"
 #include "tools.hpp"
 
 namespace pixedit {
@@ -25,6 +27,7 @@ struct EditorState
 {
   SDL_Window* window = nullptr;
   SDL_Renderer* renderer = nullptr;
+  PluginManager plugins;
   ImGuiComponent ui;
 
   PictureManager picture;
@@ -50,8 +53,6 @@ static EditorState* ctx = nullptr;
 
 static void
 setupActions();
-static void
-setupShortcuts();
 static void
 event(const SDL_Event& ev, bool imGuiMayUse);
 static void
@@ -158,7 +159,9 @@ EditorApp::EditorApp(EditorInitSettings settings)
   }
 
   setupActions();
-  setupShortcuts();
+
+  installShortcutPlugin(ctx->plugins, ctx->shortcuts);
+  installShortcutDefaultsPlugin(ctx->plugins);
 
   currentView().canvas | ColorA{0, 0, 0, 255};
   currentView().canvas | ColorB{255, 255, 255, 255};
@@ -603,35 +606,6 @@ setupActions()
   });
   actions.set(actions::EDITOR_FOCUS_PICTURE,
               [&] { ctx->focusBufferNextFrame = true; });
-}
-
-void
-setupShortcuts()
-{
-  auto& shortcuts = ctx->shortcuts;
-  shortcuts.set({.key = SDLK_n, .ctrl = true}, actions::PIC_NEW);
-  shortcuts.set({.key = SDLK_o, .ctrl = true}, actions::PIC_OPEN);
-  shortcuts.set({.key = SDLK_ESCAPE}, actions::SELECTION_PERSIST);
-  shortcuts.set({.key = SDLK_DELETE}, actions::SELECTION_DELETE);
-  shortcuts.set({.key = SDLK_c, .ctrl = true}, actions::CLIP_COPY);
-  shortcuts.set({.key = SDLK_x, .ctrl = true}, actions::CLIP_CUT);
-  shortcuts.set({.key = SDLK_v, .ctrl = true}, actions::CLIP_PASTE);
-  shortcuts.set({.key = SDLK_v, .ctrl = true, .shift = true},
-                actions::CLIP_PASTE_NEW);
-  shortcuts.set({.key = SDLK_w, .ctrl = true}, actions::PIC_CLOSE);
-  shortcuts.set({.key = SDLK_F4, .ctrl = true}, actions::PIC_CLOSE);
-  shortcuts.set({.key = SDLK_s, .ctrl = true}, actions::PIC_SAVE);
-  shortcuts.set({.key = SDLK_s, .ctrl = true, .shift = true},
-                actions::PIC_SAVE_AS);
-  shortcuts.set({.key = SDLK_z, .ctrl = true}, actions::HISTORY_UNDO);
-  shortcuts.set({.key = SDLK_z, .ctrl = true, .shift = true},
-                actions::HISTORY_REDO);
-
-  // Swap colors
-  shortcuts.set({.key = SDLK_x, .alt = true}, actions::EDITOR_COLOR_SWAP);
-
-  // grid
-  shortcuts.set({.key = SDLK_g, .alt = true}, actions::VIEW_GRID_TOGGLE);
 }
 
 static void

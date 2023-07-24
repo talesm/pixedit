@@ -8,7 +8,6 @@
 #include "ImGuiComponent.hpp"
 #include "PictureManager.hpp"
 #include "PictureView.hpp"
-#include "ShortcutManager.hpp"
 #include "utils/rect.hpp"
 
 namespace pixedit {
