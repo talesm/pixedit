@@ -2,7 +2,12 @@
 #include <sstream>
 #include <stdexcept>
 #include <imgui.h>
+#include "Action.hpp"
+#include "Clipboard.hpp"
 #include "FileDialogTinyfd.hpp"
+#include "ImGuiComponent.hpp"
+#include "PictureManager.hpp"
+#include "PictureView.hpp"
 #include "PluginManager.hpp"
 #include "actions.hpp"
 #include "shortcutPlugin.hpp"

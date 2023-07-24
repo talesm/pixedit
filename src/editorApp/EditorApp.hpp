@@ -2,12 +2,6 @@
 #define PIXEDIT_SRC_EDITOR_APP_EDITOR_APP_INCLUDED
 
 #include <string>
-#include <SDL.h>
-#include "Action.hpp"
-#include "Clipboard.hpp"
-#include "ImGuiComponent.hpp"
-#include "PictureManager.hpp"
-#include "PictureView.hpp"
 #include "utils/rect.hpp"
 
 namespace pixedit {
@@ -15,9 +9,9 @@ namespace pixedit {
 /// @brief Startup settings for Editor
 struct EditorInitSettings
 {
-  SDL_Point windowSz;
+  Point windowSz;
   std::string filename;
-  SDL_Point pictureSz;
+  Point pictureSz;
 };
 
 class EditorApp
