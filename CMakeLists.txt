@@ -26,6 +26,11 @@ target_include_directories(pix
     PRIVATE ${PROJECT_BINARY_DIR}
 )
 
+# Configuration
+set(PIXEDIT_INITIAL_FILENAME "" CACHE FILEPATH "The initial filename, use \"\" to empty file")
+configure_file(src/config.h.in pixedit_config.h)
+
+# SDL2 dependency
 find_path(SDL_2_INCLUDE_DIR SDL.h HINTS /usr/include/SDL2)
 execute_process(COMMAND sdl2-config --cflags
     OUTPUT_VARIABLE SDL_2_CFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
