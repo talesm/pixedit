@@ -62,7 +62,7 @@ void
 PictureManager::setColorB(Color value)
 {
   colorB = value;
-  if (lastView) { lastView->canvas | ColorA{colorB}; }
+  if (lastView) { lastView->canvas | ColorB{colorB}; }
 }
 
 void

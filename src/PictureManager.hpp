@@ -39,6 +39,14 @@ public:
 
   bool isTransparent() const { return transparent; }
   void setTransparent(bool value);
+
+  void swapColors()
+  {
+    auto colorA = getColorA();
+    auto colorB = getColorB();
+    setColorA(colorB);
+    setColorB(colorA);
+  }
 };
 
 } // namespace pixedit

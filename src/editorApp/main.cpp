@@ -25,9 +25,7 @@ main(int argc, char** argv)
       .filename = defaults::INITIAL_FILENAME,
       .pictureSz = {defaults::INITIAL_SIZE[0], defaults::INITIAL_SIZE[1]}};
     if (argc > 1) { settings.filename = argv[argc - 1]; }
-
-    EditorApp app{settings};
-    return app.run();
+    return runEditorApp(settings);
   } catch (std::exception& e) {
     std::cerr << e.what() << '\n';
   } catch (...) {

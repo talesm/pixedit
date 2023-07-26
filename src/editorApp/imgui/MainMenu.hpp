@@ -1,9 +1,10 @@
-#ifndef PIXEDIT_SRC_EDITOR_APP_IMGUI_SHOW_MAIN_MENU_INCLUDED
-#define PIXEDIT_SRC_EDITOR_APP_IMGUI_SHOW_MAIN_MENU_INCLUDED
+#ifndef PIXEDIT_SRC_EDITOR_APP_IMGUI_MAIN_MENU_INCLUDED
+#define PIXEDIT_SRC_EDITOR_APP_IMGUI_MAIN_MENU_INCLUDED
 
 #include <imgui.h>
 #include "../actions.hpp"
 #include "PictureView.hpp"
+#include "tools.hpp"
 
 namespace pixedit {
 
@@ -82,4 +83,4 @@ showMainMenuBar(PictureView& view, bool* maximizeView)
 
 } // namespace pixedit
 
-#endif /* PIXEDIT_SRC_EDITOR_APP_IMGUI_SHOW_MAIN_MENU_INCLUDED */
+#endif /* PIXEDIT_SRC_EDITOR_APP_IMGUI_MAIN_MENU_INCLUDED */

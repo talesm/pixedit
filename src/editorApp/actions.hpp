@@ -6,6 +6,7 @@
 namespace pixedit::actions {
 
 constexpr Id PIC_CLOSE{"picture.close"};
+constexpr Id PIC_FORCE_CLOSE{"picture.force_close"};
 constexpr Id PIC_OPEN{"picture.open"};
 constexpr Id PIC_NEW{"picture.new"};
 constexpr Id PIC_SAVE{"picture.save"};
@@ -23,6 +24,7 @@ constexpr Id HISTORY_UNDO{"history.undo"};
 constexpr Id HISTORY_REDO{"history.redo"};
 
 constexpr Id VIEW_GRID_TOGGLE{"view.grid.toggle"};
+constexpr Id VIEW_CHANGE{"view.change"};
 
 constexpr Id EDITOR_COLOR_SWAP{"editor.color.swap"};
 constexpr Id EDITOR_FOCUS_PICTURE{"editor.focus.picture"};

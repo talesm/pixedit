@@ -14,16 +14,8 @@ struct EditorInitSettings
   Point pictureSz;
 };
 
-class EditorApp
-{
-public:
-  EditorApp(EditorInitSettings settings);
-  EditorApp(const EditorApp&) = delete;
-  ~EditorApp();
-  EditorApp& operator=(const EditorApp&) = delete;
-
-  int run();
-};
+int
+runEditorApp(EditorInitSettings settings);
 
 } // namespace pixedit
 
