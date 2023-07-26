@@ -10,6 +10,9 @@
 #include "PictureView.hpp"
 #include "PluginManager.hpp"
 #include "actions.hpp"
+#include "imgui/showAboutDialog.hpp"
+#include "imgui/showMainMenu.hpp"
+#include "imgui/showNewFileDialog.hpp"
 #include "shortcutPlugin.hpp"
 #include "tools.hpp"
 
@@ -63,19 +66,13 @@ event(const SDL_Event& ev, bool imGuiMayUse);
 static void
 update();
 static void
-showNewFileDialog();
-static void
 showConfirmExitDialog();
 static void
 showPictureWindows();
 static void
 showPictureWindow(const std::shared_ptr<PictureBuffer>& buffer);
 static void
-showMainMenuBar();
-static void
 showPictureOptions();
-static void
-appendFile(std::shared_ptr<PictureBuffer> buffer);
 
 /// Actions
 static void
@@ -100,9 +97,18 @@ update()
     ctx->picture.update(&ctx->view, ctx->renderer, ctx->pictureViewport);
   }
   ctx->ui.update();
-  showMainMenuBar();
+  showMainMenuBar(currentView(), &ctx->maximizeView);
   if (ImGui::Begin("Picture options")) { showPictureOptions(); }
   ImGui::End();
+
+  if (!ctx->requestModal.empty()) {
+    ImGui::OpenPopup(ctx->requestModal.c_str());
+    ctx->requestModal.clear();
+  }
+  showNewFileDialog();
+  showConfirmExitDialog();
+  showAboutDialog();
+
   if (!ctx->maximizeView) { showPictureWindows(); }
 }
 
@@ -258,7 +264,7 @@ close(bool force)
     ctx->exited = true;
   } else if (!force && currentBuffer()->isDirty() &&
              defaults::ASK_SAVE_ON_CLOSE) {
-    ctx->requestModal = "Confirm exit";
+    pushAction(actions::MODAL_SHOW, "Confirm exit");
   } else {
     ctx->viewSettings.erase(currentBuffer());
     ctx->buffers.erase(ctx->buffers.begin() + ctx->bufferIndex);
@@ -295,50 +301,9 @@ PatternCombo(const char* label, Pattern* pattern)
   return result;
 }
 
-static void
-showAboutDialog()
-{
-  ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-  ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-  if (ImGui::BeginPopupModal(
-        "About", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-    ImGui::Text("Pixedit version: v0.1.0-AuspiciousAmber (Alpha)");
-    ImGui::Separator();
-    ImGui::TextWrapped(
-      "A simple and customizable pixel art focused image editor");
-    ImGui::Text("Homepage: ");
-    ImGui::SameLine();
-    static const char url[] = "https://github.com/jungleowl2/pixedit";
-    if (ImGui::SmallButton(url)) { ImGui::SetClipboardText(url); }
-    if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort) &&
-        ImGui::BeginTooltip()) {
-      ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-      ImGui::TextUnformatted("Click to copy url to clipboard");
-      ImGui::PopTextWrapPos();
-      ImGui::EndTooltip();
-    }
-
-    ImGui::Spacing();
-    ImGui::Separator();
-    if (ImGui::Button("Ok", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
-      ImGui::CloseCurrentPopup();
-    }
-    ImGui::SetItemDefaultFocus();
-    ImGui::EndPopup();
-  }
-}
-
 void
 showPictureOptions()
 {
-  if (!ctx->requestModal.empty()) {
-    ImGui::OpenPopup(ctx->requestModal.c_str());
-    ctx->requestModal.clear();
-  }
-  showNewFileDialog();
-  showConfirmExitDialog();
-  showAboutDialog();
-
   ImGui::BeginDisabled(ctx->maximizeView == false);
   if (ImGui::BeginCombo("File",
                         ctx->bufferIndex < 0
@@ -552,7 +517,8 @@ void
 setupActions()
 {
   auto& actions = ctx->actions;
-  actions.set(actions::PIC_NEW, [&] { ctx->requestModal = "New image"; });
+  actions.set(actions::PIC_NEW,
+              [&] { pushAction(actions::MODAL_SHOW, "New image"); });
   actions.set(actions::PIC_OPEN, [&] {
     auto buffer = loadFromFileDialog("./");
     if (buffer) { appendFile(buffer); };
@@ -608,111 +574,15 @@ setupActions()
   actions.set(actions::EDITOR_COLOR_SWAP, [&] { currentView().swapColors(); });
   actions.set(actions::VIEW_GRID_TOGGLE, [&] {
     currentView().enableGrid(!currentView().isGridEnabled());
+    pushAction(actions::EDITOR_FOCUS_PICTURE);
   });
   actions.set(actions::EDITOR_FOCUS_PICTURE,
               [&] { ctx->focusBufferNextFrame = true; });
+
+  actions.set(actions::MODAL_SHOW,
+              [&](Id parameter) { ctx->requestModal = parameter; });
 }
 
-static void
-showFileMenuContent(bool hasBuffer)
-{
-  if (ImGui::MenuItem("New")) { pushAction(actions::PIC_NEW); }
-  if (ImGui::MenuItem("Open", "Ctrl+O")) { pushAction(actions::PIC_OPEN); }
-  if (ImGui::MenuItem("Save", "Ctrl+S")) { pushAction(actions::PIC_SAVE); }
-  if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S")) {
-    pushAction(actions::PIC_SAVE_AS);
-  }
-  if (ImGui::MenuItem("Close File", "Ctrl+F4", nullptr, hasBuffer)) {
-    pushAction(actions::PIC_CLOSE);
-  }
-  ImGui::Separator();
-  if (ImGui::MenuItem("Exit")) { pushAction(actions::QUIT); }
-}
-
-static void
-showEditMenuContent()
-{
-  if (ImGui::MenuItem("Undo", "Ctrl+Z")) { pushAction(actions::HISTORY_UNDO); }
-  if (ImGui::MenuItem("Redo", "Ctrl+Shift+Z")) {
-    pushAction(actions::HISTORY_REDO);
-  }
-  ImGui::Separator();
-  if (ImGui::MenuItem("Cut", "Ctrl+X")) { pushAction(actions::CLIP_CUT); }
-  if (ImGui::MenuItem("Copy", "Ctrl+C")) { pushAction(actions::CLIP_COPY); }
-  if (ImGui::MenuItem("Paste", "Ctrl+V")) { pushAction(actions::CLIP_PASTE); }
-  if (ImGui::MenuItem("Paste as new", "Ctrl+Shift+V")) {
-    pushAction(actions::CLIP_PASTE_NEW);
-  }
-}
-
-void
-showMainMenuBar()
-{
-  if (ImGui::BeginMainMenuBar()) {
-    if (ImGui::BeginMenu("File")) {
-      showFileMenuContent(!ctx->buffers.empty());
-      ImGui::EndMenu();
-    }
-    if (ImGui::BeginMenu("Edit")) {
-      showEditMenuContent();
-      ImGui::EndMenu();
-    }
-    if (ImGui::BeginMenu("View")) {
-      ImGui::Checkbox("Maximize", &ctx->maximizeView);
-      bool gridEnabled = currentView().isGridEnabled();
-      if (ImGui::Checkbox("Show grid", &gridEnabled)) {
-        currentView().enableGrid(gridEnabled);
-      }
-      ImGui::EndMenu();
-    }
-    if (ImGui::BeginMenu("Help")) {
-      if (ImGui::MenuItem("About")) { ctx->requestModal = "About"; }
-      ImGui::EndMenu();
-    }
-    ImGui::Dummy({50, 0});
-    ImGui::Text("%s %dx%d",
-                getTool(currentView().getToolId()).name.c_str(),
-                currentView().state.x,
-                currentView().state.y);
-    if (currentBuffer()) {
-      ImGui::Dummy({20, 0});
-      auto& b = *currentBuffer();
-      ImGui::Text("%dx%d", b.getW(), b.getH());
-      ImGui::Text("%.2f%%", currentView().scale * 100);
-    }
-    ImGui::EndMainMenuBar();
-  }
-}
-
-void
-showNewFileDialog()
-{
-  ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-  ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-  if (ImGui::BeginPopupModal(
-        "New image", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-    ImGui::Text("Do you want to create a new image");
-    ImGui::Separator();
-
-    static int width = 320, height = 240;
-    if (ImGui::InputInt("width", &width)) {
-      if (width < 1) width = 1;
-    }
-    if (ImGui::InputInt("height", &height)) {
-      if (height < 1) height = 1;
-    }
-
-    if (ImGui::Button("OK", ImVec2(120, 0))) {
-      appendFile(
-        std::make_shared<PictureBuffer>("", Surface::create(width, height)));
-      ImGui::CloseCurrentPopup();
-    }
-    ImGui::SetItemDefaultFocus();
-    ImGui::SameLine();
-    if (ImGui::Button("Cancel", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
-    ImGui::EndPopup();
-  }
-}
 void
 showConfirmExitDialog()
 {

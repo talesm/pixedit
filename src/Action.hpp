@@ -22,6 +22,9 @@ using ActionWithParameter = std::function<void(std::string_view)>;
 void
 pushAction(Id action);
 
+void
+pushAction(Id action, Id parameter);
+
 class ActionManager
 {
   Uint32 type;

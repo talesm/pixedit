@@ -1,5 +1,6 @@
 #include "Action.hpp"
 #include <algorithm>
+#include <sstream>
 #include <stdexcept>
 #include <vector>
 
@@ -22,9 +23,18 @@ prepareEvent(Uint32 type, Sint32 code, std::string_view param)
   if (!param.empty()) {
     auto strParam = new char[param.size() + 1];
     std::copy(param.begin(), param.end(), strParam);
+    strParam[param.size()] = 0;
     ev.user.data1 = strParam;
   }
   SDL_PushEvent(&ev);
+}
+
+void
+pushAction(Id action, Id parameter)
+{
+  std::stringstream ss;
+  ss << action << ':' << parameter;
+  pushAction(ss.str());
 }
 
 void
@@ -43,11 +53,13 @@ pushAction(Id action)
       prepareEvent(m->type, it->second.code, {});
       return;
     }
-    for (auto colonPos = action.find_last_of(':');
-         colonPos != std::string::npos && colonPos > 0;
-         colonPos = action.find_last_of(':', colonPos - 1)) {
-      auto jt = m->actions.find(action.substr(0, colonPos));
-      if (jt != m->actions.end()) {
+  }
+  for (auto colonPos = action.find_last_of(':');
+       colonPos != std::string::npos && colonPos > 0;
+       colonPos = action.find_last_of(':', colonPos - 1)) {
+    for (auto m : getManagers()) {
+      auto it = m->actions.find(action.substr(0, colonPos));
+      if (it != m->actions.end()) {
         prepareEvent(m->type, it->second.code, action.substr(colonPos + 1));
         return;
       }
