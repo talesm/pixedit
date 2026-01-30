@@ -3,3 +3,4 @@ build/
 imgui.ini
 scratch/
 CMakeUserPresets.json
+.idea/
