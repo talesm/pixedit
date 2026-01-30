@@ -34,6 +34,10 @@ configure_file(src/config.h.in pixedit_config.h)
 find_package(SDL2 CONFIG REQUIRED)
 find_package(SDL2_image CONFIG REQUIRED)
 
+# SDL3 dependency
+find_package(SDL3 CONFIG REQUIRED)
+find_package(SDL3_image CONFIG REQUIRED)
+
 # pixtest
 file(GLOB_RECURSE PIXTEST_SOURCES CONFIGURE_DEPENDS test/*.cpp)
 add_executable(pixtest ${PIXTEST_SOURCES})
@@ -50,6 +54,14 @@ add_library(imgui_sdl2
         external/imgui_sdl2/imgui_impl_sdlrenderer2.h)
 target_include_directories(imgui_sdl2 PUBLIC external/imgui_sdl2/)
 target_link_libraries(imgui_sdl2 PUBLIC SDL2::SDL2 SDL2_image::SDL2_image-static imgui::imgui)
+
+add_library(imgui_sdl3
+        external/imgui_sdl3/imgui_impl_sdl3.cpp
+        external/imgui_sdl3/imgui_impl_sdl3.h
+        external/imgui_sdl3/imgui_impl_sdlrenderer3.cpp
+        external/imgui_sdl3/imgui_impl_sdlrenderer3.h)
+target_include_directories(imgui_sdl3 PUBLIC external/imgui_sdl3/)
+target_link_libraries(imgui_sdl3 PUBLIC SDL3::SDL3 SDL3_image::SDL3_image imgui::imgui)
 
 # tinyfiledialogs
 add_library(tinyfiledialogs external/tinyfiledialogs/tinyfiledialogs.c external/tinyfiledialogs/tinyfiledialogs.h)
