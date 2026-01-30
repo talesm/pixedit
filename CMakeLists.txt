@@ -20,7 +20,7 @@ file(GLOB PIX_SOURCES CONFIGURE_DEPENDS
     src/utils/*.hpp
 )
 add_library(pix ${PIX_SOURCES})
-target_link_libraries(pix PUBLIC SDL_2)
+target_link_libraries(pix PUBLIC SDL2::SDL2 SDL2_image::SDL2_image)
 target_include_directories(pix 
     PUBLIC src/ 
     PRIVATE ${PROJECT_BINARY_DIR}
@@ -31,16 +31,8 @@ set(PIXEDIT_INITIAL_FILENAME "" CACHE FILEPATH "The initial filename, use \"\" t
 configure_file(src/config.h.in pixedit_config.h)
 
 # SDL2 dependency
-find_path(SDL_2_INCLUDE_DIR SDL.h HINTS /usr/include/SDL2)
-execute_process(COMMAND sdl2-config --cflags
-    OUTPUT_VARIABLE SDL_2_CFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
-execute_process(COMMAND sdl2-config --libs
-    OUTPUT_VARIABLE SDL_2_LIBS OUTPUT_STRIP_TRAILING_WHITESPACE)
-
-add_library(SDL_2 INTERFACE)
-target_compile_options(SDL_2 INTERFACE ${SDL_2_CFLAGS})
-target_include_directories(SDL_2 INTERFACE ${SDL_2_INCLUDE_DIR})
-target_link_libraries(SDL_2 INTERFACE SDL2 SDL2_image)
+find_package(SDL2 CONFIG REQUIRED)
+find_package(SDL2_image CONFIG REQUIRED)
 
 # pixtest
 file(GLOB_RECURSE PIXTEST_SOURCES CONFIGURE_DEPENDS test/*.cpp)
@@ -52,7 +44,7 @@ target_link_libraries(pixtest PRIVATE pix)
 file(GLOB IMGUI_SOURCES external/imgui/*.cpp external/imgui/*.h)
 add_library(imgui ${IMGUI_SOURCES})
 target_include_directories(imgui PUBLIC external/imgui/)
-target_link_libraries(imgui PRIVATE SDL_2)
+target_link_libraries(imgui PRIVATE SDL2::SDL2 SDL2_image::SDL2_image)
 
 # tinyfiledialogs
 add_library(tinyfiledialogs external/tinyfiledialogs/tinyfiledialogs.c external/tinyfiledialogs/tinyfiledialogs.h)
