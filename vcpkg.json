@@ -1,6 +1,6 @@
 {
-  "dependencies": [
-    "sdl2",
-    "sdl2-image"
-  ]
+  "dependencies" : [ "sdl2", "sdl2-image", {
+    "name" : "imgui",
+    "version>=" : "1.91.9"
+  } ]
 }

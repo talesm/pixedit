@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 20)
 # pixedit
 file(GLOB PIXEDIT_SOURCES CONFIGURE_DEPENDS src/editorApp/*.cpp src/editorApp/*.hpp)
 add_executable(pixedit ${PIXEDIT_SOURCES})
-target_link_libraries(pixedit PRIVATE pix imgui tinyfiledialogs)
+target_link_libraries(pixedit PRIVATE pix imgui_sdl2 tinyfiledialogs)
 
 # libpix
 file(GLOB PIX_SOURCES CONFIGURE_DEPENDS
@@ -41,10 +41,15 @@ target_include_directories(pixtest PUBLIC test/)
 target_link_libraries(pixtest PRIVATE pix)
 
 # ImGui
-file(GLOB IMGUI_SOURCES external/imgui/*.cpp external/imgui/*.h)
-add_library(imgui ${IMGUI_SOURCES})
-target_include_directories(imgui PUBLIC external/imgui/)
-target_link_libraries(imgui PRIVATE SDL2::SDL2 SDL2_image::SDL2_image)
+find_package(imgui CONFIG REQUIRED)
+
+add_library(imgui_sdl2
+        external/imgui_sdl2/imgui_impl_sdl2.cpp
+        external/imgui_sdl2/imgui_impl_sdl2.h
+        external/imgui_sdl2/imgui_impl_sdlrenderer2.cpp
+        external/imgui_sdl2/imgui_impl_sdlrenderer2.h)
+target_include_directories(imgui_sdl2 PUBLIC external/imgui_sdl2/)
+target_link_libraries(imgui_sdl2 PUBLIC SDL2::SDL2 SDL2_image::SDL2_image imgui::imgui)
 
 # tinyfiledialogs
 add_library(tinyfiledialogs external/tinyfiledialogs/tinyfiledialogs.c external/tinyfiledialogs/tinyfiledialogs.h)

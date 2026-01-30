@@ -77,7 +77,8 @@ showPictureWindow(SDL_Renderer* renderer,
       SDL_SetRenderTarget(renderer, nullptr);
     }
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    draw_list->AddImage(settings.texture, canvasP0, canvasP1);
+    draw_list->AddImage(
+      reinterpret_cast<ImTextureID>(settings.texture), canvasP0, canvasP1);
   }
   if (!stayOpen) { pushAction(actions::PIC_CLOSE); }
   ImGui::End();

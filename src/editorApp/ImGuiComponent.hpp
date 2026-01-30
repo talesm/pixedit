@@ -13,6 +13,9 @@ struct ImGuiComponent
   bool event(const SDL_Event& ev);
   void update();
   void render();
+
+private:
+  SDL_Renderer* renderer = nullptr;
 };
 
 } // namespace pixedit
