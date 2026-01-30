@@ -20,7 +20,7 @@ file(GLOB PIX_SOURCES CONFIGURE_DEPENDS
     src/utils/*.hpp
 )
 add_library(pix ${PIX_SOURCES})
-target_link_libraries(pix PUBLIC SDL2::SDL2 SDL2_image::SDL2_image)
+target_link_libraries(pix PUBLIC SDL2::SDL2 SDL2_image::SDL2_image-static)
 target_include_directories(pix 
     PUBLIC src/ 
     PRIVATE ${PROJECT_BINARY_DIR}
@@ -49,7 +49,7 @@ add_library(imgui_sdl2
         external/imgui_sdl2/imgui_impl_sdlrenderer2.cpp
         external/imgui_sdl2/imgui_impl_sdlrenderer2.h)
 target_include_directories(imgui_sdl2 PUBLIC external/imgui_sdl2/)
-target_link_libraries(imgui_sdl2 PUBLIC SDL2::SDL2 SDL2_image::SDL2_image imgui::imgui)
+target_link_libraries(imgui_sdl2 PUBLIC SDL2::SDL2 SDL2_image::SDL2_image-static imgui::imgui)
 
 # tinyfiledialogs
 add_library(tinyfiledialogs external/tinyfiledialogs/tinyfiledialogs.c external/tinyfiledialogs/tinyfiledialogs.h)
