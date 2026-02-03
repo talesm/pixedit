@@ -68,7 +68,7 @@ showMainMenuBar(PictureView& view, bool* maximizeView)
       ImGui::EndMenu();
     }
     ImGui::Dummy({50, 0});
-    ImGui::Text("%s %dx%d",
+    ImGui::Text("%s %fx%f",
                 getTool(view.getToolId()).name.c_str(),
                 view.state.x,
                 view.state.y);

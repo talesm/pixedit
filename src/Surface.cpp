@@ -12,17 +12,10 @@ Surface::clone() const
 }
 
 Surface
-Surface::cloneWith(SDL_PixelFormatEnum format) const
+Surface::cloneWith(SDL_PixelFormat format) const
 {
   if (!surface) { return nullptr; }
-  return {SDL_ConvertSurfaceFormat(surface, format, 0), true};
-}
-
-Surface
-Surface::cloneWith(const SDL_PixelFormat* format) const
-{
-  if (!surface) { return nullptr; }
-  return {SDL_ConvertSurface(surface, format, 0), true};
+  return {SDL_ConvertSurface(surface, format), true};
 }
 
 bool

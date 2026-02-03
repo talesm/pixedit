@@ -3,7 +3,7 @@
 
 #include <optional>
 #include <string>
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #include "utils/Color.hpp"
 #include "utils/pixel.hpp"
 #include "utils/rect.hpp"
@@ -46,30 +46,30 @@ public:
 
   Surface clone() const;
 
-  Surface cloneWith(SDL_PixelFormatEnum format) const;
+  Surface cloneWith(SDL_PixelFormat format) const;
 
   Surface cloneWith(const SDL_PixelFormat* format) const;
 
-  static constexpr SDL_PixelFormatEnum DEFAULT_FORMAT = SDL_PIXELFORMAT_ABGR32;
+  static constexpr SDL_PixelFormat DEFAULT_FORMAT = SDL_PIXELFORMAT_ABGR32;
 
   static Surface create(int w, int h)
   {
     return {
-      SDL_CreateRGBSurfaceWithFormat(0, w, h, 32, DEFAULT_FORMAT),
+      SDL_CreateSurface(w, h, DEFAULT_FORMAT),
       true,
     };
   }
 
   static Surface createMask(int w, int h)
   {
-    auto surface =
-      SDL_CreateRGBSurfaceWithFormat(0, w, h, 8, SDL_PIXELFORMAT_INDEX8);
+    auto surface = SDL_CreateSurface(w, h, DEFAULT_FORMAT);
+    auto palette = SDL_CreateSurfacePalette(surface);
     static SDL_Color colors[2] = {{0, 0, 0, 0}, {255, 255, 255, 0}};
-    SDL_SetPaletteColors(surface->format->palette, colors, 0, 2);
+    SDL_SetPaletteColors(palette, colors, 0, 2);
     return {surface, true};
   }
 
-  constexpr SDL_PixelFormat* getFormat() const
+  const SDL_PixelFormatDetails* getFormat() const
   {
     return safeGetFormat(surface);
   }
@@ -109,12 +109,12 @@ public:
   void fillRect(const Rect& rect, Uint32 color)
   {
     if (!surface) return;
-    SDL_FillRect(surface, &rect, color);
+    SDL_FillSurfaceRect(surface, &rect, color);
   }
 
   void reset()
   {
-    SDL_FreeSurface(surface);
+    SDL_DestroySurface(surface);
     surface = nullptr;
   }
 
@@ -142,12 +142,12 @@ public:
 
   int blitScaled(const Surface& rhs, Rect rect)
   {
-    return SDL_BlitScaled(rhs.surface, nullptr, surface, &rect);
+    return SDL_BlitSurfaceScaled(rhs.surface, nullptr, surface, &rect, SDL_SCALEMODE_NEAREST);
   }
 
   int blitScaled(const Surface& rhs, Rect rect, const Rect& subRect)
   {
-    return SDL_BlitScaled(rhs.surface, &subRect, surface, &rect);
+    return SDL_BlitSurfaceScaled(rhs.surface, &subRect, surface, &rect, SDL_SCALEMODE_NEAREST);
   }
 
   SDL_BlendMode getBlendMode() const
@@ -168,26 +168,28 @@ public:
   std::optional<Uint32> getColorKey() const
   {
     Uint32 key;
-    if (SDL_GetColorKey(surface, &key) == 0) { return key; }
+    if (SDL_GetSurfaceColorKey(surface, &key) == 0) { return key; }
     return {};
   }
-  void setColorKey(Uint32 color) { SDL_SetColorKey(surface, true, color); }
+  void setColorKey(Uint32 color) { SDL_SetSurfaceColorKey(surface, true, color); }
   void setColorKey(Color color)
   {
     if (!surface) return;
+    auto format = SDL_GetPixelFormatDetails(surface->format);
     setColorKey(
-      SDL_MapRGBA(surface->format, color.r, color.g, color.b, color.a));
+      SDL_MapRGBA(format, nullptr, color.r, color.g, color.b, color.a));
   }
-  void unsetColorKey() { SDL_SetColorKey(surface, false, 0); }
+  void unsetColorKey() { SDL_SetSurfaceColorKey(surface, false, 0); }
 
   void setColorIndex(int index, SDL_Color color)
   {
-    SDL_SetPaletteColors(surface->format->palette, &color, index, 1);
+    SDL_SetPaletteColors(SDL_GetSurfacePalette(surface), &color, index, 1);
   }
 
   Uint32 mapColor(Color c) const
   {
-    return SDL_MapRGBA(getFormat(), c.r, c.g, c.b, c.a);
+    auto format = SDL_GetPixelFormatDetails(surface->format);
+    return SDL_MapRGBA(format, nullptr, c.r, c.g, c.b, c.a);
   }
 };
 

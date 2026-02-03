@@ -1,4 +1,5 @@
 #include "paths.hpp"
+#include <SDL3/SDL.h>
 
 namespace pixedit {
 
@@ -14,12 +15,7 @@ extern const char APP_NAME[];
 const std::string&
 getBasePath()
 {
-  static const std::string path = [] {
-    auto s = SDL_GetBasePath();
-    std::string str{s};
-    SDL_free(s);
-    return str;
-  }();
+  static const std::string path = SDL_GetBasePath();
   return path;
 }
 

@@ -3,7 +3,7 @@
 
 #include <memory>
 #include <optional>
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #include "Canvas.hpp"
 #include "MouseState.hpp"
 #include "PictureBuffer.hpp"

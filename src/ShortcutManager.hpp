@@ -4,14 +4,14 @@
 #include <map>
 #include <optional>
 #include <ostream>
-#include <SDL_keyboard.h>
+#include <SDL3/SDL_keyboard.h>
 #include "Id.hpp"
 
 namespace pixedit {
 
 struct Shortcut
 {
-  Sint32 key;
+  SDL_Keycode key;
   bool ctrl = false;
   bool alt = false;
   bool shift = false;

@@ -3,7 +3,7 @@
 
 #include <functional>
 #include <string>
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #include "Id.hpp"
 
 namespace pixedit {

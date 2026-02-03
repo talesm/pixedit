@@ -2,7 +2,7 @@
 #define PIXEDIT_SRC_UTILS_COLOR_INCLUDED
 
 #include <array>
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 namespace pixedit {
 
@@ -14,22 +14,22 @@ using RawColor = Uint32;
 /// @brief Color conversion utilities
 /// @{
 constexpr Color
-rawToComponent(RawColor color, const SDL_PixelFormat* format)
+rawToComponent(RawColor color, const SDL_PixelFormatDetails* format)
 {
   if (format == nullptr) {
     return {
       Uint8(color >> 24), Uint8(color >> 16), Uint8(color >> 8), Uint8(color)};
   }
   Color c;
-  SDL_GetRGBA(color, format, &c.r, &c.g, &c.b, &c.a);
+  SDL_GetRGBA(color, format, nullptr, &c.r, &c.g, &c.b, &c.a);
   return c;
 }
 constexpr RawColor
-componentToRaw(Color color, const SDL_PixelFormat* format)
+componentToRaw(Color color, const SDL_PixelFormatDetails* format)
 {
   if (format == nullptr)
     return color.r << 24 | color.g << 16 | color.b << 8 | color.a;
-  return SDL_MapRGBA(format, color.r, color.g, color.b, color.a);
+  return SDL_MapRGBA(format, nullptr, color.r, color.g, color.b, color.a);
 }
 
 constexpr std::array<float, 4>

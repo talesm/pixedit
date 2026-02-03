@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <span>
 #include <vector>
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #include "rasterLine.hpp"
 
 namespace pixedit {

@@ -2,7 +2,7 @@
 #define PIXEDIT_SRC_UTILS_RENDER_SELECTION_INCLUDED
 
 #include <vector>
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #include "Canvas.hpp"
 #include "primitives/Blit.hpp"
 #include "primitives/Poly.hpp"

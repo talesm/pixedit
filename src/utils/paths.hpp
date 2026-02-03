@@ -2,7 +2,6 @@
 #define PIXEDIT_SRC_UTILS_PATHS_INCLUDED
 
 #include <string>
-#include <SDL.h>
 
 namespace pixedit {
 

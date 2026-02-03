@@ -1,7 +1,6 @@
 #ifndef PIXEDIT_SRC_BRUSH_INCLUDED
 #define PIXEDIT_SRC_BRUSH_INCLUDED
 
-#include <SDL.h>
 #include "Pattern.hpp"
 #include "Pen.hpp"
 #include "utils/Color.hpp"

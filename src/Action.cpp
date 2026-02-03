@@ -43,7 +43,7 @@ pushAction(Id action)
   if (action == actions::QUIT) {
     SDL_Event ev;
     SDL_zero(ev);
-    ev.type = SDL_QUIT;
+    ev.type = SDL_EVENT_QUIT;
     SDL_PushEvent(&ev);
     return;
   }

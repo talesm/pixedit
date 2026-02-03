@@ -1,9 +1,8 @@
 #include "savers.hpp"
 #include <fstream>
-#include <SDL_image.h>
+#include <SDL3_image/SDL_image.h>
 #include "PictureBuffer.hpp"
 #include "Surface.hpp"
-#include "utils/PixWriter.hpp"
 #include "utils/dumpSurface.hpp"
 
 namespace pixedit {
@@ -18,11 +17,7 @@ static bool
 doSaveSurface(const Surface& surface, const std::string& filename, Id saver)
 {
   if (saver == savers::PIX) {
-    SDL_RWops* rw = SDL_RWFromFile(filename.c_str(), "wb");
-    if (!rw) return false;
-    auto sz = writePixImage(rw, surface.get());
-    SDL_RWclose(rw);
-    return sz > 0;
+    throw std::runtime_error("Picture format does not support saving");
   }
   if (saver == savers::SDL2_IMAGE_PNG)
     return IMG_SavePNG(surface.get(), filename.c_str()) == 0;

@@ -1,7 +1,7 @@
 #ifndef PIXEDIT_SRC_UTILS_RECT_INCLUDED
 #define PIXEDIT_SRC_UTILS_RECT_INCLUDED
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 namespace pixedit {
 

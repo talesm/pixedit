@@ -1,7 +1,6 @@
 #include "PictureView.hpp"
 #include <cmath>
 #include "tools.hpp"
-#include "utils/pixel.hpp"
 
 namespace pixedit {
 
@@ -20,8 +19,7 @@ PictureView::updatePreview(SDL_Renderer* renderer)
   movingMode = false;
   if (!renderer) { return; }
   if (preview) {
-    int w, h;
-    SDL_QueryTexture(preview, nullptr, nullptr, &w, &h);
+    int w = preview->w, h = preview->h;
     if (w < buffer->getW() || h < buffer->getH()) {
       SDL_DestroyTexture(preview);
       preview = createPreview();
@@ -65,7 +63,7 @@ renderCheckerBoard(SDL_Renderer* renderer,
                    SDL_Color color2)
 {
   SDL_SetRenderDrawColor(renderer, color1.r, color1.g, color1.b, 255);
-  SDL_RenderFillRectF(renderer, &rect);
+  SDL_RenderFillRect(renderer, &rect);
   SDL_SetRenderDrawColor(renderer, color2.r, color2.g, color2.b, 255);
   SDL_FRect rect2 = {rect.x, rect.y, squareSize, squareSize};
   bool oddRow = false;
@@ -74,12 +72,12 @@ renderCheckerBoard(SDL_Renderer* renderer,
   float y2 = rect.y + rect.h;
   for (; rect2.y + rect2.h <= y2; rect2.y += rect2.h) {
     for (; rect2.x + rect2.w <= x2; rect2.x += rect2.w) {
-      if (oddCol == oddRow) SDL_RenderFillRectF(renderer, &rect2);
+      if (oddCol == oddRow) SDL_RenderFillRect(renderer, &rect2);
       oddCol = !oddCol;
     }
     if (rect2.x < x2 && oddCol == oddRow) {
       rect2.w = x2 - rect2.x;
-      SDL_RenderFillRectF(renderer, &rect2);
+      SDL_RenderFillRect(renderer, &rect2);
       rect2.w = squareSize;
     }
     oddRow = !oddRow;
@@ -89,12 +87,12 @@ renderCheckerBoard(SDL_Renderer* renderer,
   if (rect2.y < y2) {
     rect2.h = y2 - rect2.y;
     for (; rect2.x + rect2.w <= x2; rect2.x += rect2.w) {
-      if (oddCol == oddRow) SDL_RenderFillRectF(renderer, &rect2);
+      if (oddCol == oddRow) SDL_RenderFillRect(renderer, &rect2);
       oddCol = !oddCol;
     }
     if (rect2.x < x2 && oddCol == oddRow) {
       rect2.w = x2 - rect2.x;
-      SDL_RenderFillRectF(renderer, &rect2);
+      SDL_RenderFillRect(renderer, &rect2);
       rect2.w = squareSize;
     }
   }
@@ -146,7 +144,7 @@ PictureView::render(SDL_Renderer* renderer) const
     scale * buffer->getH(),
   };
   auto offset = effectiveOffset();
-  SDL_Rect srcRect{0, 0, buffer->getW(), buffer->getH()};
+  SDL_FRect srcRect{0, 0, float(buffer->getW()), float(buffer->getH())};
   SDL_FRect dstRect{
     viewport.x + offset.x + (viewport.w - scaledSz.x) / 2.f,
     viewport.y + offset.y + (viewport.h - scaledSz.y) / 2.f,
@@ -155,16 +153,16 @@ PictureView::render(SDL_Renderer* renderer) const
   };
   renderCheckerBoard(
     renderer, dstRect, checkerSize, checkerColors[0], checkerColors[1]);
-  SDL_RenderCopyF(renderer, preview, &srcRect, &dstRect);
+  SDL_RenderTexture(renderer, preview, &srcRect, &dstRect);
   if (grid && scale >= 3) {
     SDL_SetRenderDrawColor(renderer, 127, 127, 127, 255);
     float yLimit = dstRect.y + scaledSz.y;
     float xLimit = dstRect.x + scaledSz.x;
     for (float yy = dstRect.y + scale - 1; yy < yLimit; yy += scale) {
-      SDL_RenderDrawLineF(renderer, dstRect.x, yy, xLimit - 1, yy);
+      SDL_RenderLine(renderer, dstRect.x, yy, xLimit - 1, yy);
     }
     for (float xx = dstRect.x + scale - 1; xx < xLimit; xx += scale) {
-      SDL_RenderDrawLineF(renderer, xx, dstRect.y, xx, yLimit - 1);
+      SDL_RenderLine(renderer, xx, dstRect.y, xx, yLimit - 1);
     }
   }
 }

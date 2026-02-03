@@ -26,20 +26,16 @@ showPictureWindow(SDL_Renderer* renderer,
     ImVec2 canvasSz = ImGui::GetContentRegionAvail();
     if (canvasSz.x < 50.0f) canvasSz.x = 50.0f;
     if (canvasSz.y < 50.0f) canvasSz.y = 50.0f;
-    {
-      int picW, picH;
-      SDL_QueryTexture(settings.texture, nullptr, nullptr, &picW, &picH);
-      if (settings.texture == nullptr || picW != canvasSz.x ||
-          picH != canvasSz.y) {
-        SDL_DestroyTexture(settings.texture);
-        settings.texture = SDL_CreateTexture(renderer,
-                                             SDL_PIXELFORMAT_ABGR32,
-                                             SDL_TEXTUREACCESS_TARGET,
-                                             canvasSz.x,
-                                             canvasSz.y);
-        SDL_SetTextureBlendMode(settings.texture, SDL_BLENDMODE_BLEND);
-        redraw = true;
-      }
+    auto texture = settings.texture;
+    if (texture==nullptr || texture->w != canvasSz.x || texture->h != canvasSz.y) {
+      SDL_DestroyTexture(settings.texture);
+      settings.texture = SDL_CreateTexture(renderer,
+                                           SDL_PIXELFORMAT_ABGR32,
+                                           SDL_TEXTUREACCESS_TARGET,
+                                           canvasSz.x,
+                                           canvasSz.y);
+      SDL_SetTextureBlendMode(settings.texture, SDL_BLENDMODE_BLEND);
+      redraw = true;
     }
     ImVec2 canvasP0 = ImGui::GetCursorScreenPos();
     ImVec2 canvasP1 = ImVec2(canvasP0.x + canvasSz.x, canvasP0.y + canvasSz.y);

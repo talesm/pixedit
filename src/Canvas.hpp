@@ -1,9 +1,7 @@
 #ifndef PIXEDIT_SRC_CANVAS_INCLUDED
 #define PIXEDIT_SRC_CANVAS_INCLUDED
 
-#include <array>
-#include <cstdlib>
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #include "Brush.hpp"
 #include "Surface.hpp"
 #include "utils/Color.hpp"
@@ -43,11 +41,11 @@ public:
   constexpr RawColor getRawColorA() const { return brush.colorA; }
   constexpr RawColor getRawColorB() const { return brush.colorB; }
 
-  constexpr Color getColorA() const
+  Color getColorA() const
   {
     return rawToComponent(brush.colorA, surface.getFormat());
   }
-  constexpr Color getColorB() const
+  Color getColorB() const
   {
     return rawToComponent(brush.colorB, surface.getFormat());
   }

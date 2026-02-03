@@ -101,8 +101,6 @@ static SDL_Window*
 makeWindow(SDL_Point windowSz)
 {
   auto window = SDL_CreateWindow("Pixedit viewer",
-                                 SDL_WINDOWPOS_UNDEFINED,
-                                 SDL_WINDOWPOS_UNDEFINED,
                                  windowSz.x,
                                  windowSz.y,
                                  SDL_WINDOW_RESIZABLE);
@@ -113,7 +111,7 @@ makeWindow(SDL_Point windowSz)
 static SDL_Renderer*
 makeRenderer(SDL_Window* window)
 {
-  auto renderer = SDL_CreateRenderer(window, -1, 0);
+  auto renderer = SDL_CreateRenderer(window, nullptr);
   if (!renderer) { throw std::runtime_error{SDL_GetError()}; }
   return renderer;
 }
@@ -150,7 +148,7 @@ setupInitialBuffers(const EditorInitSettings& settings)
 int
 runEditorApp(EditorInitSettings settings)
 {
-  if (SDL_Init(SDL_INIT_VIDEO)) throw std::runtime_error{SDL_GetError()};
+  if (!SDL_Init(SDL_INIT_VIDEO)) throw std::runtime_error{SDL_GetError()};
   auto window = makeWindow(settings.windowSz);
   auto renderer = makeRenderer(window);
   Rect pictureViewport = {0, 0, settings.windowSz.x, settings.windowSz.y};
@@ -202,7 +200,7 @@ void
 event(const SDL_Event& ev, bool imGuiMayUse)
 {
   switch (ev.type) {
-  case SDL_QUIT:
+  case SDL_EVENT_QUIT:
     if (ctx->buffers.empty() || !defaults::ASK_SAVE_ON_CLOSE) {
       ctx->exited = true;
       break;
@@ -210,31 +208,26 @@ event(const SDL_Event& ev, bool imGuiMayUse)
     ctx->exiting = true;
     pushAction(actions::PIC_CLOSE);
     return;
-  case SDL_WINDOWEVENT:
-    switch (ev.window.event) {
-    case SDL_WINDOWEVENT_SIZE_CHANGED:
-      ctx->pictureViewport.w = ev.window.data1 - ctx->pictureViewport.x;
-      ctx->pictureViewport.h = ev.window.data2 - ctx->pictureViewport.y;
-      break;
-    default: break;
-    }
+  case SDL_EVENT_WINDOW_RESIZED:
+    ctx->pictureViewport.w = ev.window.data1 - ctx->pictureViewport.x;
+    ctx->pictureViewport.h = ev.window.data2 - ctx->pictureViewport.y;
     break;
-  case SDL_MOUSEWHEEL:
+  case SDL_EVENT_MOUSE_WHEEL:
     if (ImGui::GetIO().WantCaptureMouse || !ctx->maximizeView) break;
     ctx->view.state.wheelX += ev.wheel.x;
     ctx->view.state.wheelY += ev.wheel.y;
     break;
-  case SDL_DROPFILE:
+  case SDL_EVENT_DROP_FILE:
     if (ImGui::GetIO().WantCaptureMouse) break;
-    appendFile(PictureBuffer::load(ev.drop.file));
+    appendFile(PictureBuffer::load(ev.drop.data));
     break;
-  case SDL_KEYDOWN: {
+  case SDL_EVENT_KEY_DOWN: {
     if (ImGui::GetIO().WantCaptureKeyboard) break;
-    auto mod = ev.key.keysym.mod;
-    if (auto action = ctx->shortcuts.get({.key = ev.key.keysym.sym,
-                                          .ctrl = (mod & KMOD_CTRL) != 0,
-                                          .alt = (mod & KMOD_ALT) != 0,
-                                          .shift = (mod & KMOD_SHIFT) != 0})) {
+    auto mod = ev.key.mod;
+    if (auto action = ctx->shortcuts.get({.key = ev.key.key,
+                                          .ctrl = (mod & SDL_KMOD_CTRL) != 0,
+                                          .alt = (mod & SDL_KMOD_ALT) != 0,
+                                          .shift = (mod & SDL_KMOD_SHIFT) != 0})) {
       pushAction(*action);
     }
     break;

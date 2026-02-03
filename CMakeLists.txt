@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 20)
 # pixedit
 file(GLOB PIXEDIT_SOURCES CONFIGURE_DEPENDS src/editorApp/*.cpp src/editorApp/*.hpp)
 add_executable(pixedit ${PIXEDIT_SOURCES})
-target_link_libraries(pixedit PRIVATE pix imgui_sdl2 tinyfiledialogs)
+target_link_libraries(pixedit PRIVATE pix imgui_sdl3 tinyfiledialogs)
 
 # libpix
 file(GLOB PIX_SOURCES CONFIGURE_DEPENDS
@@ -16,11 +16,31 @@ file(GLOB PIX_SOURCES CONFIGURE_DEPENDS
     src/clipboards/*.hpp
     src/primitives/*.hpp
     src/tools/*.hpp
-    src/utils/*.cpp
-    src/utils/*.hpp
 )
-add_library(pix ${PIX_SOURCES})
-target_link_libraries(pix PUBLIC SDL2::SDL2 SDL2_image::SDL2_image-static)
+add_library(pix
+    src/utils/Color.hpp
+    src/utils/cutoutSurface.hpp
+    src/utils/dumpSurface.hpp
+    src/utils/paths.cpp
+    src/utils/paths.hpp
+    src/utils/pixel.hpp
+#    src/utils/PixFormat.hpp
+#    src/utils/PixReader.cpp
+#    src/utils/PixReader.hpp
+#    src/utils/PixWriter.hpp
+    src/utils/rasterLine.hpp
+    src/utils/rasterOval.hpp
+    src/utils/rasterPoly.hpp
+    src/utils/rect.hpp
+    src/utils/renderSelection.hpp
+    src/utils/replayPicture.cpp
+    src/utils/replayPicture.hpp
+    src/utils/safeGetFormat.hpp
+    src/utils/TempSurface.cpp
+    src/utils/TempSurface.hpp
+    ${PIX_SOURCES}
+)
+target_link_libraries(pix PUBLIC SDL3::SDL3 SDL3_image::SDL3_image)
 target_include_directories(pix 
     PUBLIC src/ 
     PRIVATE ${PROJECT_BINARY_DIR}

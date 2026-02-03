@@ -4,7 +4,7 @@
 #include <list>
 #include <memory>
 #include <string>
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #include "PictureFile.hpp"
 #include "Surface.hpp"
 #include "utils/TempSurface.hpp"

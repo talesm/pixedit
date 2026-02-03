@@ -2,10 +2,9 @@
 #include <fstream>
 #include <unordered_map>
 #include <vector>
-#include <SDL_image.h>
+#include <SDL3_image/SDL_image.h>
 #include "PictureBuffer.hpp"
 #include "Surface.hpp"
-#include "utils/PixReader.hpp"
 #include "utils/replayPicture.hpp"
 
 namespace pixedit {
@@ -21,10 +20,7 @@ static Surface
 doLoadSurface(const std::string& filename, Id loader)
 {
   if (loader == loaders::PIX) {
-    SDL_RWops* rw = SDL_RWFromFile(filename.c_str(), "rb");
-    Surface s{readPixImage(rw), true};
-    SDL_RWclose(rw);
-    return s;
+    throw std::runtime_error("Picture format does not support loading");
   }
   if (loader == loaders::SDL2_IMAGE) {
     return {IMG_Load(filename.c_str()), true};

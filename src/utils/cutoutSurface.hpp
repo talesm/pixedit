@@ -1,7 +1,7 @@
 #ifndef PIXEDIT_SRC_UTILS_CUTOUT_SURFACE_INCLUDED
 #define PIXEDIT_SRC_UTILS_CUTOUT_SURFACE_INCLUDED
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #include "Color.hpp"
 #include "Surface.hpp"
 

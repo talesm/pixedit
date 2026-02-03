@@ -1,7 +1,7 @@
 #ifndef PIXEDIT_SRC_UTILS_PIXEL_INCLUDED
 #define PIXEDIT_SRC_UTILS_PIXEL_INCLUDED
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 namespace pixedit {
 
@@ -14,8 +14,9 @@ constexpr void*
 pixelAt(SDL_Surface* surface, int x, int y)
 {
   if (x < 0 || y < 0 || x >= surface->w || y >= surface->h) { return nullptr; }
-  Uint8* pixelPtr = static_cast<Uint8*>(surface->pixels);
-  return pixelPtr + surface->pitch * y + x * surface->format->BytesPerPixel;
+  auto pixelPtr = static_cast<Uint8*>(surface->pixels);
+  auto format = SDL_GetPixelFormatDetails(surface->format);
+  return pixelPtr + surface->pitch * y + x * format->bytes_per_pixel;
 }
 
 constexpr Uint32
@@ -42,9 +43,7 @@ getPixel(void* pixel, Uint8 bytesPerPixel)
 
 constexpr Uint32
 getPixelAt(SDL_Surface* surface, int x, int y)
-{
-  return getPixel(pixelAt(surface, x, y), surface->format->BytesPerPixel);
-}
+{ return getPixel(pixelAt(surface, x, y), SDL_BYTESPERPIXEL(surface->format)); }
 
 constexpr void
 setPixel(void* pixel, Uint32 value, Uint8 bytesPerPixel)
@@ -77,7 +76,7 @@ setPixel(void* pixel, Uint32 value, Uint8 bytesPerPixel)
 constexpr void
 setPixelAt(SDL_Surface* surface, int x, int y, Uint32 value)
 {
-  setPixel(pixelAt(surface, x, y), value, surface->format->BytesPerPixel);
+  setPixel(pixelAt(surface, x, y), value, SDL_BYTESPERPIXEL(surface->format));
 }
 
 } // namespace pixedit

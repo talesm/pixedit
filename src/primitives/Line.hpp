@@ -1,7 +1,7 @@
 #ifndef PIXEDIT_SRC_PRIMITIVES_LINE_INCLUDED
 #define PIXEDIT_SRC_PRIMITIVES_LINE_INCLUDED
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #include "Canvas.hpp"
 
 namespace pixedit {

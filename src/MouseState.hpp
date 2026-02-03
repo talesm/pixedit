@@ -6,8 +6,8 @@ namespace pixedit {
 /// @brief Mouse state
 struct MouseState
 {
-  int x;
-  int y;
+  float x;
+  float y;
   bool left;
   bool middle;
   bool right;

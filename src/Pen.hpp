@@ -1,9 +1,7 @@
 #ifndef PIXEDIT_SRC_PEN_INCLUDED
 #define PIXEDIT_SRC_PEN_INCLUDED
 
-#include <array>
 #include <cassert>
-#include <SDL.h>
 
 namespace pixedit {
 

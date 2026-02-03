@@ -1,7 +1,7 @@
 #ifndef PIXEDIT_SRC_EDITOR_APP_IM_GUI_COMPONENT_INCLUDED
 #define PIXEDIT_SRC_EDITOR_APP_IM_GUI_COMPONENT_INCLUDED
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 namespace pixedit {
 

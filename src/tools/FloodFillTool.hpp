@@ -14,7 +14,7 @@ floodFill(Surface surface, const SDL_Point& p, RawColor color)
   const int HH = surface.getH();
   if (p.x < 0 || p.y < 0 || p.x >= WW || p.y >= HH) { return; }
 
-  auto BPP = surface.getFormat()->BytesPerPixel;
+  auto BPP = surface.getFormat()->bytes_per_pixel;
   auto prevColor = surface.getPixel(p.x, p.y);
   if (prevColor == color) { return; }
   std::vector<SDL_Point> stack{p};

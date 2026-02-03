@@ -10,7 +10,7 @@ inline void
 format(std::ostream& out, const Surface& s)
 {
   SDL_assert(s);
-  int bitsPerPixel = s.getFormat()->BitsPerPixel;
+  int bitsPerPixel = s.getFormat()->bits_per_pixel;
   out << "FORMAT " << s.getW() << ' ' << s.getH() << ' ' << bitsPerPixel
       << '\n';
 }
@@ -22,7 +22,7 @@ data(std::ostream& out,
      bool newlineAfterRow = false)
 {
   SDL_assert(s);
-  int bitsPerPixel = s.getFormat()->BitsPerPixel;
+  int bitsPerPixel = s.getFormat()->bits_per_pixel;
   int bytesPerPixel = bitsPerPixel / 8 + (bitsPerPixel % 8 != 0);
   int charsPerPixel = bytesPerPixel * 2;
 
