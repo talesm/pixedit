@@ -10,40 +10,40 @@ target_link_libraries(pixedit PRIVATE pix imgui_sdl3 tinyfiledialogs)
 
 # libpix
 file(GLOB PIX_SOURCES CONFIGURE_DEPENDS
-    src/*.cpp
-    src/*.hpp
-    src/clipboards/*.cpp
-    src/clipboards/*.hpp
-    src/primitives/*.hpp
-    src/tools/*.hpp
+        src/*.cpp
+        src/*.hpp
+        src/clipboards/*.cpp
+        src/clipboards/*.hpp
+        src/primitives/*.hpp
+        src/tools/*.hpp
 )
 add_library(pix
-    src/utils/Color.hpp
-    src/utils/cutoutSurface.hpp
-    src/utils/dumpSurface.hpp
-    src/utils/paths.cpp
-    src/utils/paths.hpp
-    src/utils/pixel.hpp
-#    src/utils/PixFormat.hpp
-#    src/utils/PixReader.cpp
-#    src/utils/PixReader.hpp
-#    src/utils/PixWriter.hpp
-    src/utils/rasterLine.hpp
-    src/utils/rasterOval.hpp
-    src/utils/rasterPoly.hpp
-    src/utils/rect.hpp
-    src/utils/renderSelection.hpp
-    src/utils/replayPicture.cpp
-    src/utils/replayPicture.hpp
-    src/utils/safeGetFormat.hpp
-    src/utils/TempSurface.cpp
-    src/utils/TempSurface.hpp
-    ${PIX_SOURCES}
+        src/utils/Color.hpp
+        src/utils/cutoutSurface.hpp
+        src/utils/dumpSurface.hpp
+        src/utils/paths.cpp
+        src/utils/paths.hpp
+        src/utils/pixel.hpp
+        #    src/utils/PixFormat.hpp
+        #    src/utils/PixReader.cpp
+        #    src/utils/PixReader.hpp
+        #    src/utils/PixWriter.hpp
+        src/utils/rasterLine.hpp
+        src/utils/rasterOval.hpp
+        src/utils/rasterPoly.hpp
+        src/utils/rect.hpp
+        src/utils/renderSelection.hpp
+        src/utils/replayPicture.cpp
+        src/utils/replayPicture.hpp
+        src/utils/safeGetFormat.hpp
+        src/utils/TempSurface.cpp
+        src/utils/TempSurface.hpp
+        ${PIX_SOURCES}
 )
 target_link_libraries(pix PUBLIC SDL3::SDL3 SDL3_image::SDL3_image)
-target_include_directories(pix 
-    PUBLIC src/ 
-    PRIVATE ${PROJECT_BINARY_DIR}
+target_include_directories(pix
+        PUBLIC src/
+        PRIVATE ${PROJECT_BINARY_DIR}
 )
 
 # Configuration
@@ -88,9 +88,21 @@ add_library(tinyfiledialogs external/tinyfiledialogs/tinyfiledialogs.c external/
 target_include_directories(tinyfiledialogs PUBLIC external/tinyfiledialogs/)
 
 file(GLOB SCRATCH_SOURCES CONFIGURE_DEPENDS scratch/*.cpp)
-foreach(SCRATCH_SRC ${SCRATCH_SOURCES})
+foreach (SCRATCH_SRC ${SCRATCH_SOURCES})
     get_filename_component(SCRATCH_APP ${SCRATCH_SRC} NAME_WE)
     message(${SCRATCH_APP})
     add_executable(${SCRATCH_APP} ${SCRATCH_SRC})
     target_link_libraries(${SCRATCH_APP} PRIVATE pix)
-endforeach(SCRATCH_SRC ${SCRATCH_SOURCES})
+endforeach (SCRATCH_SRC ${SCRATCH_SOURCES})
+
+include(FetchContent)
+# set(SDL3PP_FORCE_BUNDLED ON) # Enable this to force CMake to download SDL, SDL_image and SDL_ttf
+FetchContent_Declare(SDL3ppExternal
+        URL https://github.com/talesm/SDL3pp/releases/download/0.7.2/SDL3pp-0.7.2.tar.gz
+)
+FetchContent_MakeAvailable(SDL3ppExternal)
+
+# Link to your project
+target_link_libraries(pix
+        PRIVATE SDL3pp::SDL3pp
+)
