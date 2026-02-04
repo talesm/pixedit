@@ -25,7 +25,21 @@ main(int argc, char** argv)
       .filename = defaults::INITIAL_FILENAME,
       .pictureSz = {defaults::INITIAL_SIZE[0], defaults::INITIAL_SIZE[1]}};
     if (argc > 1) { settings.filename = argv[argc - 1]; }
-    return runEditorApp(settings);
+    auto editorApp = createEditorApp(settings);
+
+    SDL::AppResult result = SDL::APP_CONTINUE;
+    while (result == SDL::APP_CONTINUE) {
+      for (SDL_Event ev; SDL_PollEvent(&ev);) {
+        if (auto r = editorApp->Event(ev); r != SDL::APP_CONTINUE) {
+          result = r;
+          goto exit;
+        }
+      }
+      result = editorApp->Iterate();
+      SDL::Delay(10);
+    }
+  exit:
+    return result == SDL::APP_SUCCESS ? EXIT_SUCCESS : EXIT_FAILURE;
   } catch (std::exception& e) {
     std::cerr << e.what() << '\n';
   } catch (...) {

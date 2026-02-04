@@ -28,10 +28,10 @@ extern const bool ASK_SAVE_ON_CLOSE;
 
 struct EditorState
 {
-  SDL::WindowRef window = nullptr;
-  SDL::RendererRef renderer = nullptr;
+  SDL::Window window;
+  SDL::Renderer renderer;
   PluginManager plugins;
-  ImGuiComponent ui;
+  ImGuiComponent ui{window.get(), renderer.get()};
 
   PictureManager picture;
   Rect pictureViewport;
@@ -55,10 +55,26 @@ struct EditorState
 
 static EditorState* ctx = nullptr;
 
+struct EditorAppImpl final
+  : EditorApp
+  , EditorState
+{
+
+  EditorAppImpl(SDL::Window window, SDL::Renderer, const Rect& pictureViewport);
+
+  ~EditorAppImpl() override
+  {
+    ctx = nullptr;
+    SDL::Quit();
+  }
+
+  SDL::AppResult Iterate() override;
+
+  SDL::AppResult Event(const SDL::Event& e) override;
+};
+
 static void
 setupActions();
-static void
-event(const SDL_Event& ev, bool imGuiMayUse);
 
 void
 update()
@@ -126,97 +142,98 @@ setupInitialBuffers(const EditorInitSettings& settings)
   pushAction(actions::EDITOR_FOCUS_PICTURE);
 }
 
-int
-runEditorApp(const EditorInitSettings& settings)
+EditorAppImpl::EditorAppImpl(SDL::Window w,
+                             SDL::Renderer r,
+                             const Rect& pictureViewport)
+  : EditorState{.window{std::move(w)},
+                .renderer{std::move(r)},
+                .pictureViewport{pictureViewport},
+                .view{pictureViewport},
+                .actions{EDITOR_EVENT()}}
 {
-  if (!SDL_Init(SDL_INIT_VIDEO)) throw std::runtime_error{SDL_GetError()};
-  atexit(SDL::Quit);
+}
+
+std::unique_ptr<EditorApp>
+createEditorApp(const EditorInitSettings& settings)
+{
+  if (!SDL_Init(SDL::INIT_VIDEO)) throw std::runtime_error{SDL_GetError()};
   auto [window, renderer] =
     SDL::CreateWindowAndRenderer("Pixedit viewer", settings.windowSz);
   Rect pictureViewport = {0, 0, settings.windowSz.x, settings.windowSz.y};
-  EditorState state{
-    .window{window},
-    .renderer{renderer},
-    .ui{window.get(), renderer.get()},
-    .pictureViewport{pictureViewport},
-    .view{pictureViewport},
-    .actions{EDITOR_EVENT()},
-  };
-  ctx = &state;
+  auto editorApp = std::make_unique<EditorAppImpl>(
+    std::move(window), std::move(renderer), pictureViewport);
+  ctx = editorApp.get();
 
   setupActions();
   setupInitialBuffers(settings);
-  installShortcutPlugin(ctx->plugins, ctx->shortcuts);
-  installShortcutDefaultsPlugin(ctx->plugins);
+  installShortcutPlugin(editorApp->plugins, editorApp->shortcuts);
+  installShortcutDefaultsPlugin(editorApp->plugins);
 
-  ctx->auxWindows.set(
+  editorApp->auxWindows.set(
     "core.bufferSelectionWindow",
     initBufferSelectionAuxWindow(&ctx->buffers, ctx->maximizeView));
-  ctx->auxWindows.set("core.pictureOptionsWindow", pictureOptionsAuxWindow);
-
-  while (!ctx->exited) {
-    // Update
-    for (SDL_Event ev; SDL_PollEvent(&ev);) { event(ev, ctx->ui.event(ev)); }
-
-    update();
-
-    // Render
-    ctx->renderer.SetDrawColor({60, 60, 60, 255});
-    ctx->renderer.RenderClear();
-
-    if (ctx->maximizeView) {
-      ctx->picture.render(
-        &ctx->view, ctx->renderer.get(), ctx->pictureViewport);
-    }
-
-    ctx->ui.render();
-
-    ctx->renderer.Present();
-    SDL::Delay(10);
-  }
-  ctx = nullptr;
-  return EXIT_SUCCESS;
+  editorApp->auxWindows.set("core.pictureOptionsWindow",
+                            pictureOptionsAuxWindow);
+  return editorApp;
 }
 
-void
-event(const SDL_Event& ev, bool imGuiMayUse)
+SDL::AppResult
+EditorAppImpl::Iterate()
 {
-  switch (ev.type) {
+  update();
+
+  // Render
+  renderer.SetDrawColor({60, 60, 60, 255});
+  renderer.RenderClear();
+
+  if (maximizeView) picture.render(&view, renderer.get(), pictureViewport);
+
+  ui.render();
+
+  renderer.Present();
+  return exited ? SDL::APP_SUCCESS : SDL::APP_CONTINUE;
+}
+
+SDL::AppResult
+EditorAppImpl::Event(const SDL::Event& e)
+{
+  ui.event(e);
+  switch (e.type) {
   case SDL_EVENT_QUIT:
-    if (ctx->buffers.empty() || !defaults::ASK_SAVE_ON_CLOSE) {
-      ctx->exited = true;
+    if (buffers.empty() || !defaults::ASK_SAVE_ON_CLOSE) {
+      exited = true;
       break;
     }
-    ctx->exiting = true;
+    exiting = true;
     pushAction(actions::PIC_CLOSE);
-    return;
+    break;
   case SDL_EVENT_WINDOW_RESIZED:
-    ctx->pictureViewport.w = ev.window.data1 - ctx->pictureViewport.x;
-    ctx->pictureViewport.h = ev.window.data2 - ctx->pictureViewport.y;
+    pictureViewport.w = e.window.data1 - pictureViewport.x;
+    pictureViewport.h = e.window.data2 - pictureViewport.y;
     break;
   case SDL_EVENT_MOUSE_WHEEL:
-    if (ImGui::GetIO().WantCaptureMouse || !ctx->maximizeView) break;
-    ctx->view.state.wheelX += ev.wheel.x;
-    ctx->view.state.wheelY += ev.wheel.y;
+    if (ImGui::GetIO().WantCaptureMouse || !maximizeView) break;
+    view.state.wheelX += e.wheel.x;
+    view.state.wheelY += e.wheel.y;
     break;
   case SDL_EVENT_DROP_FILE:
     if (ImGui::GetIO().WantCaptureMouse) break;
-    appendFile(PictureBuffer::load(ev.drop.data));
+    appendFile(PictureBuffer::load(e.drop.data));
     break;
   case SDL_EVENT_KEY_DOWN: {
     if (ImGui::GetIO().WantCaptureKeyboard) break;
-    auto mod = ev.key.mod;
-    if (auto action =
-          ctx->shortcuts.get({.key = ev.key.key,
-                              .ctrl = (mod & SDL_KMOD_CTRL) != 0,
-                              .alt = (mod & SDL_KMOD_ALT) != 0,
-                              .shift = (mod & SDL_KMOD_SHIFT) != 0})) {
+    auto mod = e.key.mod;
+    if (auto action = shortcuts.get({.key = e.key.key,
+                                     .ctrl = (mod & SDL_KMOD_CTRL) != 0,
+                                     .alt = (mod & SDL_KMOD_ALT) != 0,
+                                     .shift = (mod & SDL_KMOD_SHIFT) != 0})) {
       pushAction(*action);
     }
     break;
   }
-  default: ctx->actions.check(ev.user); break;
+  default: pixedit::ActionManager::check(e.user); break;
   }
+  return SDL::APP_CONTINUE;
 }
 
 static void

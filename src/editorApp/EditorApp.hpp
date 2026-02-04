@@ -14,8 +14,21 @@ struct EditorInitSettings
   Point pictureSz;
 };
 
-int
-runEditorApp(const EditorInitSettings& settings);
+struct EditorApp
+{
+protected:
+  EditorApp() = default;
+
+public:
+  virtual ~EditorApp() = default;
+
+  virtual SDL::AppResult Iterate() = 0;
+
+  virtual SDL::AppResult Event(const SDL::Event& e) = 0;
+};
+
+std::unique_ptr<EditorApp>
+createEditorApp(const EditorInitSettings& settings);
 
 } // namespace pixedit
 
