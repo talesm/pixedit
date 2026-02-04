@@ -41,14 +41,11 @@ public:
   constexpr RawColor getRawColorA() const { return brush.colorA; }
   constexpr RawColor getRawColorB() const { return brush.colorB; }
 
-  Color getColorA() const
-  {
-    return rawToComponent(brush.colorA, surface.getFormat());
-  }
-  Color getColorB() const
-  {
-    return rawToComponent(brush.colorB, surface.getFormat());
-  }
+  [[nodiscard]] Color getColorA() const
+  { return rawToComponent(brush.colorA, surface.getFormat()); }
+
+  [[nodiscard]] Color getColorB() const
+  { return rawToComponent(brush.colorB, surface.getFormat()); }
 
   constexpr const Brush& getBrush() const { return brush; }
 
@@ -110,14 +107,14 @@ operator|(Canvas& c, const Brush& brush)
   return c;
 }
 
-struct ColorA : SDL_Color
+struct ColorA : Color
 {
   ColorA(SDL_Color c)
-    : SDL_Color(c)
+    : Color(c)
   {
   }
   ColorA(Uint8 r, Uint8 g, Uint8 b, Uint8 a = 255)
-    : SDL_Color{r, g, b, a}
+    : Color{r, g, b, a}
   {
   }
 };

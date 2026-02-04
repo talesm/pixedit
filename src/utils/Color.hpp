@@ -2,11 +2,11 @@
 #define PIXEDIT_SRC_UTILS_COLOR_INCLUDED
 
 #include <array>
-#include <SDL3/SDL.h>
+#include "SDL3pp/SDL3pp.h"
 
 namespace pixedit {
 
-using Color = SDL_Color;
+using SDL::Color;
 
 /// @brief Raw color type
 using RawColor = Uint32;
@@ -34,9 +34,8 @@ componentToRaw(Color color, const SDL_PixelFormatDetails* format)
 
 constexpr std::array<float, 4>
 componentToNormalized(Color color)
-{
-  return {color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f};
-}
+{ return {color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f}; }
+
 constexpr Color
 normalizedToComponent(std::array<float, 4> color)
 {
