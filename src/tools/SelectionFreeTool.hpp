@@ -107,8 +107,7 @@ struct SelectionFreeTool
       p1.x = std::max(p1.x, p.x);
       p1.y = std::max(p1.y, p.y);
     }
-    SDL_Rect rect =
-      intersectFromOrigin(Rect::fromPoints(p0, p1), buffer.getSize());
+    SDL_Rect rect = intersectFromOrigin(Rect(p0, p1), buffer.getSize());
     for (auto& p : points) {
       p.x -= rect.x;
       p.y -= rect.y;

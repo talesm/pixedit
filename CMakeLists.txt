@@ -104,5 +104,5 @@ FetchContent_MakeAvailable(SDL3ppExternal)
 
 # Link to your project
 target_link_libraries(pix
-        PRIVATE SDL3pp::SDL3pp
+        PUBLIC SDL3pp::SDL3pp
 )

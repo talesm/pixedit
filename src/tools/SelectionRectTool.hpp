@@ -32,8 +32,8 @@ struct SelectionRectTool
       if (view.isEditing()) {
         auto currPoint = view.effectivePos();
         if (currPoint.x == lastPoint.x && currPoint.y == lastPoint.y) break;
-        SDL_Rect rect = intersectFromOrigin(
-          Rect::fromPoints(currPoint, lastPoint), buffer.getSize());
+        SDL_Rect rect =
+          intersectFromOrigin(Rect(currPoint, lastPoint), buffer.getSize());
         view.enableScratch();
         renderSelection(view.canvas, rect, true);
       }
@@ -41,8 +41,8 @@ struct SelectionRectTool
     case PictureEvent::OK:
       if (view.isEditing()) {
         auto currPoint = view.effectivePos();
-        SDL_Rect rect = intersectFromOrigin(
-          Rect::fromPoints(currPoint, lastPoint), buffer.getSize());
+        SDL_Rect rect =
+          intersectFromOrigin(Rect(currPoint, lastPoint), buffer.getSize());
         view.cancelEdit();
         auto fillColor = view.canvas.getColorB();
         if (!view.fillSelectedOut) fillColor.a = 0;
