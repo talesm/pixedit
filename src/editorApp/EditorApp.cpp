@@ -28,8 +28,8 @@ extern const bool ASK_SAVE_ON_CLOSE;
 
 struct EditorState
 {
-  SDL_Window* window = nullptr;
-  SDL_Renderer* renderer = nullptr;
+  SDL::WindowRef window = nullptr;
+  SDL::RendererRef renderer = nullptr;
   PluginManager plugins;
   ImGuiComponent ui;
 
@@ -65,14 +65,14 @@ update()
 {
   if (ctx->maximizeView) {
     if (!ImGui::GetIO().WantCaptureMouse &&
-        SDL_GetMouseFocus() == ctx->window) {
+        SDL_GetMouseFocus() == ctx->window.get()) {
       auto buttonState =
         SDL_GetMouseState(&ctx->view.state.x, &ctx->view.state.y);
       ctx->view.state.left = buttonState & SDL_BUTTON_LMASK;
       ctx->view.state.middle = buttonState & SDL_BUTTON_MMASK;
       ctx->view.state.right = buttonState & SDL_BUTTON_RMASK;
     };
-    ctx->picture.update(&ctx->view, ctx->renderer, ctx->pictureViewport);
+    ctx->picture.update(&ctx->view, ctx->renderer.get(), ctx->pictureViewport);
   }
   ctx->ui.update();
   showMainMenuBar(currentView(), &ctx->maximizeView);
@@ -92,28 +92,9 @@ update()
         ctx->focusBufferNextFrame = false;
         ImGui::SetNextWindowFocus();
       }
-      showPictureWindow(ctx->renderer, buffer);
+      showPictureWindow(ctx->renderer.get(), buffer);
     }
   }
-}
-
-static SDL_Window*
-makeWindow(SDL_Point windowSz)
-{
-  auto window = SDL_CreateWindow("Pixedit viewer",
-                                 windowSz.x,
-                                 windowSz.y,
-                                 SDL_WINDOW_RESIZABLE);
-  if (!window) { throw std::runtime_error{SDL_GetError()}; }
-  return window;
-}
-
-static SDL_Renderer*
-makeRenderer(SDL_Window* window)
-{
-  auto renderer = SDL_CreateRenderer(window, nullptr);
-  if (!renderer) { throw std::runtime_error{SDL_GetError()}; }
-  return renderer;
 }
 
 static Uint32
@@ -146,16 +127,17 @@ setupInitialBuffers(const EditorInitSettings& settings)
 }
 
 int
-runEditorApp(EditorInitSettings settings)
+runEditorApp(const EditorInitSettings& settings)
 {
   if (!SDL_Init(SDL_INIT_VIDEO)) throw std::runtime_error{SDL_GetError()};
-  auto window = makeWindow(settings.windowSz);
-  auto renderer = makeRenderer(window);
+  atexit(SDL::Quit);
+  auto [window, renderer] =
+    SDL::CreateWindowAndRenderer("Pixedit viewer", settings.windowSz);
   Rect pictureViewport = {0, 0, settings.windowSz.x, settings.windowSz.y};
   EditorState state{
     .window{window},
     .renderer{renderer},
-    .ui{window, renderer},
+    .ui{window.get(), renderer.get()},
     .pictureViewport{pictureViewport},
     .view{pictureViewport},
     .actions{EDITOR_EVENT()},
@@ -178,21 +160,21 @@ runEditorApp(EditorInitSettings settings)
 
     update();
 
-    /// Render
-    SDL_SetRenderDrawColor(ctx->renderer, 60, 60, 60, 255);
-    SDL_RenderClear(ctx->renderer);
+    // Render
+    ctx->renderer.SetDrawColor({60, 60, 60, 255});
+    ctx->renderer.RenderClear();
 
     if (ctx->maximizeView) {
-      ctx->picture.render(&ctx->view, ctx->renderer, ctx->pictureViewport);
+      ctx->picture.render(
+        &ctx->view, ctx->renderer.get(), ctx->pictureViewport);
     }
 
     ctx->ui.render();
 
-    SDL_RenderPresent(ctx->renderer);
-    SDL_Delay(10);
+    ctx->renderer.Present();
+    SDL::Delay(10);
   }
   ctx = nullptr;
-  SDL_Quit();
   return EXIT_SUCCESS;
 }
 
@@ -224,10 +206,11 @@ event(const SDL_Event& ev, bool imGuiMayUse)
   case SDL_EVENT_KEY_DOWN: {
     if (ImGui::GetIO().WantCaptureKeyboard) break;
     auto mod = ev.key.mod;
-    if (auto action = ctx->shortcuts.get({.key = ev.key.key,
-                                          .ctrl = (mod & SDL_KMOD_CTRL) != 0,
-                                          .alt = (mod & SDL_KMOD_ALT) != 0,
-                                          .shift = (mod & SDL_KMOD_SHIFT) != 0})) {
+    if (auto action =
+          ctx->shortcuts.get({.key = ev.key.key,
+                              .ctrl = (mod & SDL_KMOD_CTRL) != 0,
+                              .alt = (mod & SDL_KMOD_ALT) != 0,
+                              .shift = (mod & SDL_KMOD_SHIFT) != 0})) {
       pushAction(*action);
     }
     break;
@@ -258,9 +241,7 @@ close(bool force = false)
 
 PictureManager&
 currentPicture()
-{
-  return ctx->picture;
-}
+{ return ctx->picture; }
 
 ViewSettings&
 getSettingsFor(const std::shared_ptr<PictureBuffer>& buffer)

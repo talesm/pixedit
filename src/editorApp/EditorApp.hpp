@@ -15,7 +15,7 @@ struct EditorInitSettings
 };
 
 int
-runEditorApp(EditorInitSettings settings);
+runEditorApp(const EditorInitSettings& settings);
 
 } // namespace pixedit
 
