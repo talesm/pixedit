@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.22)
 project(pixeditor VERSION 0.1)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 
 # pixedit
 file(GLOB PIXEDIT_SOURCES CONFIGURE_DEPENDS src/editorApp/*.cpp src/editorApp/*.hpp)
@@ -40,7 +40,7 @@ add_library(pix
         src/utils/TempSurface.hpp
         ${PIX_SOURCES}
 )
-target_link_libraries(pix PUBLIC SDL3::SDL3 SDL3_image::SDL3_image)
+target_link_libraries(pix PUBLIC SDL3pp::SDL3pp)
 target_include_directories(pix
         PUBLIC src/
         PRIVATE ${PROJECT_BINARY_DIR}
@@ -49,14 +49,6 @@ target_include_directories(pix
 # Configuration
 set(PIXEDIT_INITIAL_FILENAME "" CACHE FILEPATH "The initial filename, use \"\" to empty file")
 configure_file(src/config.h.in pixedit_config.h)
-
-# SDL2 dependency
-find_package(SDL2 CONFIG REQUIRED)
-find_package(SDL2_image CONFIG REQUIRED)
-
-# SDL3 dependency
-find_package(SDL3 CONFIG REQUIRED)
-find_package(SDL3_image CONFIG REQUIRED)
 
 # pixtest
 file(GLOB_RECURSE PIXTEST_SOURCES CONFIGURE_DEPENDS test/*.cpp)
@@ -67,21 +59,13 @@ target_link_libraries(pixtest PRIVATE pix)
 # ImGui
 find_package(imgui CONFIG REQUIRED)
 
-add_library(imgui_sdl2
-        external/imgui_sdl2/imgui_impl_sdl2.cpp
-        external/imgui_sdl2/imgui_impl_sdl2.h
-        external/imgui_sdl2/imgui_impl_sdlrenderer2.cpp
-        external/imgui_sdl2/imgui_impl_sdlrenderer2.h)
-target_include_directories(imgui_sdl2 PUBLIC external/imgui_sdl2/)
-target_link_libraries(imgui_sdl2 PUBLIC SDL2::SDL2 SDL2_image::SDL2_image-static imgui::imgui)
-
 add_library(imgui_sdl3
         external/imgui_sdl3/imgui_impl_sdl3.cpp
         external/imgui_sdl3/imgui_impl_sdl3.h
         external/imgui_sdl3/imgui_impl_sdlrenderer3.cpp
         external/imgui_sdl3/imgui_impl_sdlrenderer3.h)
 target_include_directories(imgui_sdl3 PUBLIC external/imgui_sdl3/)
-target_link_libraries(imgui_sdl3 PUBLIC SDL3::SDL3 SDL3_image::SDL3_image imgui::imgui)
+target_link_libraries(imgui_sdl3 PUBLIC SDL3pp::SDL3pp imgui::imgui)
 
 # tinyfiledialogs
 add_library(tinyfiledialogs external/tinyfiledialogs/tinyfiledialogs.c external/tinyfiledialogs/tinyfiledialogs.h)
@@ -96,7 +80,7 @@ foreach (SCRATCH_SRC ${SCRATCH_SOURCES})
 endforeach (SCRATCH_SRC ${SCRATCH_SOURCES})
 
 include(FetchContent)
-# set(SDL3PP_FORCE_BUNDLED ON) # Enable this to force CMake to download SDL, SDL_image and SDL_ttf
+set(SDL3PP_FORCE_BUNDLED ON) # Enable this to force CMake to download SDL, SDL_image and SDL_ttf
 FetchContent_Declare(SDL3ppExternal
         URL https://github.com/talesm/SDL3pp/releases/download/0.7.2/SDL3pp-0.7.2.tar.gz
 )

@@ -4,3 +4,4 @@ imgui.ini
 scratch/
 CMakeUserPresets.json
 .idea/
+vcpkg_installed/

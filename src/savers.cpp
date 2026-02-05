@@ -9,9 +9,7 @@ namespace pixedit {
 
 bool
 saveBuffer(const PictureBuffer& buffer, const std::string& filename, Id saver)
-{
-  return saveSurface(buffer.getSurface(), filename, saver);
-}
+{ return saveSurface(buffer.getSurface(), filename, saver); }
 
 static bool
 doSaveSurface(const Surface& surface, const std::string& filename, Id saver)
@@ -20,11 +18,11 @@ doSaveSurface(const Surface& surface, const std::string& filename, Id saver)
     throw std::runtime_error("Picture format does not support saving");
   }
   if (saver == savers::SDL2_IMAGE_PNG)
-    return IMG_SavePNG(surface.get(), filename.c_str()) == 0;
+    return IMG_SavePNG(surface.get(), filename.c_str());
   if (saver == savers::SDL2_IMAGE_JPEG)
-    return IMG_SaveJPG(surface.get(), filename.c_str(), 90) == 0;
+    return IMG_SaveJPG(surface.get(), filename.c_str(), 90);
   if (saver == savers::SDL2_BMP)
-    return SDL_SaveBMP(surface.get(), filename.c_str()) == 0;
+    return SDL_SaveBMP(surface.get(), filename.c_str());
   if (saver == savers::TEXT) {
     std::ofstream out(filename);
     dump::surface(out, surface.cloneWith(Surface::DEFAULT_FORMAT), 80, true);

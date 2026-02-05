@@ -1,6 +1,9 @@
 {
-  "dependencies" : [ "sdl3", "sdl3-image", {
-    "name" : "imgui",
-    "version>=" : "1.91.9"
-  } ]
+  "dependencies": [
+    {
+      "name": "imgui",
+      "version>=": "1.91.9"
+    },
+    "libpng"
+  ]
 }
