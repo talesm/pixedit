@@ -1,5 +1,5 @@
 {
-  "dependencies" : [ "sdl2", "sdl2-image", "sdl3", "sdl3-image",{
+  "dependencies" : [ "sdl3", "sdl3-image", {
     "name" : "imgui",
     "version>=" : "1.91.9"
   } ]
