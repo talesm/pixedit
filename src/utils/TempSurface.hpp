@@ -18,8 +18,8 @@ private:
 
 public:
   TempSurface();
-  TempSurface(Surface surface);
-  TempSurface(Surface surface, std::string filename);
+  TempSurface(const Surface& surface);
+  TempSurface(const Surface& surface, std::string filename);
   TempSurface(const TempSurface&) = delete;
   TempSurface(TempSurface&& rhs) { std::swap(filename, rhs.filename); }
   ~TempSurface() { reset(); }

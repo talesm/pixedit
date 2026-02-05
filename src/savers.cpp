@@ -25,7 +25,7 @@ doSaveSurface(const Surface& surface, const std::string& filename, Id saver)
     return SDL_SaveBMP(surface.get(), filename.c_str());
   if (saver == savers::TEXT) {
     std::ofstream out(filename);
-    dump::surface(out, surface.cloneWith(Surface::DEFAULT_FORMAT), 80, true);
+    dump::surface(out, surface.Convert(DEFAULT_FORMAT), 80, true);
     return out.good();
   }
   return false;

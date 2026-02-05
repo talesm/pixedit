@@ -134,7 +134,7 @@ EditorAppImpl::setupInitialBuffers(const EditorInitSettings& settings)
       buffer = PictureBuffer::load(settings.filename);
     } else {
       buffer = std::make_shared<PictureBuffer>(
-        "", Surface::create(settings.pictureSz.x, settings.pictureSz.y));
+        "", Surface(settings.pictureSz, DEFAULT_FORMAT));
     }
     currentView().setBuffer(buffer);
     buffers.emplace_back(buffer);

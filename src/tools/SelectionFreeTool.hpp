@@ -112,14 +112,14 @@ struct SelectionFreeTool
       p.x -= rect.x;
       p.y -= rect.y;
     }
-    Surface mask = Surface::createMask(rect.w, rect.h);
+    Surface mask = createMask(rect.w, rect.h);
     Canvas c{mask};
     c | RawColorA{1} | FillPoly{points};
 
     auto selectionSurface =
       cutoutSurface(buffer.getSurface(), rect, mask, fillColor);
-    selectionSurface.setBlendMode(transparent ? SDL_BLENDMODE_BLEND
-                                              : SDL_BLENDMODE_NONE);
+    selectionSurface.SetBlendMode(transparent ? SDL::BLENDMODE_BLEND
+                                              : SDL::BLENDMODE_NONE);
     buffer.setSelection(selectionSurface, rect, mask);
     points.clear();
   }

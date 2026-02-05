@@ -4,6 +4,7 @@
 #include <string>
 #include "Id.hpp"
 #include "PictureFile.hpp"
+#include "Surface.hpp"
 
 namespace pixedit {
 
@@ -20,7 +21,6 @@ get(Id saver);
 
 } // namespace savers
 // Forward decl
-class Surface;
 class PictureBuffer;
 
 bool

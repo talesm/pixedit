@@ -4,11 +4,11 @@
 #include <memory>
 #include <string>
 #include "Id.hpp"
+#include "Surface.hpp"
 
 namespace pixedit {
 
 // Forward decl
-class Surface;
 class PictureBuffer;
 
 namespace loaders {

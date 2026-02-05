@@ -10,7 +10,7 @@ struct Clipboard
 {
   Surface get();
 
-  bool set(Surface surface);
+  bool set(const Surface& surface);
 };
 
 } // namespace pixedit

@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include "Surface.hpp"
+#include "pixel.hpp"
 
 namespace pixedit::dump {
 
@@ -10,9 +11,9 @@ inline void
 format(std::ostream& out, const Surface& s)
 {
   SDL_assert(s);
-  int bitsPerPixel = s.getFormat()->bits_per_pixel;
-  out << "FORMAT " << s.getW() << ' ' << s.getH() << ' ' << bitsPerPixel
-      << '\n';
+  int bitsPerPixel = s.GetFormat().GetBitsPerPixel();
+  out << "FORMAT " << s.GetWidth() << ' ' << s.GetHeight() << ' '
+      << bitsPerPixel << '\n';
 }
 
 inline void
@@ -22,15 +23,15 @@ data(std::ostream& out,
      bool newlineAfterRow = false)
 {
   SDL_assert(s);
-  int bitsPerPixel = s.getFormat()->bits_per_pixel;
+  int bitsPerPixel = s.GetFormat().GetBitsPerPixel();
   int bytesPerPixel = bitsPerPixel / 8 + (bitsPerPixel % 8 != 0);
   int charsPerPixel = bytesPerPixel * 2;
 
   out << "DATA:\n";
   out << std::hex;
   int charCount = 0;
-  for (int y = 0; y < s.getH(); y++) {
-    for (int x = 0; x < s.getW(); x++) {
+  for (int y = 0; y < s.GetHeight(); y++) {
+    for (int x = 0; x < s.GetWidth(); x++) {
       if (charsPerLine && charCount + charsPerPixel > charsPerLine) {
         charCount = 0;
         out << '\n';
@@ -40,7 +41,7 @@ data(std::ostream& out,
       }
       out.width(charsPerPixel);
       out.fill('0');
-      out << s.getPixel(x, y);
+      out << getPixelAt(s, x, y);
       charCount += charsPerPixel;
     }
     if (newlineAfterRow) {

@@ -8,10 +8,10 @@
 namespace pixedit {
 
 inline Surface
-copySurface(Surface surface, SDL_Rect rect)
+copySurface(Surface surface, Rect rect)
 {
-  if (rect.x >= surface.getW() || rect.y >= surface.getH() || rect.w < 1 ||
-      rect.h < 1) {
+  if (rect.x >= surface.GetWidth() || rect.y >= surface.GetHeight() ||
+      rect.w < 1 || rect.h < 1) {
     return nullptr;
   }
   if (rect.x < 0) {
@@ -22,15 +22,17 @@ copySurface(Surface surface, SDL_Rect rect)
     rect.h += rect.y;
     rect.y = 0;
   }
-  if (rect.x + rect.w > surface.getW()) rect.w -= surface.getW() - rect.x;
-  if (rect.y + rect.h > surface.getH()) rect.h -= surface.getH() - rect.y;
+  if (rect.x + rect.w > surface.GetWidth())
+    rect.w -= surface.GetWidth() - rect.x;
+  if (rect.y + rect.h > surface.GetHeight())
+    rect.h -= surface.GetHeight() - rect.y;
 
-  Surface target = Surface::create(rect.w, rect.h);
+  Surface target = Surface(rect.GetSize(), DEFAULT_FORMAT);
   if (!target) { return nullptr; }
-  SDL_BlendMode bkpBlendMode = surface.getBlendMode();
-  surface.setBlendMode(SDL_BLENDMODE_NONE);
-  target.blit(surface, {0, 0}, rect);
-  surface.setBlendMode(bkpBlendMode);
+  SDL_BlendMode bkpBlendMode = surface.GetBlendMode();
+  surface.SetBlendMode(SDL::BLENDMODE_NONE);
+  target.BlitAt(surface, rect, {0, 0});
+  surface.SetBlendMode(bkpBlendMode);
   return target;
 }
 
@@ -39,7 +41,7 @@ cutoutSurface(Surface surface, const SDL_Rect& rect, Color replaceColor)
 {
   if (!surface) { return nullptr; }
   auto cutout = copySurface(surface, rect);
-  surface.fillRect(rect, surface.mapColor(replaceColor));
+  surface.FillRect(rect, surface.MapRGBA(replaceColor));
   return cutout;
 }
 
@@ -51,11 +53,11 @@ cutoutSurface(Surface surface,
 {
   if (!surface) { return nullptr; }
   auto cutout = copySurface(surface, rect);
-  mask.setColorKey(1);
-  cutout.blit(mask);
-  mask.setColorKey(0);
-  mask.setColorIndex(1, replaceColor);
-  surface.blit(mask, {rect.x, rect.y});
+  mask.SetColorKey(1);
+  cutout.Blit(mask, {}, {});
+  mask.SetColorKey(0);
+  setColorIndex(mask, 1, replaceColor);
+  surface.BlitAt(mask, {}, {rect.x, rect.y});
   return cutout;
 }
 

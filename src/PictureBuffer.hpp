@@ -28,7 +28,7 @@ private:
 public:
   PictureBuffer() = default;
   PictureBuffer(std::string filename, Surface surface, bool dirty = false)
-    : PictureBuffer(PictureFile{filename}, std::move(surface), dirty){};
+    : PictureBuffer(PictureFile{filename}, std::move(surface), dirty) {};
 
   PictureBuffer(PictureFile file, Surface surface, bool dirty = false)
     : file(std::move(file))
@@ -65,33 +65,31 @@ public:
 
   Surface getSurface() const { return surface; }
 
-  void setSurface(Surface value) { surface = value; }
+  void setSurface(Surface value) { surface = std::move(value); }
 
-  int getW() const { return surface.getW(); }
-  int getH() const { return surface.getH(); }
-  SDL_Point getSize() const { return {getW(), getH()}; }
+  int GetWidth() const { return surface.GetWidth(); }
+  int GetHeight() const { return surface.GetHeight(); }
+  SDL_Point getSize() const { return {GetWidth(), GetHeight()}; }
 
   constexpr SDL_Rect& getSelectionRect() { return selectionRect; }
   constexpr const SDL_Rect& getSelectionRect() const { return selectionRect; }
   constexpr void setSelectionRect(SDL_Rect rect) { selectionRect = rect; }
 
   constexpr const Surface& getSelectionSurface() const
-  {
-    return selectionSurface;
-  }
+  { return selectionSurface; }
   constexpr const Surface& getSelectionMask() const { return selectionMask; }
 
-  bool hasSelection() const { return selectionSurface; }
-  void clearSelection() { selectionSurface.reset(); }
-  void setSelection(Surface surface, SDL_Rect rect)
+  bool hasSelection() const { return selectionSurface != nullptr; }
+  void clearSelection() { selectionSurface.Destroy(); }
+  void setSelection(Surface s, SDL_Rect rect)
   {
-    selectionSurface = std::move(surface);
+    selectionSurface = std::move(s);
     selectionRect = rect;
-    selectionMask.reset();
+    selectionMask.Destroy();
   }
-  void setSelection(Surface surface, SDL_Rect rect, Surface mask)
+  void setSelection(Surface s, SDL_Rect rect, Surface mask)
   {
-    selectionSurface = std::move(surface);
+    selectionSurface = std::move(s);
     selectionRect = rect;
     selectionMask = std::move(mask);
   }

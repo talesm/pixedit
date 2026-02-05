@@ -74,7 +74,7 @@ showMainMenuBar(PictureView& view, bool* maximizeView)
                 view.state.y);
     if (buffer) {
       ImGui::Dummy({20, 0});
-      ImGui::Text("%dx%d", buffer->getW(), buffer->getH());
+      ImGui::Text("%dx%d", buffer->GetWidth(), buffer->GetHeight());
       ImGui::Text("%.2f%%", view.scale * 100);
     }
     ImGui::EndMainMenuBar();

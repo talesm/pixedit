@@ -22,9 +22,7 @@ doLoadSurface(const std::string& filename, Id loader)
   if (loader == loaders::PIX) {
     throw std::runtime_error("Picture format does not support loading");
   }
-  if (loader == loaders::SDL_IMAGE) {
-    return {IMG_Load(filename.c_str()), true};
-  }
+  if (loader == loaders::SDL_IMAGE) return SDL::LoadSurface(filename);
   if (loader == loaders::TEXT) {
     std::ifstream fStream(filename);
     return replayPicture(fStream);

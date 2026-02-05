@@ -1,32 +1,33 @@
 #include "Clipboard.hpp"
-#include "clipboards/FallbackClip.hpp"
-#include "clipboards/PngXClip.hpp"
 
 namespace pixedit {
 
 namespace defaults {
 extern const int CLIPBOARD_MANAGER;
-
-namespace clipboards {
-extern const int FALLBACK;
-extern const int XCLIP;
-} // namespace clipboards
-
 } // namespace defaults
-using namespace defaults;
 
 Surface
 Clipboard::get()
-{
-  if (CLIPBOARD_MANAGER == clipboards::XCLIP) return copyFromXClip();
-  return copyFromFallback();
-}
+{ return SDL::GetClipboardImage(); }
 
 bool
-Clipboard::set(Surface surface)
+Clipboard::set(const Surface& surface)
 {
-  if (CLIPBOARD_MANAGER == clipboards::XCLIP) return copyToXClip(surface);
-  return copyToFallback(surface);
+  SDL::IOStreamRef stream{SDL::IOFromDynamicMem()};
+  surface.SavePNG(stream);
+  Sint64 size = stream.Tell();
+  auto pointer = stream.GetProperties().GetPointerProperty(
+    SDL::prop::IOStream::DYNAMIC_MEMORY_POINTER, nullptr);
+  SDL::SourceBytes{pointer, size_t(size)};
+
+  static const char* mimetypes[] = {"image/png"};
+  SDL::SetClipboardData(
+    [pointer, size](const char*) {
+      return SDL::SourceBytes{pointer, size_t(size)};
+    },
+    [stream] { SDL::CloseIO(stream.get()); },
+    mimetypes);
+  return true;
 }
 
 } // namespace pixedit

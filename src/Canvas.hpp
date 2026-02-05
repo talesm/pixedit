@@ -42,10 +42,10 @@ public:
   constexpr RawColor getRawColorB() const { return brush.colorB; }
 
   [[nodiscard]] Color getColorA() const
-  { return rawToComponent(brush.colorA, surface.getFormat()); }
+  { return rawToComponent(brush.colorA, surface); }
 
   [[nodiscard]] Color getColorB() const
-  { return rawToComponent(brush.colorB, surface.getFormat()); }
+  { return rawToComponent(brush.colorB, surface); }
 
   constexpr const Brush& getBrush() const { return brush; }
 
@@ -61,8 +61,8 @@ public:
   friend Canvas& operator|(Canvas& c, LineTo l);
   friend Canvas& operator|(Canvas& c, OpenLineTo l);
   friend Canvas& operator|(Canvas& c, SDL_Rect rect);
-  friend Canvas& operator|(Canvas& c, Blit blit);
-  friend Canvas& operator|(Canvas& c, BlitScaled blit);
+  friend Canvas& operator|(Canvas& c, const Blit& blit);
+  friend Canvas& operator|(Canvas& c, const BlitScaled& blit);
 };
 
 constexpr Canvas&

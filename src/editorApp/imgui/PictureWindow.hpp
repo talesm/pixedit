@@ -18,8 +18,8 @@ showPictureWindow(SDL_Renderer* renderer,
   ImGuiWindowFlags flags = 0;
   if (buffer->isDirty()) { flags |= ImGuiWindowFlags_UnsavedDocument; }
   // TODO Measure title and decoration instead of guessing
-  ImGui::SetNextWindowSize(ImVec2(buffer->getW() + 16, buffer->getH() + 35),
-                           ImGuiCond_Once);
+  ImGui::SetNextWindowSize(
+    ImVec2(buffer->GetWidth() + 16, buffer->GetHeight() + 35), ImGuiCond_Once);
   bool stayOpen = true;
   if (ImGui::Begin(settings.titleBuffer.c_str(), &stayOpen, flags)) {
     bool redraw = false;
@@ -27,7 +27,8 @@ showPictureWindow(SDL_Renderer* renderer,
     if (canvasSz.x < 50.0f) canvasSz.x = 50.0f;
     if (canvasSz.y < 50.0f) canvasSz.y = 50.0f;
     auto texture = settings.texture;
-    if (texture==nullptr || texture->w != canvasSz.x || texture->h != canvasSz.y) {
+    if (texture == nullptr || texture->w != canvasSz.x ||
+        texture->h != canvasSz.y) {
       SDL_DestroyTexture(settings.texture);
       settings.texture = SDL_CreateTexture(renderer,
                                            SDL_PIXELFORMAT_ABGR32,

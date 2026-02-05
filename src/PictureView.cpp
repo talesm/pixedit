@@ -1,6 +1,8 @@
 #include "PictureView.hpp"
 #include <cmath>
 #include "tools.hpp"
+#include "utils/pixel.hpp"
+#include "utils/rect.hpp"
 
 namespace pixedit {
 
@@ -10,17 +12,18 @@ PictureView::updatePreview(SDL_Renderer* renderer)
   changed = false;
   if (!buffer || !buffer->getSurface()) return;
   if (!scratchEnabled) canvas.setSurface(buffer->getSurface());
-  auto createPreview = [renderer, w = buffer->getW(), h = buffer->getH()] {
-    auto t = SDL_CreateTexture(
-      renderer, SDL_PIXELFORMAT_ABGR32, SDL_TEXTUREACCESS_STREAMING, w, h);
-    SDL_SetTextureBlendMode(t, SDL_BLENDMODE_BLEND);
-    return t;
-  };
+  auto createPreview =
+    [renderer, w = buffer->GetWidth(), h = buffer->GetHeight()] {
+      auto t = SDL_CreateTexture(
+        renderer, SDL_PIXELFORMAT_ABGR32, SDL_TEXTUREACCESS_STREAMING, w, h);
+      SDL_SetTextureBlendMode(t, SDL::BLENDMODE_BLEND);
+      return t;
+    };
   movingMode = false;
   if (!renderer) { return; }
   if (preview) {
     int w = preview->w, h = preview->h;
-    if (w < buffer->getW() || h < buffer->getH()) {
+    if (w < buffer->GetWidth() || h < buffer->GetHeight()) {
       SDL_DestroyTexture(preview);
       preview = createPreview();
     }
@@ -28,30 +31,32 @@ PictureView::updatePreview(SDL_Renderer* renderer)
     SDL_DestroyTexture(preview);
     preview = createPreview();
   }
-  SDL_Rect dstRect{0, 0, buffer->getW(), buffer->getH()};
+  SDL_Rect dstRect{0, 0, buffer->GetWidth(), buffer->GetHeight()};
   Surface previewSurface;
   {
     SDL_Surface* temp;
     SDL_LockTextureToSurface(preview, &dstRect, &temp);
-    previewSurface = Surface{temp, false};
+    previewSurface = Surface::Borrow(temp);
   }
 
-  previewSurface.fillRect(dstRect, 0);
-  previewSurface.blit(buffer->getSurface());
+  previewSurface.FillRect(dstRect, 0);
+  previewSurface.Blit(buffer->getSurface(), {}, {});
   if (buffer->hasSelection()) {
     auto selection = buffer->getSelectionSurface();
     auto mask = buffer->getSelectionMask();
     if (mask && !transparent) {
-      mask.setColorKey(1);
-      mask.setColorIndex(0, canvas.getColorB());
-      selection.blit(mask);
-      selection.setColorKey(canvas.getColorB());
+      mask.SetColorKey(1);
+      setColorIndex(mask, 1, canvas.getColorB());
+      selection.Blit(mask, {}, {});
+      selection.SetColorKey(selection.MapRGBA(canvas.getColorB()));
     }
-    previewSurface.blitScaled(buffer->getSelectionSurface(),
-                              buffer->getSelectionRect());
-    if (mask && !transparent) { selection.unsetColorKey(); }
+    previewSurface.BlitScaled(buffer->getSelectionSurface(),
+                              {},
+                              buffer->getSelectionRect(),
+                              SDL::SCALEMODE_NEAREST);
+    if (mask && !transparent) selection.ClearColorKey();
   }
-  if (scratchEnabled) { previewSurface.blit(scratch); }
+  if (scratchEnabled) { previewSurface.Blit(scratch, {}, {}); }
   SDL_UnlockTexture(preview);
 }
 
@@ -100,9 +105,7 @@ renderCheckerBoard(SDL_Renderer* renderer,
 
 float
 PictureView::effectiveScale() const
-{
-  return std::clamp(scale, 1 / 256.f, 256.f);
-}
+{ return std::clamp(scale, 1 / 256.f, 256.f); }
 
 SDL_FPoint
 PictureView::effectiveSize() const
@@ -110,8 +113,8 @@ PictureView::effectiveSize() const
   if (!buffer || !buffer->getSurface()) { return {0}; }
   float scale = effectiveScale();
   return {
-    scale * buffer->getW(),
-    scale * buffer->getH(),
+    scale * buffer->GetWidth(),
+    scale * buffer->GetHeight(),
   };
 }
 
@@ -140,11 +143,12 @@ PictureView::render(SDL_Renderer* renderer) const
   if (!buffer || !buffer->getSurface()) return;
   float scale = effectiveScale();
   SDL_FPoint scaledSz = {
-    scale * buffer->getW(),
-    scale * buffer->getH(),
+    scale * buffer->GetWidth(),
+    scale * buffer->GetHeight(),
   };
   auto offset = effectiveOffset();
-  SDL_FRect srcRect{0, 0, float(buffer->getW()), float(buffer->getH())};
+  SDL_FRect srcRect{
+    0, 0, float(buffer->GetWidth()), float(buffer->GetHeight())};
   SDL_FRect dstRect{
     viewport.x + offset.x + (viewport.w - scaledSz.x) / 2.f,
     viewport.y + offset.y + (viewport.h - scaledSz.y) / 2.f,
@@ -179,13 +183,13 @@ PictureView::enableScratch(bool enable)
   changed = true;
   if (!enable) {
     canvas.setSurface(buffer->getSurface());
-    scratch.reset();
-  } else if (scratch && scratch.getW() >= buffer->getW() &&
-             scratch.getH() >= buffer->getH()) {
-    scratch.fillRect({0, 0, buffer->getW(), buffer->getH()}, 0);
+    scratch.Destroy();
+  } else if (scratch && scratch.GetWidth() >= buffer->GetWidth() &&
+             scratch.GetHeight() >= buffer->GetHeight()) {
+    scratch.FillRect(Rect{0, 0, buffer->GetWidth(), buffer->GetHeight()}, 0);
     canvas.setSurface(scratch);
   } else {
-    scratch = Surface::create(buffer->getW(), buffer->getH());
+    scratch = Surface(buffer->getSize(), DEFAULT_FORMAT);
     SDL_assert(scratch);
     canvas.setSurface(scratch);
   }
@@ -288,16 +292,16 @@ PictureView::setTransparent(bool value)
   if (!buffer || !buffer->hasSelection()) { return; }
   auto selection = buffer->getSelectionSurface();
   if (transparent) {
-    if (selection.getFormat()->Amask) {
-      selection.setBlendMode(SDL_BLENDMODE_BLEND);
+    if (selection.GetFormat().IsAlpha()) {
+      selection.SetBlendMode(SDL::BLENDMODE_BLEND);
     } else {
-      selection.setColorKey(canvas.getColorB());
+      selection.SetColorKey(selection.MapRGBA(canvas.getColorB()));
     }
   } else {
-    if (selection.getFormat()->Amask) {
-      selection.setBlendMode(SDL_BLENDMODE_NONE);
+    if (selection.GetFormat().IsAlpha()) {
+      selection.SetBlendMode(SDL::BLENDMODE_NONE);
     } else {
-      selection.unsetColorKey();
+      selection.ClearColorKey();
     }
   }
   changed = true;
@@ -334,7 +338,8 @@ PictureView::setSelection(Surface surface)
     if (size.y > viewport.h) {
       yy = ceil((size.y - viewport.h) / 2 / scale - offset.y);
     }
-    buffer->setSelection(surface, {xx, yy, surface.getW(), surface.getH()});
+    buffer->setSelection(surface,
+                         {xx, yy, surface.GetWidth(), surface.GetHeight()});
     setTransparent(transparent);
     changed = true;
     nextToolId = adjustNextToolId(toolId);
@@ -358,10 +363,10 @@ PictureView::pickColorUnderMouse()
   if (!buffer) return;
   auto surface = buffer->getSurface();
   auto pos = effectivePos();
-  if (pos.x < 0 || pos.y < 0 || pos.x >= surface.getW() ||
-      pos.y >= surface.getH())
+  if (pos.x < 0 || pos.y < 0 || pos.x >= surface.GetWidth() ||
+      pos.y >= surface.GetHeight())
     return;
-  canvas | RawColorA{surface.getPixel(pos.x, pos.y)};
+  canvas | RawColorA{getPixelAt(surface, pos.x, pos.y)};
 }
 
 } // namespace pixedit

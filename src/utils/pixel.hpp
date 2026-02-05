@@ -11,23 +11,31 @@ namespace pixedit {
  * @return the pointer to the pixel or nullptr if out of bounds
  */
 constexpr void*
-pixelAt(SDL_Surface* surface, int x, int y)
+pixelAt(Surface& surface, int x, int y)
 {
   if (x < 0 || y < 0 || x >= surface->w || y >= surface->h) { return nullptr; }
   auto pixelPtr = static_cast<Uint8*>(surface->pixels);
-  auto format = SDL_GetPixelFormatDetails(surface->format);
-  return pixelPtr + surface->pitch * y + x * format->bytes_per_pixel;
+  return pixelPtr + surface->pitch * y +
+         x * surface.GetFormat().GetBytesPerPixel();
+}
+constexpr const void*
+pixelAt(const Surface& surface, int x, int y)
+{
+  if (x < 0 || y < 0 || x >= surface->w || y >= surface->h) { return nullptr; }
+  auto pixelPtr = static_cast<Uint8*>(surface->pixels);
+  return pixelPtr + surface->pitch * y +
+         x * surface.GetFormat().GetBytesPerPixel();
 }
 
 constexpr Uint32
-getPixel(void* pixel, Uint8 bytesPerPixel)
+getPixel(const void* pixel, Uint8 bytesPerPixel)
 {
   if (!pixel) return 0;
   switch (bytesPerPixel) {
-  case 1: return *static_cast<Uint8*>(pixel);
-  case 2: return *static_cast<Uint16*>(pixel);
+  case 1: return *static_cast<const Uint8*>(pixel);
+  case 2: return *static_cast<const Uint16*>(pixel);
   case 3: {
-    auto pixelPtr = static_cast<Uint8*>(pixel);
+    auto pixelPtr = static_cast<const Uint8*>(pixel);
     Uint32 value = 0;
 #if SDL_BYTEORDER == SDL_LIL_ENDIAN
     for (int i = 0; i < 3; i++) { value |= pixelPtr[i] >> i * 8; }
@@ -36,14 +44,17 @@ getPixel(void* pixel, Uint8 bytesPerPixel)
 #endif // SDL_BYTEORDER == SDL_LIL_ENDIAN
     return value;
   }
-  case 4: return *static_cast<Uint32*>(pixel);
+  case 4: return *static_cast<const Uint32*>(pixel);
   default: return 0;
   }
 }
 
 constexpr Uint32
-getPixelAt(SDL_Surface* surface, int x, int y)
-{ return getPixel(pixelAt(surface, x, y), SDL_BYTESPERPIXEL(surface->format)); }
+getPixelAt(const Surface& surface, int x, int y)
+{
+  return getPixel(pixelAt(surface, x, y),
+                  surface.GetFormat().GetBytesPerPixel());
+}
 
 constexpr void
 setPixel(void* pixel, Uint32 value, Uint8 bytesPerPixel)
@@ -74,9 +85,10 @@ setPixel(void* pixel, Uint32 value, Uint8 bytesPerPixel)
  * consideration the value should be in the surface's pixel format
  */
 constexpr void
-setPixelAt(SDL_Surface* surface, int x, int y, Uint32 value)
+setPixelAt(Surface& surface, int x, int y, Uint32 value)
 {
-  setPixel(pixelAt(surface, x, y), value, SDL_BYTESPERPIXEL(surface->format));
+  setPixel(
+    pixelAt(surface, x, y), value, surface.GetFormat().GetBytesPerPixel());
 }
 
 } // namespace pixedit

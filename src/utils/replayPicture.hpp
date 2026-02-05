@@ -1,12 +1,11 @@
 #ifndef PIXEDIT_SRC_UTILS_REPLAY_PICTURE_INCLUDED
 #define PIXEDIT_SRC_UTILS_REPLAY_PICTURE_INCLUDED
 
-#include <istream>
 #include <string_view>
+#include "Surface.hpp"
 
 namespace pixedit {
 struct PictureView;
-struct Surface;
 
 /// @brief Replay commands in an existing view
 /// @param in the command stream

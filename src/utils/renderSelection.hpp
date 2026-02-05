@@ -53,7 +53,7 @@ renderSelection(Canvas& canvas,
 }
 
 inline void
-contour(Canvas& canvas, Surface mask, SDL_Point offset = {0, 0})
+contour(Canvas& canvas, const Surface& mask, SDL_Point offset = {0, 0})
 {
   constexpr static SDL_Point borders[] = {
     {-1, -1},
@@ -65,12 +65,12 @@ contour(Canvas& canvas, Surface mask, SDL_Point offset = {0, 0})
     {-1, 1},
     {-1, 0},
   };
-  for (int y = 0; y < mask.getH(); ++y) {
-    for (int x = 0; x < mask.getW(); ++x) {
-      if (!mask.getPixel(x, y)) { continue; }
+  for (int y = 0; y < mask.GetHeight(); ++y) {
+    for (int x = 0; x < mask.GetWidth(); ++x) {
+      if (!getPixelAt(mask, x, y)) { continue; }
       bool isCentral = true;
       for (auto&& b : borders) {
-        if (!mask.getPixel(x + b.x, y + b.y)) {
+        if (!getPixelAt(mask, x + b.x, y + b.y)) {
           isCentral = false;
           break;
         }
@@ -84,7 +84,7 @@ contour(Canvas& canvas, Surface mask, SDL_Point offset = {0, 0})
 inline void
 renderSelection(Canvas& canvas,
                 SDL_Rect rect,
-                Surface mask,
+                const Surface& mask,
                 bool inProgress = false)
 {
   if (!mask) {
@@ -99,11 +99,11 @@ renderSelection(Canvas& canvas,
 
   if (!inProgress) {
     canvas | ColorA{freeSelectedColorA} | ColorB{freeSelectedColorB};
-    canvas | (inProgress ? patterns::CHECKERED_2 : patterns::CHECKERED_4);
+    canvas | patterns::CHECKERED_4;
     canvas | OutlineRect{rect};
   }
 
-  if (mask.getW() == rect.w && mask.getH() == rect.h) {
+  if (mask.GetWidth() == rect.w && mask.GetHeight() == rect.h) {
     if (inProgress) {
       canvas | ColorA{freeSelectedColorA} | ColorB{freeSelectedColorB};
     } else {
@@ -112,7 +112,7 @@ renderSelection(Canvas& canvas,
     canvas | patterns::CHECKERED_2;
     contour(canvas, mask, {rect.x, rect.y});
   } else {
-    Surface temp = Surface::create(mask.getW(), mask.getH());
+    Surface temp = Surface(mask.GetSize(), DEFAULT_FORMAT);
     Canvas c{temp};
     if (inProgress) {
       c | ColorA{freeSelectedColorA} | ColorB{freeSelectedColorB};

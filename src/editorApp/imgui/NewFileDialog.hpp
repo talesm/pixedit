@@ -27,8 +27,8 @@ showNewFileDialog()
     }
 
     if (ImGui::Button("OK", ImVec2(120, 0))) {
-      appendFile(
-        std::make_shared<PictureBuffer>("", Surface::create(width, height)));
+      appendFile(std::make_shared<PictureBuffer>(
+        "", Surface({width, height}, DEFAULT_FORMAT)));
       ImGui::CloseCurrentPopup();
     }
     ImGui::SetItemDefaultFocus();

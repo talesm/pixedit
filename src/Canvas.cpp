@@ -10,28 +10,26 @@ void
 Canvas::setSurface(Surface value)
 {
   if (surface.get() == value.get()) { return; }
-  brush.colorA = componentToRaw(
-    rawToComponent(brush.colorA, surface.getFormat()), value.getFormat());
-  brush.colorB = componentToRaw(
-    rawToComponent(brush.colorB, surface.getFormat()), value.getFormat());
-  surface = value;
+  brush.colorA = componentToRaw(rawToComponent(brush.colorA, surface), value);
+  brush.colorB = componentToRaw(rawToComponent(brush.colorB, surface), value);
+  surface = std::move(value);
 }
 
 Canvas&
 operator|(Canvas& c, Color color)
 {
-  c.brush.colorA = componentToRaw(color, c.surface.getFormat());
+  c.brush.colorA = componentToRaw(color, c.surface);
   return c;
 }
 Canvas&
 operator|(Canvas& c, ColorB color)
 {
-  c.brush.colorB = componentToRaw(color, c.surface.getFormat());
+  c.brush.colorB = componentToRaw(color, c.surface);
   return c;
 }
 
 void
-doPixel(Surface surface, const Brush& b, SDL_Point p)
+doPixel(Surface& surface, const Brush& b, SDL_Point p)
 {
   auto color = b.colorA;
   if (b.pattern.data8x8) {
@@ -39,11 +37,11 @@ doPixel(Surface surface, const Brush& b, SDL_Point p)
     int yy = p.y % 8;
     if ((b.pattern.data8x8 >> (yy * 8 + xx)) & 1) { color = b.colorB; }
   }
-  surface.setPixel(p.x, p.y, color);
+  setPixelAt(surface, p.x, p.y, color);
 }
 
 void
-doPoint(Surface surface, const Brush& b, SDL_Point p)
+doPoint(Surface& surface, const Brush& b, SDL_Point p)
 {
   if (b.pen.type == Pen::BOX) {
     int xBeg = p.x - (b.pen.w / 2 + b.pen.w % 2 - 1);
@@ -66,7 +64,7 @@ operator|(Canvas& c, SDL_Point p)
 }
 
 void
-doHLine(Surface surface, const Brush& b, const HorizontalLine& l)
+doHLine(Surface& surface, const Brush& b, const HorizontalLine& l)
 {
   SDL_Point p{l.x, l.y};
   for (int i = 0; i < l.length; ++i, ++p.x) doPoint(surface, b, p);
@@ -78,7 +76,7 @@ operator|(Canvas& c, HorizontalLine l)
   if (c.brush.pattern.data8x8 || c.brush.pen.type != Pen::DOT) {
     doHLine(c.surface, c.brush, l);
   } else {
-    c.surface.fillRect({l.x, l.y, l.length, 1}, c.brush.colorA);
+    c.surface.FillRect(Rect{l.x, l.y, l.length, 1}, c.brush.colorA);
   }
   return c;
 }
@@ -108,7 +106,7 @@ doBox(Surface surface, const Brush& b, const SDL_Rect& rect)
     HorizontalLine l{rect.x, rect.y, rect.w};
     for (int i = 0; i < rect.h; ++i, ++l.y) doHLine(surface, b, l);
   } else {
-    surface.fillRect(rect, b.colorA);
+    surface.FillRect(rect, b.colorA);
   }
 }
 
@@ -120,15 +118,15 @@ operator|(Canvas& c, SDL_Rect rect)
 }
 
 Canvas&
-operator|(Canvas& c, Blit blit)
+operator|(Canvas& c, const Blit& blit)
 {
-  c.surface.blit(blit.surface, blit.pos);
+  c.surface.BlitAt(blit.surface, {}, blit.pos);
   return c;
 }
 Canvas&
-operator|(Canvas& c, BlitScaled blit)
+operator|(Canvas& c, const BlitScaled& blit)
 {
-  c.surface.blitScaled(blit.surface, blit.rect);
+  c.surface.BlitScaled(blit.surface, {}, blit.rect, SDL::SCALEMODE_NEAREST);
   return c;
 }
 

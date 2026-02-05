@@ -4,13 +4,12 @@
 #include "Brush.hpp"
 #include "PictureView.hpp"
 #include "tools.hpp"
-#include "utils/Color.hpp"
+#include "utils/rect.hpp"
 
 namespace pixedit {
 
 class PictureManager
 {
-private:
   PictureView* lastView = nullptr;
   Id toolId = tools::FREE_HAND;
   Brush brush{};

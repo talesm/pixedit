@@ -1,6 +1,7 @@
 #include "PictureBuffer.hpp"
 #include "loaders.hpp"
 #include "savers.hpp"
+#include "utils/Color.hpp"
 
 namespace pixedit {
 
@@ -30,9 +31,7 @@ PictureFile::save(const PictureBuffer& buffer)
 
 std::unique_ptr<PictureBuffer>
 PictureBuffer::load(const std::string& filename)
-{
-  return loadBuffer(filename);
-}
+{ return loadBuffer(filename); }
 
 bool
 PictureBuffer::save(bool force)
@@ -56,9 +55,7 @@ PictureBuffer::saveAs(const std::string& filename)
 }
 bool
 PictureBuffer::saveCopy(const std::string& filename)
-{
-  return saveBuffer(*this, filename);
-}
+{ return saveBuffer(*this, filename); }
 
 void
 PictureBuffer::makeSnapshot()
@@ -108,18 +105,22 @@ void
 PictureBuffer::persistSelection()
 {
   if (selectionMask) {
-    selectionMask.setColorIndex(0, {0, 0, 0, 0});
-    selectionMask.setColorKey(1);
-    selectionSurface.blit(selectionMask);
-    if (!selectionSurface.getColorKey() &&
-        selectionSurface.getBlendMode() != SDL_BLENDMODE_BLEND) {
-      selectionMask.setColorKey(0);
-      selectionMask.setColorIndex(1, {0, 0, 0, 255});
-      surface.blitScaled(selectionMask, selectionRect);
-      selectionSurface.setBlendMode(SDL_BLENDMODE_ADD);
+    auto palette = selectionMask.GetPalette();
+    Color newColor = {{0, 0, 0, 0}};
+    palette.SetColors({&newColor, 1}, 0);
+    selectionMask.SetColorKey(1);
+    selectionSurface.Blit(selectionMask, {}, {});
+    if (!selectionSurface.GetColorKey() &&
+        selectionSurface.GetBlendMode() != SDL::BLENDMODE_BLEND) {
+      selectionMask.SetColorKey(0);
+      palette.SetColors({&newColor, 1}, 1);
+      surface.BlitScaled(
+        selectionMask, {}, selectionRect, SDL::SCALEMODE_NEAREST);
+      selectionSurface.SetBlendMode(SDL::BLENDMODE_ADD);
     }
   }
-  surface.blitScaled(selectionSurface, selectionRect);
+  surface.BlitScaled(
+    selectionSurface, {}, selectionRect, SDL::SCALEMODE_NEAREST);
   clearSelection();
 }
 

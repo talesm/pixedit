@@ -2,7 +2,9 @@
 #define PIXEDIT_SRC_UTILS_COLOR_INCLUDED
 
 #include <array>
-#include "SDL3pp/SDL3pp.h"
+#include <SDL3pp/SDL3pp.h>
+
+#include "Surface.hpp"
 
 namespace pixedit {
 
@@ -14,22 +16,16 @@ using RawColor = Uint32;
 /// @brief Color conversion utilities
 /// @{
 constexpr Color
-rawToComponent(RawColor color, const SDL_PixelFormatDetails* format)
+rawToComponent(RawColor color, const Surface& surface)
 {
-  if (format == nullptr) {
-    return {
-      Uint8(color >> 24), Uint8(color >> 16), Uint8(color >> 8), Uint8(color)};
-  }
-  Color c;
-  SDL_GetRGBA(color, format, nullptr, &c.r, &c.g, &c.b, &c.a);
-  return c;
+  if (!surface) return SDL::GetColor(color, DEFAULT_FORMAT);
+  return SDL::GetColor(color, surface.GetFormat(), surface.GetPalette().get());
 }
 constexpr RawColor
-componentToRaw(Color color, const SDL_PixelFormatDetails* format)
+componentToRaw(Color color, const Surface& surface)
 {
-  if (format == nullptr)
-    return color.r << 24 | color.g << 16 | color.b << 8 | color.a;
-  return SDL_MapRGBA(format, nullptr, color.r, color.g, color.b, color.a);
+  if (surface == nullptr) return SDL::MapColor(DEFAULT_FORMAT, color);
+  return surface.MapRGBA(color);
 }
 
 constexpr std::array<float, 4>
@@ -47,6 +43,14 @@ normalizedToComponent(std::array<float, 4> color)
   };
 }
 ///}
+
+inline void
+setColorIndex(const Surface& surface, int index, Color newColor)
+{
+  auto palette = surface.GetPalette();
+  if (!palette) return;
+  palette.SetColors({&newColor, 1}, index);
+}
 } // namespace pixedit
 
 #endif /* PIXEDIT_SRC_UTILS_COLOR_INCLUDED */

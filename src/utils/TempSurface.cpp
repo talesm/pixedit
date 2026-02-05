@@ -21,22 +21,18 @@ TempSurface::TempSurface()
 {
 }
 
-TempSurface::TempSurface(Surface surface)
+TempSurface::TempSurface(const Surface& surface)
   : TempSurface()
-{
-  if (!surface.save(filename)) { throw std::runtime_error{"Can not save"}; }
-}
+{ surface.SavePNG(filename); }
 
-TempSurface::TempSurface(Surface surface, std::string filename)
+TempSurface::TempSurface(const Surface& surface, std::string filename)
   : filename(std::move(filename))
-{
-  if (!surface.save(filename)) { throw std::runtime_error{"Can not save"}; }
-}
+{ surface.SavePNG(filename); }
 
 Surface
 TempSurface::recover() const
 {
-  Surface surface = Surface::load(filename);
+  Surface surface = SDL::LoadSurface(filename);
   if (!surface) { throw std::runtime_error{"Can not recover"}; }
   return surface;
 }

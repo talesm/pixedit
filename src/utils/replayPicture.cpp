@@ -4,6 +4,7 @@
 #include <sstream>
 #include <string>
 #include "PictureView.hpp"
+#include "pixel.hpp"
 
 namespace pixedit {
 
@@ -32,10 +33,10 @@ struct CommandEvaluator
   {
     Uint32 pixel = 0;
     in >> std::hex;
-    for (int y = 0; y < s.getH(); ++y) {
-      for (int x = 0; x < s.getW(); ++x) {
+    for (int y = 0; y < s.GetHeight(); ++y) {
+      for (int x = 0; x < s.GetWidth(); ++x) {
         in >> pixel;
-        s.setPixel(x, y, pixel);
+        setPixelAt(s, x, y, pixel);
       }
     }
     in >> std::dec;
@@ -49,7 +50,7 @@ struct CommandEvaluator
     if (cmd == "FORMAT") {
       int w = 1, h = 1;
       sline >> w >> h;
-      setSurface(Surface::create(w, h));
+      setSurface(Surface({w, h}, DEFAULT_FORMAT));
     } else if (cmd == "DATA:") {
       dataMode = true;
     } else if (cmd == "LEFT") {
@@ -109,7 +110,7 @@ struct CommandEvaluator
     if (!needsFlushing) { return; }
     if (!view.getBuffer()) {
       view.setBuffer(
-        std::make_shared<PictureBuffer>("", Surface::create(1, 1)));
+        std::make_shared<PictureBuffer>("", Surface({1, 1}, DEFAULT_FORMAT)));
     }
     view.update(nullptr);
     needsFlushing = false;
