@@ -12,16 +12,8 @@ SCENARIO("Drawing a filled rectangle", "[canvas]")
     AND_GIVEN("it is associated with a 8x8 surface")
     {
       Uint32 pixels[8 * 8] = {0}; // Blank
-      auto surface = Surface{SDL_CreateRGBSurfaceFrom(pixels,
-                                                      8,
-                                                      8,
-                                                      32,
-                                                      8 * sizeof(Uint32),
-                                                      0xFF00'0000,
-                                                      0x00FF'0000,
-                                                      0x0000'FF00,
-                                                      0x0000'00FF),
-                             true};
+      auto surface = Surface{
+        SDL_CreateSurfaceFrom(8, 8, SDL_PIXELFORMAT_RGBA32, pixels, 32), true};
       canvas.setSurface(surface);
       AND_GIVEN("color is set to white")
       {
@@ -45,9 +37,7 @@ SCENARIO("Drawing a filled rectangle", "[canvas]")
         {
           canvas | FillRectTo(2, 3, 0, 1);
           THEN("The pixel is changed to color")
-          {
-            REQUIRE(pixels[8] == color);
-          }
+          { REQUIRE(pixels[8] == color); }
         }
       }
       AND_GIVEN("Checkered pattern of black and white")
