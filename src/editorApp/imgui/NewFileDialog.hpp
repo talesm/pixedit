@@ -6,7 +6,7 @@
 namespace pixedit {
 
 void
-appendFile(std::shared_ptr<PictureBuffer> buffer);
+appendFile(const std::shared_ptr<PictureBuffer>& buffer);
 
 inline void
 showNewFileDialog()

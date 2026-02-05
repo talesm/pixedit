@@ -68,47 +68,51 @@ struct EditorAppImpl final
     SDL::Quit();
   }
 
+  void update();
+
+  void setupInitialBuffers(const EditorInitSettings& settings);
+
   SDL::AppResult Iterate() override;
 
   SDL::AppResult Event(const SDL::Event& e) override;
+
+  void close(bool force);
+
+  void setupActions();
 };
 
-static void
-setupActions();
-
 void
-update()
+EditorAppImpl::update()
 {
-  if (ctx->maximizeView) {
+  if (maximizeView) {
     if (!ImGui::GetIO().WantCaptureMouse &&
-        SDL_GetMouseFocus() == ctx->window.get()) {
-      auto buttonState =
-        SDL_GetMouseState(&ctx->view.state.x, &ctx->view.state.y);
-      ctx->view.state.left = buttonState & SDL_BUTTON_LMASK;
-      ctx->view.state.middle = buttonState & SDL_BUTTON_MMASK;
-      ctx->view.state.right = buttonState & SDL_BUTTON_RMASK;
+        SDL_GetMouseFocus() == window.get()) {
+      auto buttonState = SDL_GetMouseState(&view.state.x, &view.state.y);
+      view.state.left = buttonState & SDL_BUTTON_LMASK;
+      view.state.middle = buttonState & SDL_BUTTON_MMASK;
+      view.state.right = buttonState & SDL_BUTTON_RMASK;
     };
-    ctx->picture.update(&ctx->view, ctx->renderer.get(), ctx->pictureViewport);
+    picture.update(&view, renderer.get(), pictureViewport);
   }
-  ctx->ui.update();
-  showMainMenuBar(currentView(), &ctx->maximizeView);
-  ctx->auxWindows.showAll();
+  ui.update();
+  showMainMenuBar(currentView(), &maximizeView);
+  auxWindows.showAll();
 
-  if (!ctx->requestModal.empty()) {
-    ImGui::OpenPopup(ctx->requestModal.c_str());
-    ctx->requestModal.clear();
+  if (!requestModal.empty()) {
+    ImGui::OpenPopup(requestModal.c_str());
+    requestModal.clear();
   }
   showNewFileDialog();
-  showConfirmExitDialog(&ctx->exiting);
+  showConfirmExitDialog(&exiting);
   showAboutDialog();
 
-  if (!ctx->maximizeView) {
-    for (auto& buffer : ctx->buffers) {
-      if (ctx->focusBufferNextFrame && buffer == currentBuffer()) {
-        ctx->focusBufferNextFrame = false;
+  if (!maximizeView) {
+    for (auto& buffer : buffers) {
+      if (focusBufferNextFrame && buffer == currentBuffer()) {
+        focusBufferNextFrame = false;
         ImGui::SetNextWindowFocus();
       }
-      showPictureWindow(ctx->renderer.get(), buffer);
+      showPictureWindow(renderer.get(), buffer);
     }
   }
 }
@@ -120,8 +124,8 @@ EDITOR_EVENT()
   return event;
 }
 
-static void
-setupInitialBuffers(const EditorInitSettings& settings)
+void
+EditorAppImpl::setupInitialBuffers(const EditorInitSettings& settings)
 {
   std::shared_ptr<PictureBuffer> buffer;
   if (!settings.filename.empty() ||
@@ -133,8 +137,8 @@ setupInitialBuffers(const EditorInitSettings& settings)
         "", Surface::create(settings.pictureSz.x, settings.pictureSz.y));
     }
     currentView().setBuffer(buffer);
-    ctx->buffers.emplace_back(buffer);
-    ctx->bufferIndex = ctx->buffers.size() - 1;
+    buffers.emplace_back(buffer);
+    bufferIndex = int(buffers.size() - 1);
   }
   currentView().canvas | ColorA{0, 0, 0, 255};
   currentView().canvas | ColorB{255, 255, 255, 255};
@@ -164,8 +168,8 @@ createEditorApp(const EditorInitSettings& settings)
     std::move(window), std::move(renderer), pictureViewport);
   ctx = editorApp.get();
 
-  setupActions();
-  setupInitialBuffers(settings);
+  editorApp->setupActions();
+  editorApp->setupInitialBuffers(settings);
   installShortcutPlugin(editorApp->plugins, editorApp->shortcuts);
   installShortcutDefaultsPlugin(editorApp->plugins);
 
@@ -236,22 +240,22 @@ EditorAppImpl::Event(const SDL::Event& e)
   return SDL::APP_CONTINUE;
 }
 
-static void
-close(bool force = false)
+void
+EditorAppImpl::close(bool force = false)
 {
-  if (ctx->buffers.empty()) {
-    ctx->exited = true;
+  if (buffers.empty()) {
+    exited = true;
   } else if (!force && currentBuffer()->isDirty() &&
              defaults::ASK_SAVE_ON_CLOSE) {
     pushAction(actions::MODAL_SHOW, "Confirm exit");
   } else {
-    ctx->viewSettings.erase(currentBuffer());
-    ctx->buffers.erase(ctx->buffers.begin() + ctx->bufferIndex);
-    if (ctx->bufferIndex >= int(ctx->buffers.size())) { ctx->bufferIndex -= 1; }
-    if (ctx->bufferIndex < 0) {
-      ctx->view.setBuffer(nullptr);
+    viewSettings.erase(currentBuffer());
+    buffers.erase(buffers.begin() + bufferIndex);
+    if (bufferIndex >= int(buffers.size())) { bufferIndex -= 1; }
+    if (bufferIndex < 0) {
+      view.setBuffer(nullptr);
     } else {
-      ctx->view.setBuffer(currentBuffer());
+      view.setBuffer(currentBuffer());
     }
   }
 }
@@ -299,9 +303,8 @@ getSettingsFor(const std::shared_ptr<PictureBuffer>& buffer)
 }
 
 void
-setupActions()
+EditorAppImpl::setupActions()
 {
-  auto& actions = ctx->actions;
   actions.set(actions::PIC_NEW,
               [&] { pushAction(actions::MODAL_SHOW, "New image"); });
   actions.set(actions::PIC_OPEN, [&] {
@@ -311,7 +314,7 @@ setupActions()
   actions.set(actions::PIC_CLOSE, [&] { close(); });
   actions.set(actions::PIC_FORCE_CLOSE, [&] { close(true); });
   actions.set(actions::PIC_SAVE, [&] {
-    if (ctx->buffers.empty() || ctx->bufferIndex < 0) return;
+    if (buffers.empty() || bufferIndex < 0) return;
     if (currentBuffer()->getFilename().empty()) {
       saveWithFileDialog(*currentBuffer());
     } else {
@@ -319,25 +322,22 @@ setupActions()
     }
   });
   actions.set(actions::PIC_SAVE_AS, [&] {
-    if (ctx->buffers.empty() || ctx->bufferIndex < 0) return;
+    if (buffers.empty() || bufferIndex < 0) return;
     saveWithFileDialog(*currentBuffer());
   });
   actions.set(actions::VIEW_CHANGE, [&](auto param) {
     std::stringstream ss{std::string{param}};
-    int bufferIndex = -1;
-    ss >> bufferIndex;
-    if (bufferIndex < 0 || bufferIndex >= ctx->buffers.size()) { return; }
+    if (!(ss >> bufferIndex) || bufferIndex >= buffers.size()) { return; }
     if (auto lastBuffer = currentBuffer()) {
-      auto& settings = ctx->viewSettings[lastBuffer];
-      settings.view.offset = ctx->view.offset;
-      settings.view.scale = ctx->view.scale;
+      auto& settings = viewSettings[lastBuffer];
+      settings.view.offset = view.offset;
+      settings.view.scale = view.scale;
     }
-    ctx->bufferIndex = bufferIndex;
     auto nextBuffer = currentBuffer();
-    auto& settings = ctx->viewSettings[nextBuffer];
-    ctx->view.setBuffer(std::move(nextBuffer));
-    ctx->view.offset = settings.view.offset;
-    ctx->view.scale = settings.view.scale;
+    auto& settings = viewSettings[nextBuffer];
+    view.setBuffer(std::move(nextBuffer));
+    view.offset = settings.view.offset;
+    view.scale = settings.view.scale;
   });
 
   actions.set(actions::SELECTION_PERSIST,
@@ -348,13 +348,13 @@ setupActions()
     if (!currentBuffer()) return;
     auto& buffer = *currentBuffer();
     auto selectionSurface = buffer.getSelectionSurface();
-    ctx->clipboard.set(selectionSurface ?: buffer.getSurface());
+    clipboard.set(selectionSurface ?: buffer.getSurface());
   });
   actions.set(actions::CLIP_CUT, [&] {
     if (!currentBuffer()) return;
     auto& buffer = *currentBuffer();
     if (!buffer.hasSelection()) return;
-    ctx->clipboard.set(buffer.getSelectionSurface());
+    clipboard.set(buffer.getSelectionSurface());
     currentView().setSelection(nullptr);
   });
   actions.set(actions::CLIP_PASTE, [&] {
@@ -363,12 +363,12 @@ setupActions()
       pushAction(actions::CLIP_PASTE_NEW);
       return;
     }
-    auto surface = ctx->clipboard.get();
+    auto surface = clipboard.get();
     if (!surface) return;
     currentView().setSelection(surface);
   });
   actions.set(actions::CLIP_PASTE_NEW, [&] {
-    auto surface = ctx->clipboard.get();
+    auto surface = clipboard.get();
     if (!surface) return; // TODO Error?
     appendFile(std::make_shared<PictureBuffer>("", surface, true));
   });
@@ -382,14 +382,14 @@ setupActions()
     pushAction(actions::EDITOR_FOCUS_PICTURE);
   });
   actions.set(actions::EDITOR_FOCUS_PICTURE,
-              [&] { ctx->focusBufferNextFrame = true; });
+              [&] { focusBufferNextFrame = true; });
 
   actions.set(actions::MODAL_SHOW,
-              [&](Id parameter) { ctx->requestModal = parameter; });
+              [&](Id parameter) { requestModal = parameter; });
 }
 
 void
-appendFile(std::shared_ptr<PictureBuffer> buffer)
+appendFile(const std::shared_ptr<PictureBuffer>& buffer)
 {
   ctx->view.setBuffer(buffer);
   ctx->view.offset = {0, 0};
