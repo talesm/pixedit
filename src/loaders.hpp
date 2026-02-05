@@ -14,7 +14,7 @@ class PictureBuffer;
 namespace loaders {
 
 constexpr Id PIX{"pix"};
-constexpr Id SDL2_IMAGE{"sdl2_image"};
+constexpr Id SDL_IMAGE{"sdl_image"};
 constexpr Id TEXT{"text"};
 
 } // namespace loaders

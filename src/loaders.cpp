@@ -12,7 +12,7 @@ namespace pixedit {
 static const std::vector<Id>&
 getDefaultLoaderIds()
 {
-  static std::vector<Id> ids{loaders::PIX, loaders::SDL2_IMAGE, loaders::TEXT};
+  static std::vector<Id> ids{loaders::PIX, loaders::SDL_IMAGE, loaders::TEXT};
   return ids;
 }
 
@@ -22,7 +22,7 @@ doLoadSurface(const std::string& filename, Id loader)
   if (loader == loaders::PIX) {
     throw std::runtime_error("Picture format does not support loading");
   }
-  if (loader == loaders::SDL2_IMAGE) {
+  if (loader == loaders::SDL_IMAGE) {
     return {IMG_Load(filename.c_str()), true};
   }
   if (loader == loaders::TEXT) {
@@ -42,7 +42,7 @@ doLoadSurface(const std::string& filename, Id loader)
   }
 
 makeLoaderWrapper(PIX);
-makeLoaderWrapper(SDL2_IMAGE);
+makeLoaderWrapper(SDL_IMAGE);
 makeLoaderWrapper(TEXT);
 
 std::unique_ptr<PictureBuffer>
@@ -50,7 +50,7 @@ loadBuffer(const std::string& filename, Id loader)
 {
   static std::unordered_map<IdRef, Loader> loaders{
     {loaders::PIX, loadBuffer_PIX},
-    {loaders::SDL2_IMAGE, loadBuffer_SDL2_IMAGE},
+    {loaders::SDL_IMAGE, loadBuffer_SDL_IMAGE},
     {loaders::TEXT, loadBuffer_TEXT},
   };
   if (loader.empty()) {
