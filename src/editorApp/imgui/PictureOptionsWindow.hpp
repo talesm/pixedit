@@ -2,10 +2,8 @@
 #define PIXEDIT_SRC_EDITOR_APP_IMGUI_PICTURE_OPTIONS_WINDOW_INCLUDED
 
 #include <map>
-#include <memory>
 #include <vector>
 #include "../actions.hpp"
-#include "AuxWindowManager.hpp"
 #include "PictureManager.hpp"
 #include "PictureView.hpp"
 #include "tools.hpp"
@@ -42,7 +40,7 @@ PatternCombo(const char* label, Pattern* pattern)
   return result;
 }
 
-void
+inline void
 pictureOptionsAuxWindow()
 {
   if (ImGui::Begin("Picture options")) {

@@ -369,7 +369,7 @@ EditorAppImpl::setupActions()
   });
   actions.set(actions::CLIP_PASTE_NEW, [&] {
     auto surface = clipboard.get();
-    if (!surface) return; // TODO Error?
+    if (!surface) return;
     appendFile(std::make_shared<PictureBuffer>("", surface, true));
   });
 
@@ -395,7 +395,7 @@ appendFile(const std::shared_ptr<PictureBuffer>& buffer)
   ctx->view.offset = {0, 0};
   ctx->view.scale = 1.f;
   ctx->buffers.emplace_back(buffer);
-  ctx->bufferIndex = ctx->buffers.size() - 1;
+  ctx->bufferIndex = int(ctx->buffers.size() - 1);
 }
 
 std::shared_ptr<PictureBuffer>

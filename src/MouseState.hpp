@@ -11,8 +11,8 @@ struct MouseState
   bool left;
   bool middle;
   bool right;
-  int wheelX;
-  int wheelY;
+  float wheelX;
+  float wheelY;
 };
 
 } // namespace pixedit
