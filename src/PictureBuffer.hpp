@@ -4,10 +4,12 @@
 #include <list>
 #include <memory>
 #include <string>
+#include <utility>
 #include <SDL3/SDL.h>
 #include "PictureFile.hpp"
 #include "Surface.hpp"
 #include "utils/TempSurface.hpp"
+#include "utils/rect.hpp"
 
 namespace pixedit {
 /**
@@ -15,7 +17,6 @@ namespace pixedit {
  */
 class PictureBuffer
 {
-private:
   PictureFile file;
   Surface surface;
   std::list<TempSurface> history;
@@ -23,16 +24,16 @@ private:
   std::list<TempSurface>::iterator lastSave = history.end();
   Surface selectionSurface;
   Surface selectionMask;
-  SDL_Rect selectionRect{0, 0, 10, 10};
+  Rect selectionRect{0, 0, 10, 10};
 
 public:
   PictureBuffer() = default;
-  PictureBuffer(std::string filename, Surface surface, bool dirty = false)
-    : PictureBuffer(PictureFile{filename}, std::move(surface), dirty) {};
+  PictureBuffer(std::string filename, Surface s, bool dirty = false)
+    : PictureBuffer(PictureFile{std::move(filename)}, std::move(s), dirty) {};
 
-  PictureBuffer(PictureFile file, Surface surface, bool dirty = false)
+  PictureBuffer(PictureFile file, Surface surface_, bool dirty = false)
     : file(std::move(file))
-    , surface(surface)
+    , surface(std::move(surface_))
   {
     if (surface) {
       makeSnapshot();
@@ -69,7 +70,7 @@ public:
 
   int GetWidth() const { return surface.GetWidth(); }
   int GetHeight() const { return surface.GetHeight(); }
-  SDL_Point getSize() const { return {GetWidth(), GetHeight()}; }
+  Point getSize() const { return surface.GetSize(); }
 
   constexpr SDL_Rect& getSelectionRect() { return selectionRect; }
   constexpr const SDL_Rect& getSelectionRect() const { return selectionRect; }

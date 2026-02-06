@@ -13,26 +13,28 @@ makeTempFilename(std::string_view prefix, std::string_view suffix);
 /// @brief A class to hold temporarily a surface
 class TempSurface
 {
-private:
-  std::string filename;
 
 public:
   TempSurface();
   TempSurface(const Surface& surface);
   TempSurface(const Surface& surface, std::string filename);
   TempSurface(const TempSurface&) = delete;
-  TempSurface(TempSurface&& rhs) { std::swap(filename, rhs.filename); }
+  TempSurface(TempSurface&& rhs) noexcept
+  { std::swap(filename_, rhs.filename_); }
   ~TempSurface() { reset(); }
   TempSurface& operator=(TempSurface rhs)
   {
-    std::swap(filename, rhs.filename);
+    std::swap(filename_, rhs.filename_);
     return *this;
   }
 
   Surface recover() const;
   void reset();
 
-  const std::string& getFilename() const { return filename; }
+  const std::string& filename() const { return filename_; }
+
+private:
+  std::string filename_;
 };
 } // namespace pixedit
 

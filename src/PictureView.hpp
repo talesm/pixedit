@@ -11,6 +11,8 @@
 
 namespace pixedit {
 
+using SDL::Texture;
+
 class PictureView
 {
   SDL_Rect viewport;

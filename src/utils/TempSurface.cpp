@@ -17,22 +17,22 @@ makeTempFilename(std::string_view prefix, std::string_view suffix)
 }
 
 TempSurface::TempSurface()
-  : filename(makeTempFilename("temp_", ".png"))
+  : filename_(makeTempFilename("temp_", ".png"))
 {
 }
 
 TempSurface::TempSurface(const Surface& surface)
   : TempSurface()
-{ surface.SavePNG(filename); }
+{ surface.SavePNG(filename_); }
 
 TempSurface::TempSurface(const Surface& surface, std::string filename)
-  : filename(std::move(filename))
+  : filename_(std::move(filename))
 { surface.SavePNG(filename); }
 
 Surface
 TempSurface::recover() const
 {
-  Surface surface = SDL::LoadSurface(filename);
+  Surface surface = SDL::LoadSurface(filename_);
   if (!surface) { throw std::runtime_error{"Can not recover"}; }
   return surface;
 }
@@ -40,10 +40,10 @@ TempSurface::recover() const
 void
 TempSurface::reset()
 {
-  if (filename.empty()) return;
+  if (filename_.empty()) return;
   namespace fs = std::filesystem;
-  fs::remove(filename);
-  filename.clear();
+  fs::remove(filename_);
+  filename_.clear();
 }
 
 } // namespace pixedit

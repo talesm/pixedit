@@ -30,7 +30,7 @@ class Canvas
 
 public:
   Canvas(Surface surface = {})
-    : surface(surface)
+    : surface(std::move(surface))
   {
   }
   Canvas(const Canvas&) = delete;

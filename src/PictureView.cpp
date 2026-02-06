@@ -15,8 +15,9 @@ PictureView::updatePreview(SDL_Renderer* renderer)
   auto createPreview =
     [renderer, w = buffer->GetWidth(), h = buffer->GetHeight()] {
       auto t = SDL_CreateTexture(
-        renderer, SDL_PIXELFORMAT_ABGR32, SDL_TEXTUREACCESS_STREAMING, w, h);
-      SDL_SetTextureBlendMode(t, SDL::BLENDMODE_BLEND);
+        renderer, DEFAULT_FORMAT, SDL::TEXTUREACCESS_STREAMING, w, h);
+      SDL::SetTextureBlendMode(t, SDL::BLENDMODE_BLEND);
+      SDL::SetTextureScaleMode(t, SDL::SCALEMODE_NEAREST);
       return t;
     };
   movingMode = false;
