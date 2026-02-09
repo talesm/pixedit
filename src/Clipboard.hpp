@@ -3,16 +3,14 @@
 
 #include "Surface.hpp"
 
-namespace pixedit {
+namespace pixedit::Clipboard {
 
-/// @brief Clipboard for images
-struct Clipboard
-{
-  Surface get();
+Surface
+get();
 
-  bool set(const Surface& surface);
-};
+bool
+set(const Surface& surface);
 
-} // namespace pixedit
+} // namespace pixedit::Clipboard
 
 #endif /* PIXEDIT_SRC_CLIPBOARD_INCLUDED */

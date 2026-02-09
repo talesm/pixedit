@@ -16,18 +16,14 @@ makeTempFilename(std::string_view prefix, std::string_view suffix)
   return ss.str();
 }
 
-TempSurface::TempSurface()
-  : filename_(makeTempFilename("temp_", ".png"))
+TempSurface::TempSurface(const Surface& surface)
+  : TempSurface(surface, makeTempFilename("temp_", ".png"))
 {
 }
 
-TempSurface::TempSurface(const Surface& surface)
-  : TempSurface()
-{ surface.SavePNG(filename_); }
-
 TempSurface::TempSurface(const Surface& surface, std::string filename)
   : filename_(std::move(filename))
-{ surface.SavePNG(filename); }
+{ surface.SavePNG(filename_); }
 
 Surface
 TempSurface::recover() const

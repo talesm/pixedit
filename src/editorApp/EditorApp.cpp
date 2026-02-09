@@ -43,7 +43,6 @@ struct EditorState
   std::map<std::shared_ptr<PictureBuffer>, ViewSettings> viewSettings;
   int bufferIndex = -1;
 
-  Clipboard clipboard;
   ActionManager actions;
   ShortcutManager shortcuts;
   AuxWindowManager auxWindows;
@@ -348,13 +347,13 @@ EditorAppImpl::setupActions()
     if (!currentBuffer()) return;
     auto& buffer = *currentBuffer();
     auto selectionSurface = buffer.getSelectionSurface();
-    clipboard.set(selectionSurface ?: buffer.getSurface());
+    Clipboard::set(selectionSurface ?: buffer.getSurface());
   });
   actions.set(actions::CLIP_CUT, [&] {
     if (!currentBuffer()) return;
     auto& buffer = *currentBuffer();
     if (!buffer.hasSelection()) return;
-    clipboard.set(buffer.getSelectionSurface());
+    Clipboard::set(buffer.getSelectionSurface());
     currentView().setSelection(nullptr);
   });
   actions.set(actions::CLIP_PASTE, [&] {
@@ -363,12 +362,12 @@ EditorAppImpl::setupActions()
       pushAction(actions::CLIP_PASTE_NEW);
       return;
     }
-    auto surface = clipboard.get();
+    auto surface = Clipboard::get();
     if (!surface) return;
     currentView().setSelection(surface);
   });
   actions.set(actions::CLIP_PASTE_NEW, [&] {
-    auto surface = clipboard.get();
+    auto surface = Clipboard::get();
     if (!surface) return;
     appendFile(std::make_shared<PictureBuffer>("", surface, true));
   });

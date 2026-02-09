@@ -15,7 +15,7 @@ class TempSurface
 {
 
 public:
-  TempSurface();
+  constexpr TempSurface() = default;
   TempSurface(const Surface& surface);
   TempSurface(const Surface& surface, std::string filename);
   TempSurface(const TempSurface&) = delete;

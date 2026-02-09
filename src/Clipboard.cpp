@@ -2,20 +2,22 @@
 
 #include "utils/TempSurface.hpp"
 
-namespace pixedit {
+namespace pixedit::Clipboard {
 
 namespace defaults {
 extern const int CLIPBOARD_MANAGER;
 } // namespace defaults
 
 Surface
-Clipboard::get()
+get()
 { return SDL::GetClipboardImage(); }
 
 bool
-Clipboard::set(const Surface& surface)
+set(const Surface& surface)
 {
-  TempSurface tempSurface(surface);
+  // Avoid pollution
+  static std::string filename = makeTempFilename("clip_", ".png");
+  TempSurface tempSurface(surface, filename);
   SDL::IOStream stream{SDL::IOFromFile(tempSurface.filename(), "rb")};
   Sint64 size = stream.GetSize();
   auto pointer = new Uint8[size];
@@ -32,4 +34,4 @@ Clipboard::set(const Surface& surface)
   return true;
 }
 
-} // namespace pixedit
+} // namespace pixedit::Clipboard
