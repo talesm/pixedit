@@ -1,5 +1,7 @@
 #include "Clipboard.hpp"
 
+#include "utils/TempSurface.hpp"
+
 namespace pixedit {
 
 namespace defaults {
@@ -13,11 +15,11 @@ Clipboard::get()
 bool
 Clipboard::set(const Surface& surface)
 {
-  SDL::IOStreamRef stream{SDL::IOFromDynamicMem()};
-  surface.SavePNG(stream);
-  Sint64 size = stream.Tell();
-  auto pointer = stream.GetProperties().GetPointerProperty(
-    SDL::prop::IOStream::DYNAMIC_MEMORY_POINTER, nullptr);
+  TempSurface tempSurface(surface);
+  SDL::IOStream stream{SDL::IOFromFile(tempSurface.filename(), "rb")};
+  Sint64 size = stream.GetSize();
+  auto pointer = new Uint8[size];
+  stream.Read(SDL::TargetBytes(pointer, size));
   SDL::SourceBytes{pointer, size_t(size)};
 
   static const char* mimetypes[] = {"image/png"};
@@ -25,7 +27,7 @@ Clipboard::set(const Surface& surface)
     [pointer, size](const char*) {
       return SDL::SourceBytes{pointer, size_t(size)};
     },
-    [stream] { SDL::CloseIO(stream.get()); },
+    [pointer] { delete[] pointer; },
     mimetypes);
   return true;
 }
