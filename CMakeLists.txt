@@ -24,10 +24,6 @@ add_library(pix
         src/utils/paths.cpp
         src/utils/paths.hpp
         src/utils/pixel.hpp
-        #    src/utils/PixFormat.hpp
-        #    src/utils/PixReader.cpp
-        #    src/utils/PixReader.hpp
-        #    src/utils/PixWriter.hpp
         src/utils/rasterLine.hpp
         src/utils/rasterOval.hpp
         src/utils/rasterPoly.hpp
