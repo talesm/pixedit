@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 23)
 # pixedit
 file(GLOB PIXEDIT_SOURCES CONFIGURE_DEPENDS src/editorApp/*.cpp src/editorApp/*.hpp)
 add_executable(pixedit ${PIXEDIT_SOURCES})
-target_link_libraries(pixedit PRIVATE pix imgui_sdl3 tinyfiledialogs nlohmann_json::nlohmann_json SQLiteCpp)
+target_link_libraries(pixedit PRIVATE pix imgui_sdl3 tinyfiledialogs)
 
 # libpix
 file(GLOB PIX_SOURCES CONFIGURE_DEPENDS
@@ -35,8 +35,10 @@ add_library(pix
         src/utils/TempSurface.cpp
         src/utils/TempSurface.hpp
         ${PIX_SOURCES}
+        src/pixformat/saveSurface.cpp
+        src/pixformat/saveSurface.hpp
 )
-target_link_libraries(pix PUBLIC SDL3pp::SDL3pp)
+target_link_libraries(pix PUBLIC SDL3pp::SDL3pp nlohmann_json::nlohmann_json SQLiteCpp)
 target_include_directories(pix
         PUBLIC src/
         PRIVATE ${PROJECT_BINARY_DIR}

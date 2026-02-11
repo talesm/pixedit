@@ -3,6 +3,7 @@
 #include <SDL3_image/SDL_image.h>
 #include "PictureBuffer.hpp"
 #include "Surface.hpp"
+#include "pixformat/saveSurface.hpp"
 #include "utils/dumpSurface.hpp"
 
 namespace pixedit {
@@ -15,7 +16,12 @@ static bool
 doSaveSurface(const Surface& surface, const std::string& filename, Id saver)
 {
   if (saver == savers::PIX) {
-    throw std::runtime_error("Picture format does not support saving");
+    try {
+      savePixSurface(surface, filename);
+      return true;
+    } catch (...) {
+      return false;
+    }
   }
   if (saver == savers::SDL2_IMAGE_PNG)
     return IMG_SavePNG(surface.get(), filename.c_str());
