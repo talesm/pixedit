@@ -1,9 +1,12 @@
 {
-  "dependencies": [
-    {
-      "name": "imgui",
-      "version>=": "1.91.9"
-    },
-    "libpng"
-  ]
+  "dependencies" : [ {
+    "name" : "imgui",
+    "version>=" : "1.91.9"
+  }, "libpng", {
+    "name" : "sqlitecpp",
+    "version>=" : "3.3.3"
+  }, {
+    "name" : "nlohmann-json",
+    "version>=" : "3.12.0#2"
+  } ]
 }

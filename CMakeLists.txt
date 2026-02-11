@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 23)
 # pixedit
 file(GLOB PIXEDIT_SOURCES CONFIGURE_DEPENDS src/editorApp/*.cpp src/editorApp/*.hpp)
 add_executable(pixedit ${PIXEDIT_SOURCES})
-target_link_libraries(pixedit PRIVATE pix imgui_sdl3 tinyfiledialogs)
+target_link_libraries(pixedit PRIVATE pix imgui_sdl3 tinyfiledialogs nlohmann_json::nlohmann_json SQLiteCpp)
 
 # libpix
 file(GLOB PIX_SOURCES CONFIGURE_DEPENDS
@@ -56,8 +56,12 @@ add_executable(pixtest ${PIXTEST_SOURCES})
 target_include_directories(pixtest PUBLIC test/)
 target_link_libraries(pixtest PRIVATE pix)
 
-# ImGui
+# Deps
 find_package(imgui CONFIG REQUIRED)
+find_package(nlohmann_json CONFIG REQUIRED)
+find_package(SQLiteCpp CONFIG REQUIRED)
+
+# ImGui
 
 add_library(imgui_sdl3
         external/imgui_sdl3/imgui_impl_sdl3.cpp
