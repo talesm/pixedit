@@ -37,6 +37,8 @@ add_library(pix
         ${PIX_SOURCES}
         src/pixformat/saveSurface.cpp
         src/pixformat/saveSurface.hpp
+        src/pixformat/dbActions.hpp
+        src/pixformat/dbActions.cpp
 )
 target_link_libraries(pix PUBLIC SDL3pp::SDL3pp nlohmann_json::nlohmann_json SQLiteCpp)
 target_include_directories(pix

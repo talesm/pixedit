@@ -3,35 +3,11 @@
 //
 #include <SQLiteCpp/SQLiteCpp.h>
 #include <nlohmann/json.hpp>
+#include "dbActions.hpp"
 
 #include "Surface.hpp"
 
 namespace pixedit {
-static const char createCommand[] = R"==(
-PRAGMA foreign_keys = OFF;
-DROP TABLE IF EXISTS "Meta";
-DROP TABLE IF EXISTS "Command";
-DROP TABLE IF EXISTS "History";
-PRAGMA foreign_keys = ON;
-CREATE TABLE "Meta" (
-	"key"	TEXT UNIQUE,
-	"value"	INTEGER,
-	PRIMARY KEY("key") ON CONFLICT REPLACE
-);
-CREATE TABLE "History" (
-        "id"            INTEGER PRIMARY KEY,
-        "description"   TEXT
-);
-CREATE TABLE "Command" (
-	"id"	        INTEGER PRIMARY KEY,
-        "history_id"    INTEGER REFERENCES "History"("id") ON UPDATE CASCADE ON DELETE CASCADE,
-	"description"	TEXT NOT NULL,
-	"options"	TEXT,
-	"content"	BLOB
-);
-INSERT INTO "Meta" VALUES ('format.version', '0.0.1');
-INSERT INTO "History" VALUES (NULL, 'BASELINE');
-)==";
 
 static void
 copyTo(const Surface& surface, Uint8* target)
@@ -52,10 +28,10 @@ savePixSurface(const Surface& surface, const std::string& filename)
 {
   SQLite::Database db(filename, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
 
-  db.exec(createCommand);
-
   // Begin transaction
   SQLite::Transaction transaction(db);
+  // Clear
+  persist::createOrClear(db);
   // Prepare query
   SQLite::Statement query{db, R"===(
 INSERT INTO "Command" (description, history_id, options, content) VALUES (?, 1, ?, ?);)==="};
