@@ -95,7 +95,6 @@ add_executable(pixtest
         # test/CanvasFillRectangleScenario.cpp
         # test/CanvasPointScenario.cpp
         test/catch.cpp
-        test/catch.hpp
         test/PluginManagerTest.cpp
         # test/utils/PixReaderTest.cpp
         # test/utils/PixWritterTest.cpp
@@ -103,7 +102,7 @@ add_executable(pixtest
         test/utils/rasterPolyTest.cpp
 )
 target_include_directories(pixtest PUBLIC test/)
-target_link_libraries(pixtest PRIVATE pix)
+target_link_libraries(pixtest PRIVATE pix catch)
 
 # pix_utils
 add_library(pix_utils OBJECT
@@ -122,7 +121,7 @@ add_library(pix_utils OBJECT
         utils/TempSurface.cpp
         utils/TempSurface.hpp
 )
-target_link_libraries(pix_utils PUBLIC SDL3pp::SDL3pp)
+target_link_libraries(pix_utils PUBLIC SDL3pp::SDL3pp catch)
 target_include_directories(pix_utils PUBLIC utils/)
 
 # pix_format
@@ -140,8 +139,11 @@ find_package(imgui CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(SQLiteCpp CONFIG REQUIRED)
 
-# ImGui
+# Catch
+add_library(catch INTERFACE external/catch/catch.hpp)
+target_include_directories(catch INTERFACE external/catch/)
 
+# ImGui SDL3 binding
 add_library(imgui_sdl3
         external/imgui_sdl3/imgui_impl_sdl3.cpp
         external/imgui_sdl3/imgui_impl_sdl3.h
