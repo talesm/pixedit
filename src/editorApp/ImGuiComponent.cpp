@@ -2,11 +2,12 @@
 #include "imgui.h"
 #include "imgui_impl_sdl3.h"
 #include "imgui_impl_sdlrenderer3.h"
-#include "utils/paths.hpp"
+#include "paths.hpp"
 
 namespace pixedit {
 
-ImGuiComponent::ImGuiComponent(SDL_Window* window, SDL_Renderer* renderer):renderer(renderer)
+ImGuiComponent::ImGuiComponent(SDL_Window* window, SDL_Renderer* renderer)
+  : renderer(renderer)
 {
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();

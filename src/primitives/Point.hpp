@@ -3,7 +3,7 @@
 
 #include <SDL3/SDL.h>
 #include "Canvas.hpp"
-#include "utils/rect.hpp"
+#include "rect.hpp"
 
 namespace pixedit {
 

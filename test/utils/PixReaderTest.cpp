@@ -1,5 +1,5 @@
 #include "catch.hpp"
-#include "utils/PixReader.hpp"
+#include "PixReader.hpp"
 
 using namespace pixedit;
 

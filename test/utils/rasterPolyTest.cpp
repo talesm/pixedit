@@ -1,7 +1,7 @@
 #include "catch.hpp"
 #include <tuple>
 #include <vector>
-#include "utils/rasterPoly.hpp"
+#include "rasterPoly.hpp"
 
 using namespace pixedit;
 

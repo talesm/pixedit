@@ -3,9 +3,9 @@
 
 #include <vector>
 #include "SelectionHandTool.hpp"
+#include "cutoutSurface.hpp"
 #include "primitives/Poly.hpp"
-#include "utils/cutoutSurface.hpp"
-#include "utils/renderSelection.hpp"
+#include "renderSelection.hpp"
 
 namespace pixedit {
 

@@ -5,7 +5,7 @@
 #include <SDL3_image/SDL_image.h>
 #include "PictureBuffer.hpp"
 #include "Surface.hpp"
-#include "utils/replayPicture.hpp"
+#include "replayPicture.hpp"
 
 namespace pixedit {
 

@@ -3,7 +3,7 @@
 
 #include <vector>
 #include "PictureView.hpp"
-#include "utils/pixel.hpp"
+#include "pixel.hpp"
 
 namespace pixedit {
 

@@ -1,8 +1,8 @@
 #include "PictureView.hpp"
 #include <cmath>
+#include "pixel.hpp"
+#include "rect.hpp"
 #include "tools.hpp"
-#include "utils/pixel.hpp"
-#include "utils/rect.hpp"
 
 namespace pixedit {
 
@@ -106,7 +106,9 @@ renderCheckerBoard(SDL_Renderer* renderer,
 
 float
 PictureView::effectiveScale() const
-{ return std::clamp(scale, 1 / 256.f, 256.f); }
+{
+  return std::clamp(scale, 1 / 256.f, 256.f);
+}
 
 SDL_FPoint
 PictureView::effectiveSize() const

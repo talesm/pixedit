@@ -1,7 +1,7 @@
 #include "PictureBuffer.hpp"
+#include "Color.hpp"
 #include "loaders.hpp"
 #include "savers.hpp"
-#include "utils/Color.hpp"
 
 namespace pixedit {
 
@@ -31,7 +31,9 @@ PictureFile::save(const PictureBuffer& buffer)
 
 std::unique_ptr<PictureBuffer>
 PictureBuffer::load(const std::string& filename)
-{ return loadBuffer(filename); }
+{
+  return loadBuffer(filename);
+}
 
 bool
 PictureBuffer::save(bool force)
@@ -55,7 +57,9 @@ PictureBuffer::saveAs(const std::string& filename)
 }
 bool
 PictureBuffer::saveCopy(const std::string& filename)
-{ return saveBuffer(*this, filename); }
+{
+  return saveBuffer(*this, filename);
+}
 
 void
 PictureBuffer::makeSnapshot()

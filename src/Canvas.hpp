@@ -3,8 +3,8 @@
 
 #include <SDL3/SDL.h>
 #include "Brush.hpp"
+#include "Color.hpp"
 #include "Surface.hpp"
-#include "utils/Color.hpp"
 
 namespace pixedit {
 
@@ -42,10 +42,14 @@ public:
   constexpr RawColor getRawColorB() const { return brush.colorB; }
 
   [[nodiscard]] Color getColorA() const
-  { return rawToComponent(brush.colorA, surface); }
+  {
+    return rawToComponent(brush.colorA, surface);
+  }
 
   [[nodiscard]] Color getColorB() const
-  { return rawToComponent(brush.colorB, surface); }
+  {
+    return rawToComponent(brush.colorB, surface);
+  }
 
   constexpr const Brush& getBrush() const { return brush; }
 

@@ -3,8 +3,8 @@
 
 #include "Brush.hpp"
 #include "PictureView.hpp"
+#include "rect.hpp"
 #include "tools.hpp"
-#include "utils/rect.hpp"
 
 namespace pixedit {
 

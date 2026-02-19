@@ -1,6 +1,6 @@
 #include "Clipboard.hpp"
 
-#include "utils/TempSurface.hpp"
+#include "TempSurface.hpp"
 
 namespace pixedit::Clipboard {
 
@@ -10,7 +10,9 @@ extern const int CLIPBOARD_MANAGER;
 
 Surface
 get()
-{ return SDL::GetClipboardImage(); }
+{
+  return SDL::GetClipboardImage();
+}
 
 bool
 set(const Surface& surface)

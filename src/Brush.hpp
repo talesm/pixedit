@@ -1,9 +1,9 @@
 #ifndef PIXEDIT_SRC_BRUSH_INCLUDED
 #define PIXEDIT_SRC_BRUSH_INCLUDED
 
+#include "Color.hpp"
 #include "Pattern.hpp"
 #include "Pen.hpp"
-#include "utils/Color.hpp"
 
 namespace pixedit {
 

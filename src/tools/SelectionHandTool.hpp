@@ -4,7 +4,7 @@
 #include <array>
 #include <cmath>
 
-#include "utils/renderSelection.hpp"
+#include "renderSelection.hpp"
 
 namespace pixedit {
 

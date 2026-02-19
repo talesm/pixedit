@@ -8,16 +8,7 @@ file(GLOB PIXEDIT_SOURCES CONFIGURE_DEPENDS src/editorApp/*.cpp src/editorApp/*.
 add_executable(pixedit ${PIXEDIT_SOURCES})
 target_link_libraries(pixedit PRIVATE pix imgui_sdl3 tinyfiledialogs)
 
-# libpix
-file(GLOB PIX_SOURCES CONFIGURE_DEPENDS
-        src/*.cpp
-        src/*.hpp
-        src/clipboards/*.cpp
-        src/clipboards/*.hpp
-        src/primitives/*.hpp
-        src/tools/*.hpp
-)
-add_library(pix
+add_library(pix_utils OBJECT
         src/utils/Color.hpp
         src/utils/cutoutSurface.hpp
         src/utils/dumpSurface.hpp
@@ -34,13 +25,27 @@ add_library(pix
         src/utils/safeGetFormat.hpp
         src/utils/TempSurface.cpp
         src/utils/TempSurface.hpp
+)
+target_link_libraries(pix_utils PUBLIC SDL3pp::SDL3pp)
+target_include_directories(pix_utils PUBLIC src/utils/)
+
+# libpix
+file(GLOB PIX_SOURCES CONFIGURE_DEPENDS
+        src/*.cpp
+        src/*.hpp
+        src/clipboards/*.cpp
+        src/clipboards/*.hpp
+        src/primitives/*.hpp
+        src/tools/*.hpp
+)
+add_library(pix
         ${PIX_SOURCES}
         src/pixformat/saveSurface.cpp
         src/pixformat/saveSurface.hpp
         src/pixformat/dbActions.hpp
         src/pixformat/dbActions.cpp
 )
-target_link_libraries(pix PUBLIC SDL3pp::SDL3pp nlohmann_json::nlohmann_json SQLiteCpp)
+target_link_libraries(pix PUBLIC SDL3pp::SDL3pp nlohmann_json::nlohmann_json SQLiteCpp pix_utils)
 target_include_directories(pix
         PUBLIC src/
         PRIVATE ${PROJECT_BINARY_DIR}

@@ -4,7 +4,7 @@
 #include "Canvas.hpp"
 #include "Line.hpp"
 #include "Lines.hpp"
-#include "utils/rasterPoly.hpp"
+#include "rasterPoly.hpp"
 
 namespace pixedit {
 
@@ -30,9 +30,8 @@ inline Canvas&
 operator|(Canvas& c, FillPoly lns)
 {
   if (lns.vertices.size() < 3) { return c | static_cast<Lines>(lns); }
-  rasterPoly(lns.vertices, [&](int x, int y, int len) {
-    c | HorizontalLine{x, y, len};
-  });
+  rasterPoly(lns.vertices,
+             [&](int x, int y, int len) { c | HorizontalLine{x, y, len}; });
   return c;
 }
 

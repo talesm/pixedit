@@ -2,7 +2,7 @@
 #define PIXEDIT_SRC_PRIMITIVES_BLIT_INCLUDED
 
 #include "Surface.hpp"
-#include "utils/rect.hpp"
+#include "rect.hpp"
 
 namespace pixedit {
 

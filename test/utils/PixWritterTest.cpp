@@ -1,5 +1,5 @@
 #include "catch.hpp"
-#include "utils/PixWriter.hpp"
+#include "PixWriter.hpp"
 
 using namespace pixedit;
 

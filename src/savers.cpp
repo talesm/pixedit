@@ -3,14 +3,16 @@
 #include <SDL3_image/SDL_image.h>
 #include "PictureBuffer.hpp"
 #include "Surface.hpp"
+#include "dumpSurface.hpp"
 #include "pixformat/saveSurface.hpp"
-#include "utils/dumpSurface.hpp"
 
 namespace pixedit {
 
 bool
 saveBuffer(const PictureBuffer& buffer, const std::string& filename, Id saver)
-{ return saveSurface(buffer.getSurface(), filename, saver); }
+{
+  return saveSurface(buffer.getSurface(), filename, saver);
+}
 
 static bool
 doSaveSurface(const Surface& surface, const std::string& filename, Id saver)

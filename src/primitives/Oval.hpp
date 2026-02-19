@@ -4,7 +4,7 @@
 #include "Canvas.hpp"
 #include "Line.hpp"
 #include "Point.hpp"
-#include "utils/rasterOval.hpp"
+#include "rasterOval.hpp"
 
 namespace pixedit {
 

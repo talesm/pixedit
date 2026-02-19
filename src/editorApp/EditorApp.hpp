@@ -2,7 +2,7 @@
 #define PIXEDIT_SRC_EDITOR_APP_EDITOR_APP_INCLUDED
 
 #include <string>
-#include "utils/rect.hpp"
+#include "rect.hpp"
 
 namespace pixedit {
 

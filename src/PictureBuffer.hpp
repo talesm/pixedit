@@ -8,8 +8,8 @@
 #include <SDL3/SDL.h>
 #include "PictureFile.hpp"
 #include "Surface.hpp"
-#include "utils/TempSurface.hpp"
-#include "utils/rect.hpp"
+#include "TempSurface.hpp"
+#include "rect.hpp"
 
 namespace pixedit {
 /**
@@ -77,7 +77,9 @@ public:
   constexpr void setSelectionRect(SDL_Rect rect) { selectionRect = rect; }
 
   constexpr const Surface& getSelectionSurface() const
-  { return selectionSurface; }
+  {
+    return selectionSurface;
+  }
   constexpr const Surface& getSelectionMask() const { return selectionMask; }
 
   bool hasSelection() const { return selectionSurface != nullptr; }
