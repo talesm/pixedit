@@ -4,10 +4,108 @@ project(pixeditor VERSION 0.1)
 set(CMAKE_CXX_STANDARD 23)
 
 # pixedit
-file(GLOB PIXEDIT_SOURCES CONFIGURE_DEPENDS editorApp/*.cpp editorApp/*.hpp)
-add_executable(pixedit ${PIXEDIT_SOURCES})
+add_executable(pixedit 
+        editorApp/EditorApp.cpp
+        editorApp/EditorApp.hpp
+        editorApp/FileDialogTinyfd.cpp
+        editorApp/FileDialogTinyfd.hpp
+        editorApp/ImGuiComponent.cpp
+        editorApp/ImGuiComponent.hpp
+        editorApp/main.cpp
+        editorApp/shortcutPlugin.cpp
+        editorApp/shortcutPlugin.hpp
+        editorApp/ViewSettings.hpp
+        editorApp/imgui/AboutDialog.hpp
+        editorApp/imgui/AuxWindowManager.hpp
+        editorApp/imgui/BufferSelectionWindow.hpp
+        editorApp/imgui/ConfirmExitDialog.hpp
+        editorApp/imgui/MainMenu.hpp
+        editorApp/imgui/NewFileDialog.hpp
+        editorApp/imgui/PictureOptionsWindow.hpp
+        editorApp/imgui/PictureWindow.hpp
+)
 target_link_libraries(pixedit PRIVATE pix imgui_sdl3 tinyfiledialogs)
 
+# libpix
+add_library(pix
+        src/Action.cpp
+        src/Action.hpp
+        src/Brush.hpp
+        src/Canvas.cpp
+        src/Canvas.hpp
+        src/Clipboard.cpp
+        src/Clipboard.hpp
+        src/config.h.in
+        src/defaults.cpp
+        src/defaults.hpp
+        src/Id.cpp
+        src/Id.hpp
+        src/loaders.cpp
+        src/loaders.hpp
+        src/MouseState.hpp
+        src/Pattern.hpp
+        src/Pen.hpp
+        src/PictureBuffer.cpp
+        src/PictureBuffer.hpp
+        src/PictureFile.hpp
+        src/PictureManager.cpp
+        src/PictureManager.hpp
+        src/PictureView.cpp
+        src/PictureView.hpp
+        src/PluginManager.cpp
+        src/PluginManager.hpp
+        src/replayPicture.cpp
+        src/replayPicture.hpp
+        src/savers.cpp
+        src/savers.hpp
+        src/ShortcutManager.hpp
+        src/ToolDescription.hpp
+        src/tools.cpp
+        src/tools.hpp
+        src/primitives/Blit.hpp
+        src/primitives/Line.hpp
+        src/primitives/Lines.hpp
+        src/primitives/Oval.hpp
+        src/primitives/Point.hpp
+        src/primitives/Poly.hpp
+        src/primitives/Rect.hpp
+        src/tools/FloodFillTool.hpp
+        src/tools/FreeHandTool.hpp
+        src/tools/LinesTool.hpp
+        src/tools/OvalTool.hpp
+        src/tools/PolyTool.hpp
+        src/tools/RectTool.hpp
+        src/tools/SelectionFreeTool.hpp
+        src/tools/SelectionHandTool.hpp
+        src/tools/SelectionRectTool.hpp
+        src/tools/ZoomTool.hpp
+)
+target_link_libraries(pix PUBLIC SDL3pp::SDL3pp pix_utils pix_format)
+target_include_directories(pix
+        PUBLIC src/
+        PRIVATE ${PROJECT_BINARY_DIR}
+)
+
+# Configuration
+set(PIXEDIT_INITIAL_FILENAME "" CACHE FILEPATH "The initial filename, use \"\" to empty file")
+configure_file(src/config.h.in pixedit_config.h)
+
+# pixtest
+add_executable(pixtest 
+        # test/CanvasFillRectangleScenario.cpp
+        # test/CanvasPointScenario.cpp
+        test/catch.cpp
+        test/catch.hpp
+        test/PluginManagerTest.cpp
+        # test/utils/PixReaderTest.cpp
+        # test/utils/PixWritterTest.cpp
+        test/utils/rasterLineTest.cpp
+        test/utils/rasterPolyTest.cpp
+)
+target_include_directories(pixtest PUBLIC test/)
+target_link_libraries(pixtest PRIVATE pix)
+
+# pix_utils
 add_library(pix_utils OBJECT
         utils/Color.hpp
         utils/cutoutSurface.hpp
@@ -27,6 +125,7 @@ add_library(pix_utils OBJECT
 target_link_libraries(pix_utils PUBLIC SDL3pp::SDL3pp)
 target_include_directories(pix_utils PUBLIC utils/)
 
+# pix_format
 add_library(pix_format OBJECT
         pixformat/saveSurface.cpp
         pixformat/saveSurface.hpp
@@ -35,32 +134,6 @@ add_library(pix_format OBJECT
 )
 target_link_libraries(pix_format PUBLIC SDL3pp::SDL3pp nlohmann_json::nlohmann_json SQLiteCpp pix_utils)
 target_include_directories(pix_format PUBLIC pixformat/)
-
-# libpix
-file(GLOB PIX_SOURCES CONFIGURE_DEPENDS
-        src/*.cpp
-        src/*.hpp
-        src/primitives/*.hpp
-        src/tools/*.hpp
-)
-add_library(pix
-        ${PIX_SOURCES}
-)
-target_link_libraries(pix PUBLIC SDL3pp::SDL3pp pix_utils pix_format)
-target_include_directories(pix
-        PUBLIC src/
-        PRIVATE ${PROJECT_BINARY_DIR}
-)
-
-# Configuration
-set(PIXEDIT_INITIAL_FILENAME "" CACHE FILEPATH "The initial filename, use \"\" to empty file")
-configure_file(src/config.h.in pixedit_config.h)
-
-# pixtest
-file(GLOB_RECURSE PIXTEST_SOURCES CONFIGURE_DEPENDS test/*.cpp)
-add_executable(pixtest ${PIXTEST_SOURCES})
-target_include_directories(pixtest PUBLIC test/)
-target_link_libraries(pixtest PRIVATE pix)
 
 # Deps
 find_package(imgui CONFIG REQUIRED)
