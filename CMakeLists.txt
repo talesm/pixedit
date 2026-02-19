@@ -29,23 +29,26 @@ add_library(pix_utils OBJECT
 target_link_libraries(pix_utils PUBLIC SDL3pp::SDL3pp)
 target_include_directories(pix_utils PUBLIC src/utils/)
 
-# libpix
-file(GLOB PIX_SOURCES CONFIGURE_DEPENDS
-        src/*.cpp
-        src/*.hpp
-        src/clipboards/*.cpp
-        src/clipboards/*.hpp
-        src/primitives/*.hpp
-        src/tools/*.hpp
-)
-add_library(pix
-        ${PIX_SOURCES}
+add_library(pix_format OBJECT
         src/pixformat/saveSurface.cpp
         src/pixformat/saveSurface.hpp
         src/pixformat/dbActions.hpp
         src/pixformat/dbActions.cpp
 )
-target_link_libraries(pix PUBLIC SDL3pp::SDL3pp nlohmann_json::nlohmann_json SQLiteCpp pix_utils)
+target_link_libraries(pix_format PUBLIC SDL3pp::SDL3pp pix_utils)
+target_include_directories(pix_format PUBLIC src/pixformat/)
+
+# libpix
+file(GLOB PIX_SOURCES CONFIGURE_DEPENDS
+        src/*.cpp
+        src/*.hpp
+        src/primitives/*.hpp
+        src/tools/*.hpp
+)
+add_library(pix
+        ${PIX_SOURCES}
+)
+target_link_libraries(pix PUBLIC SDL3pp::SDL3pp nlohmann_json::nlohmann_json SQLiteCpp pix_utils pix_format)
 target_include_directories(pix
         PUBLIC src/
         PRIVATE ${PROJECT_BINARY_DIR}

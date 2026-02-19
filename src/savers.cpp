@@ -4,7 +4,7 @@
 #include "PictureBuffer.hpp"
 #include "Surface.hpp"
 #include "dumpSurface.hpp"
-#include "pixformat/saveSurface.hpp"
+#include "saveSurface.hpp"
 
 namespace pixedit {
 
