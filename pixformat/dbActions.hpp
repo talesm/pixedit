@@ -2,8 +2,8 @@
 // Created by talesm on 13/02/2026.
 //
 
-#ifndef PIXEDITOR_DBACTIONS_HPP
-#define PIXEDITOR_DBACTIONS_HPP
+#ifndef PIXEDIT_PIXFORMAT_INCLUDE_DB_ACTIONS_INCLUDED
+#define PIXEDIT_PIXFORMAT_INCLUDE_DB_ACTIONS_INCLUDED
 
 #include <SQLiteCpp/SQLiteCpp.h>
 #include <nlohmann/json.hpp>
@@ -33,4 +33,4 @@ createOrClear(SQLite::Database& db, const Surface& surface);
 
 }
 
-#endif // PIXEDITOR_DBACTIONS_HPP
+#endif /* PIXEDIT_PIXFORMAT_INCLUDE_DB_ACTIONS_INCLUDED */

@@ -9,34 +9,32 @@ add_executable(pixedit ${PIXEDIT_SOURCES})
 target_link_libraries(pixedit PRIVATE pix imgui_sdl3 tinyfiledialogs)
 
 add_library(pix_utils OBJECT
-        src/utils/Color.hpp
-        src/utils/cutoutSurface.hpp
-        src/utils/dumpSurface.hpp
-        src/utils/paths.cpp
-        src/utils/paths.hpp
-        src/utils/pixel.hpp
-        src/utils/rasterLine.hpp
-        src/utils/rasterOval.hpp
-        src/utils/rasterPoly.hpp
-        src/utils/rect.hpp
-        src/utils/renderSelection.hpp
-        src/utils/replayPicture.cpp
-        src/utils/replayPicture.hpp
-        src/utils/safeGetFormat.hpp
-        src/utils/TempSurface.cpp
-        src/utils/TempSurface.hpp
+        utils/Color.hpp
+        utils/cutoutSurface.hpp
+        utils/dumpSurface.hpp
+        utils/paths.cpp
+        utils/paths.hpp
+        utils/pixel.hpp
+        utils/rasterLine.hpp
+        utils/rasterOval.hpp
+        utils/rasterPoly.hpp
+        utils/rect.hpp
+        utils/renderSelection.hpp
+        utils/safeGetFormat.hpp
+        utils/TempSurface.cpp
+        utils/TempSurface.hpp
 )
 target_link_libraries(pix_utils PUBLIC SDL3pp::SDL3pp)
-target_include_directories(pix_utils PUBLIC src/utils/)
+target_include_directories(pix_utils PUBLIC utils/)
 
 add_library(pix_format OBJECT
-        src/pixformat/saveSurface.cpp
-        src/pixformat/saveSurface.hpp
-        src/pixformat/dbActions.hpp
-        src/pixformat/dbActions.cpp
+        pixformat/saveSurface.cpp
+        pixformat/saveSurface.hpp
+        pixformat/dbActions.hpp
+        pixformat/dbActions.cpp
 )
-target_link_libraries(pix_format PUBLIC SDL3pp::SDL3pp pix_utils)
-target_include_directories(pix_format PUBLIC src/pixformat/)
+target_link_libraries(pix_format PUBLIC SDL3pp::SDL3pp nlohmann_json::nlohmann_json SQLiteCpp pix_utils)
+target_include_directories(pix_format PUBLIC pixformat/)
 
 # libpix
 file(GLOB PIX_SOURCES CONFIGURE_DEPENDS
@@ -48,7 +46,7 @@ file(GLOB PIX_SOURCES CONFIGURE_DEPENDS
 add_library(pix
         ${PIX_SOURCES}
 )
-target_link_libraries(pix PUBLIC SDL3pp::SDL3pp nlohmann_json::nlohmann_json SQLiteCpp pix_utils pix_format)
+target_link_libraries(pix PUBLIC SDL3pp::SDL3pp pix_utils pix_format)
 target_include_directories(pix
         PUBLIC src/
         PRIVATE ${PROJECT_BINARY_DIR}
