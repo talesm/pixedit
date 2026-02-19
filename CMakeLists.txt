@@ -4,7 +4,7 @@ project(pixeditor VERSION 0.1)
 set(CMAKE_CXX_STANDARD 23)
 
 # pixedit
-file(GLOB PIXEDIT_SOURCES CONFIGURE_DEPENDS src/editorApp/*.cpp src/editorApp/*.hpp)
+file(GLOB PIXEDIT_SOURCES CONFIGURE_DEPENDS editorApp/*.cpp editorApp/*.hpp)
 add_executable(pixedit ${PIXEDIT_SOURCES})
 target_link_libraries(pixedit PRIVATE pix imgui_sdl3 tinyfiledialogs)
 
