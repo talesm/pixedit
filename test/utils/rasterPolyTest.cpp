@@ -1,15 +1,15 @@
-#include "catch.hpp"
+#include "rasterPoly.hpp"
+#include <doctest/doctest.h>
 #include <tuple>
 #include <vector>
-#include "rasterPoly.hpp"
 
 using namespace pixedit;
 
-TEST_CASE("Raster Poly", "[utils]")
+TEST_CASE("Raster Poly")
 {
   using HLine = std::tuple<int, int, int>;
   std::vector<HLine> hLines;
-  SECTION("Triangle (1,0)(0,1)(1,2)")
+  SUBCASE("Triangle (1,0)(0,1)(1,2)")
   {
     int points[] = {1, 0, 0, 1, 2, 1};
     rasterPoly(points,

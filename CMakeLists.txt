@@ -90,20 +90,6 @@ target_include_directories(pix
 set(PIXEDIT_INITIAL_FILENAME "" CACHE FILEPATH "The initial filename, use \"\" to empty file")
 configure_file(src/config.h.in pixedit_config.h)
 
-# pixtest
-add_executable(pix_test
-        # test/CanvasFillRectangleScenario.cpp
-        # test/CanvasPointScenario.cpp
-        test/catch.cpp
-        test/PluginManagerTest.cpp
-        # test/utils/PixReaderTest.cpp
-        # test/utils/PixWritterTest.cpp
-        test/utils/rasterLineTest.cpp
-        test/utils/rasterPolyTest.cpp
-)
-target_include_directories(pix_test PUBLIC test/)
-target_link_libraries(pix_test PRIVATE pix catch)
-
 # pix_utils
 add_library(pix_utils OBJECT
         utils/Color.hpp
@@ -121,8 +107,9 @@ add_library(pix_utils OBJECT
         utils/TempSurface.cpp
         utils/TempSurface.hpp
 )
-target_link_libraries(pix_utils PUBLIC SDL3pp::SDL3pp catch)
+target_link_libraries(pix_utils PUBLIC SDL3pp::SDL3pp)
 target_include_directories(pix_utils PUBLIC utils/)
+target_compile_definitions(pix_utils PUBLIC DOCTEST_CONFIG_DISABLE)
 
 # pix_format
 add_library(pix_format OBJECT
@@ -136,14 +123,34 @@ add_library(pix_format OBJECT
 target_link_libraries(pix_format PUBLIC SDL3pp::SDL3pp nlohmann_json::nlohmann_json SQLiteCpp pix_utils)
 target_include_directories(pix_format PUBLIC pixformat/)
 
+# pixtest
+get_property(PIX_LIB_SOURCES TARGET pix PROPERTY SOURCES)
+get_property(PIXUTILS_LIB_SOURCES TARGET pix_utils PROPERTY SOURCES)
+get_property(PIXFORMAT_LIB_SOURCES TARGET pix_format PROPERTY SOURCES)
+add_executable(pix_test
+        ${PIX_LIB_SOURCES}
+        ${PIXUTILS_LIB_SOURCES}
+        ${PIXFORMAT_LIB_SOURCES}
+        # test/CanvasFillRectangleScenario.cpp
+        # test/CanvasPointScenario.cpp
+        test/doctest.cpp
+        test/PluginManagerTest.cpp
+        # test/utils/PixReaderTest.cpp
+        # test/utils/PixWritterTest.cpp
+        test/utils/rasterLineTest.cpp
+        test/utils/rasterPolyTest.cpp
+)
+target_include_directories(pix_test PRIVATE test/ ${PROJECT_BINARY_DIR} src/ utils/ pixformat/)
+target_link_libraries(pix_test PRIVATE SDL3pp::SDL3pp nlohmann_json::nlohmann_json SQLiteCpp)
+
 # Deps
 find_package(imgui CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(SQLiteCpp CONFIG REQUIRED)
 
-# Catch
-add_library(catch INTERFACE external/catch/catch.hpp)
-target_include_directories(catch INTERFACE external/catch/)
+# Doctest
+find_package(doctest CONFIG REQUIRED)
+target_link_libraries(pix_utils PUBLIC doctest::doctest)
 
 # ImGui SDL3 binding
 add_library(imgui_sdl3

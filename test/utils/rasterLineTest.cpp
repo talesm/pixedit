@@ -1,72 +1,72 @@
-#include "catch.hpp"
+#include "rasterLine.hpp"
+#include <doctest/doctest.h>
 #include <tuple>
 #include <vector>
-#include "rasterLine.hpp"
 
 using namespace pixedit;
 
 using Point = std::tuple<int, int>;
 using PointVector = std::vector<Point>;
 
-TEST_CASE("Test rasterLine", "[raster][line]")
+TEST_CASE("Test rasterLine")
 {
   PointVector points;
   auto callback = [&points](int x, int y) { points.emplace_back(x, y); };
-  SECTION("Begin == End")
+  SUBCASE("Begin == End")
   {
     rasterLineOpen(10, 10, 10, 10, callback);
     REQUIRE(points.empty());
   }
-  SECTION("End is 3px to the right")
+  SUBCASE("End is 3px to the right")
   {
     rasterLineOpen(10, 10, 13, 10, callback);
     REQUIRE(points.at(0) == Point{10, 10});
     REQUIRE(points.at(1) == Point{11, 10});
     REQUIRE(points.at(2) == Point{12, 10});
   }
-  SECTION("End is 3px to the left")
+  SUBCASE("End is 3px to the left")
   {
     rasterLineOpen(10, 10, 7, 10, callback);
     REQUIRE(points.at(0) == Point{10, 10});
     REQUIRE(points.at(1) == Point{9, 10});
     REQUIRE(points.at(2) == Point{8, 10});
   }
-  SECTION("End is 3px down")
+  SUBCASE("End is 3px down")
   {
     rasterLineOpen(10, 10, 10, 13, callback);
     REQUIRE(points.at(0) == Point{10, 10});
     REQUIRE(points.at(1) == Point{10, 11});
     REQUIRE(points.at(2) == Point{10, 12});
   }
-  SECTION("End is 3px up")
+  SUBCASE("End is 3px up")
   {
     rasterLineOpen(10, 10, 10, 7, callback);
     REQUIRE(points.at(0) == Point{10, 10});
     REQUIRE(points.at(1) == Point{10, 9});
     REQUIRE(points.at(2) == Point{10, 8});
   }
-  SECTION("End is 3px down right")
+  SUBCASE("End is 3px down right")
   {
     rasterLineOpen(10, 10, 13, 13, callback);
     REQUIRE(points.at(0) == Point{10, 10});
     REQUIRE(points.at(1) == Point{11, 11});
     REQUIRE(points.at(2) == Point{12, 12});
   }
-  SECTION("End is 3px down left")
+  SUBCASE("End is 3px down left")
   {
     rasterLineOpen(10, 10, 7, 13, callback);
     REQUIRE(points.at(0) == Point{10, 10});
     REQUIRE(points.at(1) == Point{9, 11});
     REQUIRE(points.at(2) == Point{8, 12});
   }
-  SECTION("End is 3px up right")
+  SUBCASE("End is 3px up right")
   {
     rasterLineOpen(10, 10, 13, 7, callback);
     REQUIRE(points.at(0) == Point{10, 10});
     REQUIRE(points.at(1) == Point{11, 9});
     REQUIRE(points.at(2) == Point{12, 8});
   }
-  SECTION("End is 3px up left")
+  SUBCASE("End is 3px up left")
   {
     rasterLineOpen(10, 10, 7, 7, callback);
     REQUIRE(points.at(0) == Point{10, 10});

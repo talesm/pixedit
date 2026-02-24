@@ -1,5 +1,5 @@
-#include "catch.hpp"
 #include "PluginManager.hpp"
+#include <doctest/doctest.h>
 
 using namespace pixedit;
 

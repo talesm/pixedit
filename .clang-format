@@ -2,7 +2,7 @@ BasedOnStyle: Mozilla
 BinPackParameters: false
 Cpp11BracedListStyle: true
 IncludeCategories:
-  - Regex: '^("|<)catch\.hpp'
+  - Regex: '^<doctest/doctest.h>'
     Priority: 0
   - Regex: '^(<[a-z0-9_]*>)'
     Priority: 1

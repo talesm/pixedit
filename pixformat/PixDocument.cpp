@@ -3,7 +3,7 @@
 //
 
 #include "PixDocument.hpp"
-#include "catch.hpp"
+#include <doctest/doctest.h>
 #include <SQLiteCpp/SQLiteCpp.h>
 #include "dbActions.hpp"
 
