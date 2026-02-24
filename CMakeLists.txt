@@ -4,7 +4,7 @@ project(pixeditor VERSION 0.1)
 set(CMAKE_CXX_STANDARD 23)
 
 # pixedit
-add_executable(pixedit 
+add_executable(pixedit
         editorApp/EditorApp.cpp
         editorApp/EditorApp.hpp
         editorApp/FileDialogTinyfd.cpp
@@ -91,7 +91,7 @@ set(PIXEDIT_INITIAL_FILENAME "" CACHE FILEPATH "The initial filename, use \"\" t
 configure_file(src/config.h.in pixedit_config.h)
 
 # pixtest
-add_executable(pixtest 
+add_executable(pix_test
         # test/CanvasFillRectangleScenario.cpp
         # test/CanvasPointScenario.cpp
         test/catch.cpp
@@ -101,8 +101,8 @@ add_executable(pixtest
         test/utils/rasterLineTest.cpp
         test/utils/rasterPolyTest.cpp
 )
-target_include_directories(pixtest PUBLIC test/)
-target_link_libraries(pixtest PRIVATE pix catch)
+target_include_directories(pix_test PUBLIC test/)
+target_link_libraries(pix_test PRIVATE pix catch)
 
 # pix_utils
 add_library(pix_utils OBJECT
@@ -130,6 +130,8 @@ add_library(pix_format OBJECT
         pixformat/saveSurface.hpp
         pixformat/dbActions.hpp
         pixformat/dbActions.cpp
+        pixformat/PixDocument.cpp
+        pixformat/PixDocument.hpp
 )
 target_link_libraries(pix_format PUBLIC SDL3pp::SDL3pp nlohmann_json::nlohmann_json SQLiteCpp pix_utils)
 target_include_directories(pix_format PUBLIC pixformat/)
@@ -175,3 +177,7 @@ FetchContent_MakeAvailable(SDL3ppExternal)
 target_link_libraries(pix
         PUBLIC SDL3pp::SDL3pp
 )
+
+enable_testing()
+
+add_test(NAME unit_tests COMMAND pix_test)
