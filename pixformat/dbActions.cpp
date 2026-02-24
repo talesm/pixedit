@@ -72,7 +72,7 @@ insertBuffer(SQLite::Database& db, std::span<Uint8> buffer)
   return query.getColumn(0).getInt64();
 }
 
-static Sint64
+Sint64
 insertResource(SQLite::Database& db, const Surface& surface)
 {
   // Copy data to buffer
@@ -90,13 +90,28 @@ insertResource(SQLite::Database& db, const Surface& surface)
 
   const auto bufferId = insertBuffer(db, std::span{(content.get()), sz});
 
-  SQLite::Statement query{
-    db,
-    R"===(INSERT INTO "Resource" (buffer_id, options) VALUES (?, ?) RETURNING id;)==="};
-
   // Store options
   json options{
     {"width", width}, {"height", height}, {"depth", depth}}; // Prepare query
+  return insertResource(db, options, bufferId);
+}
+
+Sint64
+insertResource(SQLite::Database& db,
+               const json& options,
+               std::span<Uint8> content)
+{
+  const auto bufferId = insertBuffer(db, content);
+  return insertResource(db, options, bufferId);
+}
+
+Sint64
+insertResource(SQLite::Database& db, const json& options, Sint64 bufferId)
+{
+  if (bufferId == 0) return insertResource(db, options);
+  SQLite::Statement query{
+    db,
+    R"===(INSERT INTO "Resource" (buffer_id, options) VALUES (?, ?) RETURNING id;)==="};
 
   // Bind values
   query.bind(1, bufferId);
@@ -105,6 +120,46 @@ insertResource(SQLite::Database& db, const Surface& surface)
   // Exec
   if (!query.executeStep()) throw std::runtime_error{"Error creating resource"};
   return query.getColumn(0).getInt64();
+}
+
+Sint64
+insertResource(SQLite::Database& db, const json& options)
+{
+  SQLite::Statement query{
+    db, R"===(INSERT INTO "Resource" (options) VALUES (?) RETURNING id;)==="};
+
+  // Bind values
+  query.bind(1, options.dump());
+
+  // Exec
+  if (!query.executeStep()) throw std::runtime_error{"Error creating resource"};
+  return query.getColumn(0).getInt64();
+}
+
+std::string
+ctos(SDL::Color color)
+{
+  return std::format("{:02x}{:02x}{:02x}{:02x}",
+                     int(color.r),
+                     int(color.g),
+                     int(color.b),
+                     int(color.a));
+}
+
+void
+createOrClear(SQLite::Database& db, const SDL::Point& size, SDL::Color color)
+{
+  createOrClear(db);
+  // Store options
+  json options{
+    {"width", size.x},
+    {"height", size.y},
+    {"depth", 4},
+    {"color", ctos(color)},
+  }; // Prepare query
+  const auto resourceId = insertResource(db, options);
+  insertAction(db, resourceId, "image");
+  db.exec(R"===(INSERT INTO "Meta" VALUES ('current.image', 1);)===");
 }
 
 static Sint64
@@ -118,7 +173,7 @@ insertPath(SQLite::Database& db, const std::string& kind)
   return query.getColumn(0).getInt64();
 }
 
-static Sint64
+Sint64
 insertAction(SQLite::Database& db, Sint64 resourceId, const std::string& kind)
 {
   const auto pathId = insertPath(db, kind);

@@ -23,6 +23,16 @@ void
 createOrClear(SQLite::Database& db);
 
 /**
+ * Create or clear database tables.
+ *
+ * @param db the database to apply to.
+ */
+void
+createOrClear(SQLite::Database& db,
+              const SDL::Point& size,
+              SDL::Color color = {});
+
+/**
  * Create single frame single layer picture.
  *
  * @param db the database.
@@ -30,6 +40,26 @@ createOrClear(SQLite::Database& db);
  */
 void
 createOrClear(SQLite::Database& db, const Surface& surface);
+
+Sint64
+insertResource(SQLite::Database& db, const Surface& surface);
+
+Sint64
+insertResource(SQLite::Database& db,
+               const json& options,
+               std::span<Uint8> content);
+
+Sint64
+insertResource(SQLite::Database& db, const json& options, Sint64 bufferId);
+
+Sint64
+insertResource(SQLite::Database& db, const json& options);
+
+Sint64
+insertAction(SQLite::Database& db, Sint64 resourceId, const std::string& kind);
+
+std::string
+ctos(SDL::Color color);
 
 }
 

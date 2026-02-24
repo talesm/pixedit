@@ -53,7 +53,7 @@ void
 PixDocument::clearContents(const SDL::Point& size)
 {
   SQLite::Transaction transaction(pimpl->db);
-  persist::createOrClear(pimpl->db);
+  persist::createOrClear(pimpl->db, size);
   transaction.commit();
 }
 
