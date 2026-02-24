@@ -51,11 +51,19 @@ PixDocument::convert(const std::string& filename, const SDL::Surface& surface)
 
 void
 PixDocument::clearContents(const SDL::Point& size)
-{ persist::createOrClear(pimpl->db); }
+{
+  SQLite::Transaction transaction(pimpl->db);
+  persist::createOrClear(pimpl->db);
+  transaction.commit();
+}
 
 void
 PixDocument::clearContents(const SDL::Surface& surface)
-{ persist::createOrClear(pimpl->db, surface); }
+{
+  SQLite::Transaction transaction(pimpl->db);
+  persist::createOrClear(pimpl->db, surface);
+  transaction.commit();
+}
 
 PixDocument::PixDocument(std::unique_ptr<impl> impl)
   : pimpl{std::move(impl)}

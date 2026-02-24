@@ -29,7 +29,7 @@ public:
 
   static PixDocument load(const std::string& path);
 
-  void clearContents(const SDL::Point& size);
+  void clearContents(const SDL::Point& size = {});
 
   void clearContents(const SDL::Surface& surface);
 
