@@ -11,5 +11,8 @@
   }, {
     "name" : "doctest",
     "version>=" : "2.4.12"
+  }, {
+    "name" : "picosha2",
+    "version>=" : "1.0.1"
   } ]
 }

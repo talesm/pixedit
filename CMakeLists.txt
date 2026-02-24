@@ -151,6 +151,11 @@ find_package(SQLiteCpp CONFIG REQUIRED)
 # Doctest
 find_package(doctest CONFIG REQUIRED)
 target_link_libraries(pix_utils PUBLIC doctest::doctest)
+target_link_libraries(pix_test PUBLIC doctest::doctest)
+
+find_path(PICOSHA2_INCLUDE_DIRS "picosha2.h")
+target_include_directories(pix_utils PUBLIC ${PICOSHA2_INCLUDE_DIRS})
+target_include_directories(pix_test PRIVATE ${PICOSHA2_INCLUDE_DIRS})
 
 # ImGui SDL3 binding
 add_library(imgui_sdl3
