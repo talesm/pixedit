@@ -50,10 +50,7 @@ insertResource(SQLite::Database& db,
                std::span<Uint8> content);
 
 Sint64
-insertResource(SQLite::Database& db, const json& options, Sint64 bufferId);
-
-Sint64
-insertResource(SQLite::Database& db, const json& options);
+insertResource(SQLite::Database& db, const json& options, Sint64 bufferId = 0);
 
 Sint64
 insertAction(SQLite::Database& db, Sint64 resourceId, const std::string& kind);

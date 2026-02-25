@@ -201,28 +201,17 @@ insertResource(SQLite::Database& db,
 Sint64
 insertResource(SQLite::Database& db, const json& options, Sint64 bufferId)
 {
-  if (bufferId == 0) return insertResource(db, options);
   SQLite::Statement query{
     db,
     R"===(INSERT INTO "Resource" (buffer_id, options) VALUES (?, ?) RETURNING id;)==="};
 
   // Bind values
   query.bind(1, bufferId);
-  query.bind(2, options.dump());
-
-  // Exec
-  if (!query.executeStep()) throw std::runtime_error{"Error creating resource"};
-  return query.getColumn(0).getInt64();
-}
-
-Sint64
-insertResource(SQLite::Database& db, const json& options)
-{
-  SQLite::Statement query{
-    db, R"===(INSERT INTO "Resource" (options) VALUES (?) RETURNING id;)==="};
-
-  // Bind values
-  query.bind(1, options.dump());
+  if (bufferId != 0) {
+    query.bind(2, options.dump());
+  } else {
+    query.bind(2);
+  }
 
   // Exec
   if (!query.executeStep()) throw std::runtime_error{"Error creating resource"};
