@@ -2,6 +2,7 @@
 // Created by talesm on 13/02/2026.
 //
 #include "dbActions.hpp"
+#include <doctest/doctest.h>
 
 namespace pixedit::persist {
 
@@ -21,7 +22,8 @@ CREATE TABLE "Meta" (
 );
 CREATE TABLE "Buffer" (
         "id"            INTEGER PRIMARY KEY,
-	"content"	BLOB
+        "hash"          BLOB NOT NULL,
+	"content"	BLOB UNIQUE
 );
 CREATE TABLE "Resource" (
         "id"            INTEGER PRIMARY KEY,
@@ -62,7 +64,7 @@ insertBuffer(SQLite::Database& db, std::span<Uint8> buffer)
 {
   // Prepare query
   SQLite::Statement query{
-    db, R"===(INSERT INTO "Buffer" (content) VALUES (?) RETURNING id;)==="};
+    db, R"===(INSERT INTO "Buffer" (hash) VALUES (?) RETURNING id;)==="};
 
   // Bind values
   query.bindNoCopy(1, buffer.data(), buffer.size_bytes());
@@ -70,6 +72,41 @@ insertBuffer(SQLite::Database& db, std::span<Uint8> buffer)
   // Exec
   if (!query.executeStep()) throw std::runtime_error{"Error creating buffer"};
   return query.getColumn(0).getInt64();
+}
+
+static Sint64
+makeBuffer(SQLite::Database& db, std::span<Uint8> buffer)
+{
+  // Prepare query
+  SQLite::Statement query(
+    db, R"===(SELECT "id", "content" FROM "Buffer" WHERE "hash" = ?)===");
+
+  query.bind(1, buffer.data(), buffer.size());
+  if (query.executeStep()) { return query.getColumn(0).getInt64(); }
+
+  return insertBuffer(db, buffer);
+}
+
+TEST_CASE("makeBuffer")
+{
+  SQLite::Database db("", SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
+  createOrClear(db);
+
+  SUBCASE("Small")
+  {
+    Uint8 buffer1[4] = {1, 3, 3, 7};
+    auto id1 = makeBuffer(db, buffer1);
+    REQUIRE(id1 != 0);
+
+    Uint8 buffer2[8] = {1, 3, 3, 7, 42, 64};
+    auto id2 = makeBuffer(db, buffer2);
+    REQUIRE(id2 != 0);
+    REQUIRE(id1 != id2);
+
+    auto id3 = makeBuffer(db, buffer1);
+    REQUIRE(id3 != 0);
+    REQUIRE(id3 == id1);
+  }
 }
 
 Sint64
@@ -88,7 +125,7 @@ insertResource(SQLite::Database& db, const Surface& surface)
     copyTo(surface, content.get());
   }
 
-  const auto bufferId = insertBuffer(db, std::span{(content.get()), sz});
+  const auto bufferId = makeBuffer(db, std::span{(content.get()), sz});
 
   // Store options
   json options{
