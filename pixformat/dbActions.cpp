@@ -8,18 +8,24 @@
 namespace pixedit::persist {
 
 static void
-createOrClear(SQLite::Database& db);
-
-static Sint64
-insertResource(SQLite::Database& db, const Surface& surface);
+doCreateOrClear(SQLite::Database& db);
 
 static Sint64
 insertResource(SQLite::Database& db,
                const json& options,
                std::span<Uint8> content = {});
 
-Sint64
-insertAction(SQLite::Database& db, Sint64 resourceId, const std::string& kind);
+static Sint64
+insertPath(SQLite::Database& db, const std::string& kind, Sint64* pos);
+
+static Sint64
+getPath(SQLite::Database& db, const std::string& kind, Sint64 pos);
+
+static Sint64
+putResource(SQLite::Database& db,
+            Sint64 pathId,
+            const json& options,
+            std::span<Uint8> content = {});
 
 static const char createCommand[] = R"==(
 SAVEPOINT "Clearing";
@@ -70,8 +76,42 @@ RELEASE SAVEPOINT "Clearing";
 )==";
 
 void
-createOrClear(SQLite::Database& db)
+doCreateOrClear(SQLite::Database& db)
 { db.exec(createCommand); }
+
+void
+createOrClear(SQLite::Database& db, const Surface& surface)
+{
+  doCreateOrClear(db);
+  putSurface(db, 0, surface);
+  db.exec(R"===(INSERT INTO "Meta" VALUES ('current.image', 1);)===");
+}
+
+void
+createOrClear(SQLite::Database& db, const SDL::Point& size, SDL::Color color)
+{
+  doCreateOrClear(db);
+  putSurface(db, 0, size, color);
+
+  db.exec(R"===(INSERT INTO "Meta" VALUES ('current.mode', 'surface');)===");
+  db.exec(R"===(INSERT INTO "Meta" VALUES ('current.image', 1);)===");
+}
+
+TEST_CASE("CreateOrClearFromColor")
+{
+  SQLite::Database db("", SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
+  createOrClear(db, {8, 8}, {1, 2, 3, 4});
+
+  auto currentMode =
+    db.execAndGet("SELECT value FROM Meta WHERE key = 'current.mode'")
+      .getString();
+  REQUIRE(currentMode == "surface");
+
+  auto currentPicture =
+    db.execAndGet("SELECT value FROM Meta WHERE key = 'current.image'")
+      .getInt();
+  REQUIRE(currentPicture == 1);
+}
 
 static void
 copyTo(const Surface& surface, Uint8* target);
@@ -145,7 +185,7 @@ makeBuffer(SQLite::Database& db, std::span<Uint8> buffer)
 TEST_CASE("makeBuffer")
 {
   SQLite::Database db("", SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
-  createOrClear(db);
+  doCreateOrClear(db);
 
   SUBCASE("Small")
   {
@@ -231,65 +271,13 @@ insertResource(SQLite::Database& db,
   return query.getColumn(0).getInt64();
 }
 
-std::string
-ctos(SDL::Color color)
-{
-  return std::format("{:02x}{:02x}{:02x}{:02x}",
-                     int(color.r),
-                     int(color.g),
-                     int(color.b),
-                     int(color.a));
-}
-
-void
-createOrClear(SQLite::Database& db, const SDL::Point& size, SDL::Color color)
-{
-  createOrClear(db);
-  // Prepare query
-  const auto imageId = insertResource(db,
-                                      json{
-                                        {"width", size.x},
-                                        {"height", size.y},
-                                        {"color", ctos(color)},
-                                      });
-  insertAction(db, imageId, "surface");
-
-  db.exec(R"===(INSERT INTO "Meta" VALUES ('current.mode', 'surface');)===");
-  db.exec(R"===(INSERT INTO "Meta" VALUES ('current.image', 1);)===");
-}
-
-TEST_CASE("CreateOrClearFromColor")
-{
-  SQLite::Database db("", SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
-  createOrClear(db, {8, 8}, {1, 2, 3, 4});
-
-  auto currentMode =
-    db.execAndGet("SELECT value FROM Meta WHERE key = 'current.mode'")
-      .getString();
-  REQUIRE(currentMode == "surface");
-
-  auto currentPicture =
-    db.execAndGet("SELECT value FROM Meta WHERE key = 'current.image'")
-      .getInt();
-  REQUIRE(currentPicture == 1);
-}
-
 static Sint64
-insertPath(SQLite::Database& db, const std::string& kind)
+putResource(SQLite::Database& db,
+            Sint64 pathId,
+            const json& options,
+            std::span<Uint8> content)
 {
-  SQLite::Statement query{db, R"===(INSERT INTO "Path" (kind, pos) VALUES (?1,
-    IFNULL((SELECT MAX(pos) FROM "Path" WHERE kind = ?1), 0) + 1) RETURNING id;)==="};
-  // Exec
-  query.bind(1, kind);
-  if (!query.executeStep()) throw std::runtime_error{"Error creating path"};
-  return query.getColumn(0).getInt64();
-}
-
-Sint64
-insertAction(SQLite::Database& db, Sint64 resourceId, const std::string& kind)
-{
-  const auto pathId = insertPath(db, kind);
-
+  Sint64 resourceId = insertResource(db, options, content);
   SQLite::Statement query{
     db, R"===(INSERT INTO "Action" (resource_id, command_id, path_id)
 VALUES (?, (SELECT MAX(id) FROM "Command"), ?) RETURNING id;)==="};
@@ -303,14 +291,97 @@ VALUES (?, (SELECT MAX(id) FROM "Command"), ?) RETURNING id;)==="};
   return query.getColumn(0).getInt64();
 }
 
-void
-createOrClear(SQLite::Database& db, const Surface& surface)
-{
-  createOrClear(db);
-  const auto resourceId = insertResource(db, surface);
-  insertAction(db, resourceId, "surface");
+static Sint64
+makePath(SQLite::Database& db, const std::string& kind, Sint64* pos)
+{ return *pos ? getPath(db, kind, *pos) : insertPath(db, kind, pos); }
 
-  db.exec(R"===(INSERT INTO "Meta" VALUES ('current.image', 1);)===");
+Sint64
+putSurface(SQLite::Database& db, Sint64 pos, const Surface& surface)
+{
+  auto pathId = makePath(db, "surface", &pos);
+
+  // Copy data to buffer
+  int width = surface.GetWidth();
+  int height = surface.GetHeight();
+  int depth = 4;
+
+  auto content = makeSurface32Buffer(surface);
+
+  // Store options
+  json options{
+    {"width", width},
+    {"height", height},
+    {"depth", depth},
+  }; // Prepare query
+
+  putResource(db, pathId, options, content);
+
+  return pos;
+}
+
+Sint64
+putSurface(SQLite::Database& db,
+           Sint64 pos,
+           const SDL::Point& size,
+           SDL::Color color)
+{
+  auto pathId = makePath(db, "surface", &pos);
+
+  // Copy data to buffer
+  int width = size.x;
+  int height = size.y;
+  int depth = 4;
+
+  // Store options
+  json options{
+    {"width", width},
+    {"height", height},
+    {"depth", depth},
+    {"color", ctos(color)},
+  }; // Prepare query
+
+  putResource(db, pathId, options);
+
+  return pos;
+}
+
+std::string
+ctos(SDL::Color color)
+{
+  return std::format("{:02x}{:02x}{:02x}{:02x}",
+                     int(color.r),
+                     int(color.g),
+                     int(color.b),
+                     int(color.a));
+}
+
+Sint64
+insertPath(SQLite::Database& db, const std::string& kind, Sint64* pos)
+{
+  SQLite::Statement query1{
+    db, R"===(SELECT MAX(pos) FROM "Path" WHERE kind = ?;)==="};
+  query1.bind(1, kind);
+  *pos = query1.executeStep() ? query1.getColumn(0).getInt64() + 1 : 1;
+
+  SQLite::Statement query2{
+    db, R"===(INSERT INTO "Path" (kind, pos) VALUES (?, ?) RETURNING id;)==="};
+  // Exec
+  query2.bind(1, kind);
+  query2.bind(2, *pos);
+  if (!query2.executeStep()) throw std::runtime_error{"Error creating path"};
+  return query2.getColumn(0).getInt64();
+}
+
+Sint64
+getPath(SQLite::Database& db, const std::string& kind, Sint64 pos)
+{
+  SQLite::Statement query{
+    db, R"===(SELECT id FROM "Path" WHERE kind = ? AND pos = ?;)==="};
+  // Exec
+  query.bind(1, kind);
+  query.bind(2, pos);
+  if (!query.executeStep()) throw std::runtime_error{"Error getting path"};
+  return query.getColumn(0).getInt64();
 }
 
 static void

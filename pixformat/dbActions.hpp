@@ -36,6 +36,15 @@ createOrClear(SQLite::Database& db, const Surface& surface);
 std::string
 ctos(SDL::Color color);
 
+Sint64
+putSurface(SQLite::Database& db, Sint64 pos, const Surface& surface);
+
+Sint64
+putSurface(SQLite::Database& db,
+           Sint64 pos,
+           const SDL::Point& size,
+           SDL::Color color);
+
 }
 
 #endif /* PIXEDIT_PIXFORMAT_INCLUDE_DB_ACTIONS_INCLUDED */
