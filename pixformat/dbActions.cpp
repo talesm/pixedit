@@ -8,6 +8,7 @@
 namespace pixedit::persist {
 
 static const char createCommand[] = R"==(
+SAVEPOINT "Clearing";
 PRAGMA foreign_keys = OFF;
 DROP TABLE IF EXISTS "Action";
 DROP TABLE IF EXISTS "Path";
@@ -51,6 +52,7 @@ CREATE TABLE "Action" (
 );
 INSERT INTO "Meta" VALUES ('format.version', '0.0.1');
 INSERT INTO "Command" VALUES (1, '', '{"baseline": true}');
+RELEASE SAVEPOINT "Clearing";
 )==";
 
 void
@@ -241,16 +243,33 @@ void
 createOrClear(SQLite::Database& db, const SDL::Point& size, SDL::Color color)
 {
   createOrClear(db);
-  // Store options
-  json options{
-    {"width", size.x},
-    {"height", size.y},
-    {"depth", 4},
-    {"color", ctos(color)},
-  }; // Prepare query
-  const auto resourceId = insertResource(db, options);
-  insertAction(db, resourceId, "image");
+  // Prepare query
+  const auto imageId = insertResource(db,
+                                      json{
+                                        {"width", size.x},
+                                        {"height", size.y},
+                                        {"color", ctos(color)},
+                                      });
+  insertAction(db, imageId, "image");
+
+  db.exec(R"===(INSERT INTO "Meta" VALUES ('current.mode', 'image');)===");
   db.exec(R"===(INSERT INTO "Meta" VALUES ('current.image', 1);)===");
+}
+
+TEST_CASE("CreateOrClearFromColor")
+{
+  SQLite::Database db("", SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
+  createOrClear(db, {8, 8}, {1, 2, 3, 4});
+
+  auto currentMode =
+    db.execAndGet("SELECT value FROM Meta WHERE key = 'current.mode'")
+      .getString();
+  REQUIRE(currentMode == "image");
+
+  auto currentPicture =
+    db.execAndGet("SELECT value FROM Meta WHERE key = 'current.image'")
+      .getInt();
+  REQUIRE(currentPicture == 1);
 }
 
 static Sint64
