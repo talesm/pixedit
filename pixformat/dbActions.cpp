@@ -59,7 +59,7 @@ CREATE TABLE "Path" (
 );
 CREATE TABLE "Action" (
 	"id"	        INTEGER PRIMARY KEY,
-	"resource_id"   INTEGER REFERENCES "Image"("id") ON UPDATE CASCADE ON DELETE CASCADE,
+	"resource_id"   INTEGER REFERENCES "Resource"("id") ON UPDATE CASCADE ON DELETE CASCADE,
         "command_id"    INTEGER NOT NULL REFERENCES "Command"("id") ON UPDATE CASCADE ON DELETE CASCADE,
         "path_id"       INTEGER NOT NULL REFERENCES "Path"("id") ON UPDATE CASCADE ON DELETE CASCADE,
         UNIQUE (command_id, path_id) ON CONFLICT REPLACE
@@ -252,9 +252,9 @@ createOrClear(SQLite::Database& db, const SDL::Point& size, SDL::Color color)
                                         {"height", size.y},
                                         {"color", ctos(color)},
                                       });
-  insertAction(db, imageId, "image");
+  insertAction(db, imageId, "surface");
 
-  db.exec(R"===(INSERT INTO "Meta" VALUES ('current.mode', 'image');)===");
+  db.exec(R"===(INSERT INTO "Meta" VALUES ('current.mode', 'surface');)===");
   db.exec(R"===(INSERT INTO "Meta" VALUES ('current.image', 1);)===");
 }
 
@@ -266,7 +266,7 @@ TEST_CASE("CreateOrClearFromColor")
   auto currentMode =
     db.execAndGet("SELECT value FROM Meta WHERE key = 'current.mode'")
       .getString();
-  REQUIRE(currentMode == "image");
+  REQUIRE(currentMode == "surface");
 
   auto currentPicture =
     db.execAndGet("SELECT value FROM Meta WHERE key = 'current.image'")
@@ -308,7 +308,7 @@ createOrClear(SQLite::Database& db, const Surface& surface)
 {
   createOrClear(db);
   const auto resourceId = insertResource(db, surface);
-  insertAction(db, resourceId, "image");
+  insertAction(db, resourceId, "surface");
 
   db.exec(R"===(INSERT INTO "Meta" VALUES ('current.image', 1);)===");
 }
