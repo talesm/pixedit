@@ -165,6 +165,19 @@ TEST_CASE("makeBuffer")
   }
 }
 
+static std::vector<Uint8>
+makeSurface32Buffer(const Surface& surface)
+{
+  std::vector<Uint8> buffer;
+  buffer.resize(surface->w * surface->h * 4);
+  if (surface.GetFormat() != SDL::PIXELFORMAT_ABGR32) {
+    copyTo(surface.Convert(SDL::PIXELFORMAT_ABGR32), buffer.data());
+  } else {
+    copyTo(surface, buffer.data());
+  }
+  return buffer;
+}
+
 Sint64
 insertResource(SQLite::Database& db, const Surface& surface)
 {
@@ -173,15 +186,8 @@ insertResource(SQLite::Database& db, const Surface& surface)
   int height = surface.GetHeight();
   int depth = 4;
 
-  size_t sz = width * height * depth;
-  std::unique_ptr<Uint8[]> content{new Uint8[sz]};
-  if (surface.GetFormat() != SDL::PIXELFORMAT_ABGR32) {
-    copyTo(surface.Convert(SDL::PIXELFORMAT_ABGR32), content.get());
-  } else {
-    copyTo(surface, content.get());
-  }
-
-  const auto bufferId = makeBuffer(db, std::span{(content.get()), sz});
+  auto content = makeSurface32Buffer(surface);
+  const auto bufferId = makeBuffer(db, content);
 
   // Store options
   json options{
