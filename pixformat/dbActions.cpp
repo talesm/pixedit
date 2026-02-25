@@ -3,6 +3,7 @@
 //
 #include "dbActions.hpp"
 #include <doctest/doctest.h>
+#include <picosha2.h>
 
 namespace pixedit::persist {
 
@@ -60,31 +61,69 @@ static void
 copyTo(const Surface& surface, Uint8* target);
 
 static Sint64
-insertBuffer(SQLite::Database& db, std::span<Uint8> buffer)
+insertBuffer(SQLite::Database& db,
+             std::span<Uint8> hash,
+             std::span<Uint8> buffer = {})
 {
   // Prepare query
   SQLite::Statement query{
-    db, R"===(INSERT INTO "Buffer" (hash) VALUES (?) RETURNING id;)==="};
+    db,
+    R"===(INSERT INTO "Buffer" ("hash", "content") VALUES (?, ?) RETURNING id;)==="};
 
   // Bind values
-  query.bindNoCopy(1, buffer.data(), buffer.size_bytes());
+  query.bindNoCopy(1, hash.data(), hash.size_bytes());
+  if (buffer.empty()) {
+    query.bind(2);
+  } else {
+    query.bindNoCopy(2, buffer.data(), buffer.size_bytes());
+  }
 
   // Exec
   if (!query.executeStep()) throw std::runtime_error{"Error creating buffer"};
   return query.getColumn(0).getInt64();
 }
 
+static std::vector<Uint8>
+makeHash(std::span<Uint8> buffer)
+{
+  std::vector<Uint8> hash(picosha2::k_digest_size);
+  picosha2::hash256(buffer.begin(), buffer.end(), hash.begin(), hash.end());
+  return hash;
+}
+
 static Sint64
 makeBuffer(SQLite::Database& db, std::span<Uint8> buffer)
 {
+  if (buffer.size_bytes() <= 64) {
+    // Prepare query
+    SQLite::Statement query(
+      db,
+      R"===(SELECT "id" FROM "Buffer" WHERE "hash" = ? AND "content" IS NULL)===");
+
+    query.bind(1, buffer.data(), buffer.size());
+    if (query.executeStep()) { return query.getColumn(0).getInt64(); }
+
+    return insertBuffer(db, buffer);
+  }
   // Prepare query
   SQLite::Statement query(
-    db, R"===(SELECT "id", "content" FROM "Buffer" WHERE "hash" = ?)===");
+    db,
+    R"===(SELECT "id", "content" FROM "Buffer" WHERE "hash" = ? AND "content" IS NOT NULL)===");
 
-  query.bind(1, buffer.data(), buffer.size());
-  if (query.executeStep()) { return query.getColumn(0).getInt64(); }
+  auto hash = makeHash(buffer);
+  query.bind(1, hash.data(), hash.size());
 
-  return insertBuffer(db, buffer);
+  while (query.executeStep()) {
+    auto blobColumn = query.getColumn(1);
+    auto size = blobColumn.size();
+    if (size != buffer.size()) continue;
+    auto blob = blobColumn.getBlob();
+    if (SDL::memcmp(blob, buffer.data(), size) == 0) {
+      return query.getColumn(0).getInt64();
+    }
+  }
+
+  return insertBuffer(db, hash, buffer);
 }
 
 TEST_CASE("makeBuffer")
@@ -99,6 +138,21 @@ TEST_CASE("makeBuffer")
     REQUIRE(id1 != 0);
 
     Uint8 buffer2[8] = {1, 3, 3, 7, 42, 64};
+    auto id2 = makeBuffer(db, buffer2);
+    REQUIRE(id2 != 0);
+    REQUIRE(id1 != id2);
+
+    auto id3 = makeBuffer(db, buffer1);
+    REQUIRE(id3 != 0);
+    REQUIRE(id3 == id1);
+  }
+  SUBCASE("Big")
+  {
+    Uint8 buffer1[128] = {1, 3, 3, 7};
+    auto id1 = makeBuffer(db, buffer1);
+    REQUIRE(id1 != 0);
+
+    Uint8 buffer2[128] = {1, 3, 3, 7, 42, 64};
     auto id2 = makeBuffer(db, buffer2);
     REQUIRE(id2 != 0);
     REQUIRE(id1 != id2);
