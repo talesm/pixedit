@@ -7,6 +7,20 @@
 
 namespace pixedit::persist {
 
+static void
+createOrClear(SQLite::Database& db);
+
+static Sint64
+insertResource(SQLite::Database& db, const Surface& surface);
+
+static Sint64
+insertResource(SQLite::Database& db,
+               const json& options,
+               std::span<Uint8> content = {});
+
+Sint64
+insertAction(SQLite::Database& db, Sint64 resourceId, const std::string& kind);
+
 static const char createCommand[] = R"==(
 SAVEPOINT "Clearing";
 PRAGMA foreign_keys = OFF;
@@ -187,12 +201,11 @@ insertResource(SQLite::Database& db, const Surface& surface)
   int depth = 4;
 
   auto content = makeSurface32Buffer(surface);
-  const auto bufferId = makeBuffer(db, content);
 
   // Store options
   json options{
     {"width", width}, {"height", height}, {"depth", depth}}; // Prepare query
-  return insertResource(db, options, bufferId);
+  return insertResource(db, options, content);
 }
 
 Sint64
@@ -200,13 +213,7 @@ insertResource(SQLite::Database& db,
                const json& options,
                std::span<Uint8> content)
 {
-  const auto bufferId = insertBuffer(db, content);
-  return insertResource(db, options, bufferId);
-}
-
-Sint64
-insertResource(SQLite::Database& db, const json& options, Sint64 bufferId)
-{
+  const Sint64 bufferId = content.empty() ? 0 : insertBuffer(db, content);
   SQLite::Statement query{
     db,
     R"===(INSERT INTO "Resource" (buffer_id, options) VALUES (?, ?) RETURNING id;)==="};
