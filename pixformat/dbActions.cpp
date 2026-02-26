@@ -10,6 +10,8 @@
 
 namespace pixedit::persist {
 
+constexpr auto KIND_SURFACE = "surface";
+
 static void
 doCreateOrClear(SQLite::Database& db);
 
@@ -47,8 +49,8 @@ CREATE TABLE "Meta" (
 );
 CREATE TABLE "Buffer" (
         "id"            INTEGER PRIMARY KEY,
-        "hash"          BLOB NOT NULL,
-	"content"	BLOB UNIQUE
+        "hash"          BLOB,
+	"content"	BLOB UNIQUE NOT NULL
 );
 CREATE TABLE "Resource" (
         "id"            INTEGER PRIMARY KEY,
@@ -110,7 +112,7 @@ TEST_CASE("CreateOrClearFromColor")
   auto currentMode =
     db.execAndGet("SELECT value FROM Meta WHERE key = 'current.mode'")
       .getString();
-  REQUIRE(currentMode == "surface");
+  REQUIRE(currentMode == KIND_SURFACE);
 
   auto currentPicture =
     db.execAndGet("SELECT value FROM Meta WHERE key = 'current.image'")
@@ -132,7 +134,7 @@ TEST_CASE("CreateOrClearFromSurface")
   auto currentMode =
     db.execAndGet("SELECT value FROM Meta WHERE key = 'current.mode'")
       .getString();
-  REQUIRE(currentMode == "surface");
+  REQUIRE(currentMode == KIND_SURFACE);
 
   auto currentPicture =
     db.execAndGet("SELECT value FROM Meta WHERE key = 'current.image'")
@@ -168,7 +170,7 @@ copyTo(const Surface& surface, Uint8* target);
 static Sint64
 insertBuffer(SQLite::Database& db,
              std::span<Uint8> hash,
-             std::span<Uint8> buffer = {})
+             std::span<Uint8> buffer)
 {
   // Prepare query
   SQLite::Statement query{
@@ -176,12 +178,12 @@ insertBuffer(SQLite::Database& db,
     R"===(INSERT INTO "Buffer" ("hash", "content") VALUES (?, ?) RETURNING id;)==="};
 
   // Bind values
-  query.bindNoCopy(1, hash.data(), hash.size_bytes());
-  if (buffer.empty()) {
-    query.bind(2);
+  if (hash.empty()) {
+    query.bind(1);
   } else {
-    query.bindNoCopy(2, buffer.data(), buffer.size_bytes());
+    query.bindNoCopy(1, hash.data(), hash.size_bytes());
   }
+  query.bindNoCopy(2, buffer.data(), buffer.size_bytes());
 
   // Exec
   if (!query.executeStep()) throw std::runtime_error{"Error creating buffer"};
@@ -203,12 +205,12 @@ makeBuffer(SQLite::Database& db, std::span<Uint8> buffer)
     // Prepare query
     SQLite::Statement query(
       db,
-      R"===(SELECT "id" FROM "Buffer" WHERE "hash" = ? AND "content" IS NULL)===");
+      R"===(SELECT "id" FROM "Buffer" WHERE "hash" IS NULL AND "content" = ?)===");
 
     query.bind(1, buffer.data(), buffer.size());
     if (query.executeStep()) { return query.getColumn(0).getInt64(); }
 
-    return insertBuffer(db, buffer);
+    return insertBuffer(db, {}, buffer);
   }
   // Prepare query
   SQLite::Statement query(
@@ -286,7 +288,7 @@ doInsertResource(SQLite::Database& db,
                  const json& options,
                  std::span<Uint8> content)
 {
-  const Sint64 bufferId = content.empty() ? 0 : insertBuffer(db, content);
+  const Sint64 bufferId = content.empty() ? 0 : makeBuffer(db, content);
   SQLite::Statement query{
     db,
     R"===(INSERT INTO "Resource" (buffer_id, options) VALUES (?, ?) RETURNING id;)==="};
@@ -331,7 +333,7 @@ makePath(SQLite::Database& db, const std::string& kind, Sint64* pos)
 Sint64
 putSurface(SQLite::Database& db, Sint64 pos, const Surface& surface)
 {
-  auto pathId = makePath(db, "surface", &pos);
+  auto pathId = makePath(db, KIND_SURFACE, &pos);
 
   // Copy data to buffer
   int width = surface.GetWidth();
@@ -358,7 +360,7 @@ putSurface(SQLite::Database& db,
            const SDL::Point& size,
            SDL::Color color)
 {
-  auto pathId = makePath(db, "surface", &pos);
+  auto pathId = makePath(db, KIND_SURFACE, &pos);
 
   // Copy data to buffer
   int width = size.x;
