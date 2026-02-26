@@ -175,6 +175,62 @@ WHERE a.command_id = 1)==");
   return result;
 }
 
+Sint64
+newVersion(SQLite::Database& db,
+           const std::string& description,
+           Sint64 commandId)
+{
+  // db.exec("SAVEPOINT newVersion");
+  if (commandId != 0) {
+    SQLite::Statement deleteActionQuery(
+      db, R"==(DELETE FROM Action WHERE command_id > ?1;)==");
+    deleteActionQuery.bind(1, commandId);
+    deleteActionQuery.exec();
+    SQLite::Statement deleteCommandQuery(
+      db, R"==(DELETE FROM Command WHERE id > ?1;)==");
+    deleteCommandQuery.bind(1, commandId);
+    deleteCommandQuery.exec();
+  } else {
+    commandId = getLatestVersion(db);
+  }
+  Sint64 newCommandId = commandId + 1;
+  SQLite::Statement commandQuery(
+    db, R"==(INSERT INTO Command VALUES (?, ?, '{}');)==");
+  commandQuery.bind(1, newCommandId);
+  commandQuery.bind(2, description);
+  commandQuery.exec();
+
+  SQLite::Statement actionsQuery(
+    db, R"==(INSERT INTO Action(resource_id, command_id, path_id)
+SELECT resource_id, ?1, path_id FROM Action WHERE command_id = ?2;)==");
+  actionsQuery.bind(1, newCommandId);
+  actionsQuery.bind(2, commandId);
+  actionsQuery.exec();
+
+  return newCommandId;
+}
+
+TEST_CASE("newVersion")
+{
+  SQLite::Database db("newVersion.db",
+                      SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
+  createOrClear(db, {8, 8}, {1, 2, 3, 4});
+  REQUIRE_EQ(getLatestVersion(db), 1);
+  REQUIRE_EQ(db.execAndGet("SELECT count(1) FROM Action").getInt(), 1);
+
+  newVersion(db, "a change 1");
+  REQUIRE_EQ(getLatestVersion(db), 2);
+  REQUIRE_EQ(db.execAndGet("SELECT count(1) FROM Action").getInt(), 2);
+
+  newVersion(db, "a change 2");
+  REQUIRE_EQ(getLatestVersion(db), 3);
+  REQUIRE_EQ(db.execAndGet("SELECT count(1) FROM Action").getInt(), 3);
+
+  newVersion(db, "a change 1b", 1);
+  REQUIRE_EQ(getLatestVersion(db), 2);
+  REQUIRE_EQ(db.execAndGet("SELECT count(1) FROM Action").getInt(), 2);
+}
+
 static void
 copyTo(const Surface& surface, Uint8* target);
 

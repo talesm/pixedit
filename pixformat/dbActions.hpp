@@ -54,6 +54,18 @@ getLatestVersion(SQLite::Database& db);
 std::set<std::string>
 getKinds(SQLite::Database& db, Sint64 command_id);
 
+/**
+ * Create new version
+ * @param db the database
+ * @param description the description
+ * @param command_id the command id to base version into
+ * @return the new version command id
+ */
+Sint64
+newVersion(SQLite::Database& db,
+           const std::string& description,
+           Sint64 command_id = 0);
+
 std::string
 ctos(SDL::Color color);
 
