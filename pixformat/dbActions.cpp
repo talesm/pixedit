@@ -87,6 +87,8 @@ createOrClear(SQLite::Database& db, const Surface& surface)
 {
   doCreateOrClear(db);
   putSurface(db, 0, surface);
+
+  db.exec(R"===(INSERT INTO "Meta" VALUES ('current.mode', 'surface');)===");
   db.exec(R"===(INSERT INTO "Meta" VALUES ('current.image', 1);)===");
 }
 
@@ -104,6 +106,28 @@ TEST_CASE("CreateOrClearFromColor")
 {
   SQLite::Database db("", SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
   createOrClear(db, {8, 8}, {1, 2, 3, 4});
+
+  auto currentMode =
+    db.execAndGet("SELECT value FROM Meta WHERE key = 'current.mode'")
+      .getString();
+  REQUIRE(currentMode == "surface");
+
+  auto currentPicture =
+    db.execAndGet("SELECT value FROM Meta WHERE key = 'current.image'")
+      .getInt();
+  REQUIRE(currentPicture == 1);
+
+  REQUIRE(getLatestVersion(db) == 1);
+
+  auto kinds = getKinds(db, 1);
+  REQUIRE(kinds.size() == 1);
+}
+
+TEST_CASE("CreateOrClearFromSurface")
+{
+  SDL::Surface test({8, 8}, DEFAULT_FORMAT);
+  SQLite::Database db("", SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
+  createOrClear(db, test);
 
   auto currentMode =
     db.execAndGet("SELECT value FROM Meta WHERE key = 'current.mode'")
