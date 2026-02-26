@@ -66,6 +66,20 @@ putSurface(SQLite::Database& db,
            const SDL::Point& size,
            SDL::Color color);
 
+void
+getSurface(SQLite::Database& db,
+           Sint64 command_id,
+           Sint64 pos,
+           Surface* surface);
+
+inline Surface
+getSurface(SQLite::Database& db, Sint64 command_id, Sint64 pos)
+{
+  Surface s;
+  getSurface(db, command_id, pos, &s);
+  return s;
+}
+
 }
 
 #endif /* PIXEDIT_PIXFORMAT_INCLUDE_DB_ACTIONS_INCLUDED */

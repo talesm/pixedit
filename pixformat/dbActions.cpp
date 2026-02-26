@@ -8,6 +8,9 @@
 
 #include <picosha2.h>
 
+#include "dumpSurface.hpp"
+#include "primitives/Point.hpp"
+
 namespace pixedit::persist {
 
 constexpr auto KIND_SURFACE = "surface";
@@ -37,7 +40,7 @@ getResource(const SQLite::Database& db,
             Sint64 command_id,
             const std::string& kind,
             Sint64 pos,
-            std::vector<Uint8>* buffer);
+            std::vector<Uint8>* content = nullptr);
 
 static const char createCommand[] = R"==(
 SAVEPOINT "Clearing";
@@ -342,7 +345,7 @@ getResource(const SQLite::Database& db,
             Sint64 command_id,
             const std::string& kind,
             Sint64 pos,
-            std::vector<Uint8>* buffer = nullptr)
+            std::vector<Uint8>* content)
 {
   SQLite::Statement query(db, R"==(SELECT options, content
 FROM "Path" p
@@ -361,14 +364,14 @@ AND p.pos = ?
   if (!query.executeStep()) return {};
 
   auto options = json::parse(query.getColumn(0).getString());
-  if (buffer) {
+  if (content) {
     auto contentColumn = query.getColumn(1);
     if (contentColumn.isNull()) {
-      buffer->clear();
+      content->clear();
     } else {
       int64_t size = contentColumn.getBytes();
-      buffer->resize(size);
-      std::memcpy(buffer->data(), contentColumn.getBlob(), size);
+      content->resize(size);
+      std::memcpy(content->data(), contentColumn.getBlob(), size);
     }
   }
   return options;
@@ -449,6 +452,75 @@ putSurface(SQLite::Database& db,
   return pos;
 }
 
+static SDL::Uint32
+atoc(const std::string& value)
+{
+  if (value.size() != 8) return 0;
+  Uint32 result;
+  std::sscanf(value.c_str(), "%x", &result);
+  return SDL::Swap32LE(result);
+}
+
+void
+getSurface(SQLite::Database& db,
+           Sint64 command_id,
+           Sint64 pos,
+           Surface* surface)
+{
+  std::vector<Uint8> content;
+  json options = getResource(db, command_id, KIND_SURFACE, pos, &content);
+  int width = options["width"];
+  int height = options["height"];
+  int depth = options["depth"];
+  SDL_assert(depth == 4);
+  Point size = {width, height};
+  if (!*surface || surface->GetSize() != size ||
+      surface->GetFormat() != DEFAULT_FORMAT) {
+    *surface = Surface{size, DEFAULT_FORMAT};
+  }
+  if (content.size() > 0) {
+    SDL_assert(content.size() == width * height * depth);
+    auto src = content.data();
+    auto dst = static_cast<Uint8*>(surface->GetPixels());
+    auto pitch = surface->GetPitch();
+    for (int y = 0; y < height; y++, dst += pitch, src += width * depth) {
+      SDL::memcpy(dst, src, pitch);
+    }
+  } else if (options.count("color")) {
+    surface->Fill(atoc(options["color"]));
+  }
+}
+
+TEST_CASE("getSurface")
+{
+  SQLite::Database db("testSurface.db",
+                      SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
+  doCreateOrClear(db);
+
+  SUBCASE("color")
+  {
+    auto pos = putSurface(db, 0, {8, 16}, {31, 63, 127, 255});
+    REQUIRE_EQ(pos, 1);
+    auto surface = getSurface(db, getLatestVersion(db), pos);
+    REQUIRE(surface);
+    REQUIRE_EQ(surface.GetSize(), SDL::Point(8, 16));
+    auto result = surface.ReadPixel({2, 2});
+    REQUIRE_EQ(result, Color{31, 63, 127, 255});
+  }
+  SUBCASE("surface")
+  {
+    SDL::Surface testSurface({8, 16}, DEFAULT_FORMAT);
+    testSurface.WritePixel({2, 3}, Color{31, 63, 127, 255});
+    auto pos = putSurface(db, 0, testSurface);
+
+    auto resultSurface = getSurface(db, getLatestVersion(db), pos);
+    REQUIRE(resultSurface);
+    REQUIRE_EQ(resultSurface.GetSize(), SDL::Point(8, 16));
+    auto result = resultSurface.ReadPixel({2, 3});
+    REQUIRE_EQ(result, Color{31, 63, 127, 255});
+  }
+}
+
 std::string
 ctos(SDL::Color color)
 {
@@ -501,5 +573,4 @@ copyTo(const Surface& surface, Uint8* target)
     target += w * 4;
   }
 }
-
 }
