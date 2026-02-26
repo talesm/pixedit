@@ -8,8 +8,8 @@
 
 #include <picosha2.h>
 
+#include "Color.hpp"
 #include "dumpSurface.hpp"
-#include "primitives/Point.hpp"
 
 namespace pixedit::persist {
 
@@ -31,7 +31,8 @@ getPath(SQLite::Database& db, const std::string& kind, Sint64 pos);
 
 static Sint64
 putResource(SQLite::Database& db,
-            Sint64 pathId,
+            const std::string& kind,
+            Sint64 pos,
             const json& options,
             std::span<Uint8> content = {});
 
@@ -317,28 +318,30 @@ doInsertResource(SQLite::Database& db,
 }
 
 static Sint64
+makePath(SQLite::Database& db, const std::string& kind, Sint64* pos)
+{ return *pos ? getPath(db, kind, *pos) : insertPath(db, kind, pos); }
+
+static Sint64
 putResource(SQLite::Database& db,
-            Sint64 pathId,
+            const std::string& kind,
+            Sint64 pos,
             const json& options,
             std::span<Uint8> content)
 {
+  auto pathId = makePath(db, kind, &pos);
   Sint64 resourceId = doInsertResource(db, options, content);
   SQLite::Statement query{
     db, R"===(INSERT INTO "Action" (resource_id, command_id, path_id)
-VALUES (?, (SELECT MAX(id) FROM "Command"), ?) RETURNING id;)==="};
+VALUES (?, (SELECT MAX(id) FROM "Command"), ?);)==="};
 
   // Bind values
   query.bind(1, resourceId);
   query.bind(2, pathId);
 
   // Exec
-  if (!query.executeStep()) throw std::runtime_error{"Error creating action"};
-  return query.getColumn(0).getInt64();
+  if (!query.exec()) throw std::runtime_error{"Error creating action"};
+  return pos;
 }
-
-static Sint64
-makePath(SQLite::Database& db, const std::string& kind, Sint64* pos)
-{ return *pos ? getPath(db, kind, *pos) : insertPath(db, kind, pos); }
 
 static json
 getResource(const SQLite::Database& db,
@@ -382,10 +385,9 @@ TEST_CASE("getResource")
   SQLite::Database db("", SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
   doCreateOrClear(db);
 
-  Sint64 pos = 0;
-  Sint64 pathId = makePath(db, "test", &pos);
   Uint8 content[4] = {1, 2, 3, 4};
-  putResource(db, pathId, json{{"field", "value", "answer", 42}}, content);
+  Sint64 pos =
+    putResource(db, "test", 0, json{{"field", "value", "answer", 42}}, content);
 
   REQUIRE_EQ(pos, 1);
   SUBCASE("without buffer")
@@ -405,8 +407,6 @@ TEST_CASE("getResource")
 Sint64
 putSurface(SQLite::Database& db, Sint64 pos, const Surface& surface)
 {
-  auto pathId = makePath(db, KIND_SURFACE, &pos);
-
   // Copy data to buffer
   int width = surface.GetWidth();
   int height = surface.GetHeight();
@@ -421,9 +421,7 @@ putSurface(SQLite::Database& db, Sint64 pos, const Surface& surface)
     {"depth", depth},
   }; // Prepare query
 
-  putResource(db, pathId, options, content);
-
-  return pos;
+  return putResource(db, KIND_SURFACE, pos, options, content);
 }
 
 Sint64
@@ -432,8 +430,6 @@ putSurface(SQLite::Database& db,
            const SDL::Point& size,
            SDL::Color color)
 {
-  auto pathId = makePath(db, KIND_SURFACE, &pos);
-
   // Copy data to buffer
   int width = size.x;
   int height = size.y;
@@ -447,9 +443,7 @@ putSurface(SQLite::Database& db,
     {"color", ctos(color)},
   }; // Prepare query
 
-  putResource(db, pathId, options);
-
-  return pos;
+  return putResource(db, KIND_SURFACE, pos, options);
 }
 
 static SDL::Uint32
@@ -473,7 +467,7 @@ getSurface(SQLite::Database& db,
   int height = options["height"];
   int depth = options["depth"];
   SDL_assert(depth == 4);
-  Point size = {width, height};
+  SDL::Point size = {width, height};
   if (!*surface || surface->GetSize() != size ||
       surface->GetFormat() != DEFAULT_FORMAT) {
     *surface = Surface{size, DEFAULT_FORMAT};
@@ -493,8 +487,7 @@ getSurface(SQLite::Database& db,
 
 TEST_CASE("getSurface")
 {
-  SQLite::Database db("testSurface.db",
-                      SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
+  SQLite::Database db("", SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
   doCreateOrClear(db);
 
   SUBCASE("color")
