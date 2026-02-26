@@ -11,9 +11,9 @@ static void
 doCreateOrClear(SQLite::Database& db);
 
 static Sint64
-insertResource(SQLite::Database& db,
-               const json& options,
-               std::span<Uint8> content = {});
+doInsertResource(SQLite::Database& db,
+                 const json& options,
+                 std::span<Uint8> content = {});
 
 static Sint64
 insertPath(SQLite::Database& db, const std::string& kind, Sint64* pos);
@@ -233,25 +233,9 @@ makeSurface32Buffer(const Surface& surface)
 }
 
 Sint64
-insertResource(SQLite::Database& db, const Surface& surface)
-{
-  // Copy data to buffer
-  int width = surface.GetWidth();
-  int height = surface.GetHeight();
-  int depth = 4;
-
-  auto content = makeSurface32Buffer(surface);
-
-  // Store options
-  json options{
-    {"width", width}, {"height", height}, {"depth", depth}}; // Prepare query
-  return insertResource(db, options, content);
-}
-
-Sint64
-insertResource(SQLite::Database& db,
-               const json& options,
-               std::span<Uint8> content)
+doInsertResource(SQLite::Database& db,
+                 const json& options,
+                 std::span<Uint8> content)
 {
   const Sint64 bufferId = content.empty() ? 0 : insertBuffer(db, content);
   SQLite::Statement query{
@@ -277,7 +261,7 @@ putResource(SQLite::Database& db,
             const json& options,
             std::span<Uint8> content)
 {
-  Sint64 resourceId = insertResource(db, options, content);
+  Sint64 resourceId = doInsertResource(db, options, content);
   SQLite::Statement query{
     db, R"===(INSERT INTO "Action" (resource_id, command_id, path_id)
 VALUES (?, (SELECT MAX(id) FROM "Command"), ?) RETURNING id;)==="};
