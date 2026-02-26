@@ -32,6 +32,13 @@ putResource(SQLite::Database& db,
             const json& options,
             std::span<Uint8> content = {});
 
+static json
+getResource(const SQLite::Database& db,
+            Sint64 command_id,
+            const std::string& kind,
+            Sint64 pos,
+            std::vector<Uint8>* buffer);
+
 static const char createCommand[] = R"==(
 SAVEPOINT "Clearing";
 PRAGMA foreign_keys = OFF;
@@ -291,12 +298,12 @@ doInsertResource(SQLite::Database& db,
   const Sint64 bufferId = content.empty() ? 0 : makeBuffer(db, content);
   SQLite::Statement query{
     db,
-    R"===(INSERT INTO "Resource" (buffer_id, options) VALUES (?, ?) RETURNING id;)==="};
+    R"===(INSERT INTO "Resource" (options, buffer_id) VALUES (?, ?) RETURNING id;)==="};
 
   // Bind values
-  query.bind(1, bufferId);
+  query.bind(1, options.dump());
   if (bufferId != 0) {
-    query.bind(2, options.dump());
+    query.bind(2, bufferId);
   } else {
     query.bind(2);
   }
@@ -329,6 +336,68 @@ VALUES (?, (SELECT MAX(id) FROM "Command"), ?) RETURNING id;)==="};
 static Sint64
 makePath(SQLite::Database& db, const std::string& kind, Sint64* pos)
 { return *pos ? getPath(db, kind, *pos) : insertPath(db, kind, pos); }
+
+static json
+getResource(const SQLite::Database& db,
+            Sint64 command_id,
+            const std::string& kind,
+            Sint64 pos,
+            std::vector<Uint8>* buffer = nullptr)
+{
+  SQLite::Statement query(db, R"==(SELECT options, content
+FROM "Path" p
+JOIN "Action" a ON a.path_id = p.id
+JOIN "Resource" r ON a.resource_id = r.id
+LEFT JOIN "Buffer" b ON r.buffer_id = b.id
+WHERE a.command_id = ?
+AND p.kind = ?
+AND p.pos = ?
+;)==");
+
+  query.bind(1, command_id);
+  query.bind(2, kind);
+  query.bind(3, pos);
+
+  if (!query.executeStep()) return {};
+
+  auto options = json::parse(query.getColumn(0).getString());
+  if (buffer) {
+    auto contentColumn = query.getColumn(1);
+    if (contentColumn.isNull()) {
+      buffer->clear();
+    } else {
+      int64_t size = contentColumn.getBytes();
+      buffer->resize(size);
+      std::memcpy(buffer->data(), contentColumn.getBlob(), size);
+    }
+  }
+  return options;
+}
+
+TEST_CASE("getResource")
+{
+  SQLite::Database db("", SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
+  doCreateOrClear(db);
+
+  Sint64 pos = 0;
+  Sint64 pathId = makePath(db, "test", &pos);
+  Uint8 content[4] = {1, 2, 3, 4};
+  putResource(db, pathId, json{{"field", "value", "answer", 42}}, content);
+
+  REQUIRE_EQ(pos, 1);
+  SUBCASE("without buffer")
+  {
+    auto result = getResource(db, 1, "test", pos);
+    REQUIRE_EQ(result, json{{"field", "value", "answer", 42}});
+  }
+  SUBCASE("with buffer")
+  {
+    std::vector<Uint8> contentResult;
+    auto result = getResource(db, 1, "test", pos, &contentResult);
+    REQUIRE_EQ(result, json{{"field", "value", "answer", 42}});
+    REQUIRE_EQ(contentResult.size(), 4);
+  }
+}
 
 Sint64
 putSurface(SQLite::Database& db, Sint64 pos, const Surface& surface)
