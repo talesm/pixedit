@@ -3,6 +3,9 @@
 //
 #include "dbActions.hpp"
 #include <doctest/doctest.h>
+
+#include <set>
+
 #include <picosha2.h>
 
 namespace pixedit::persist {
@@ -111,6 +114,28 @@ TEST_CASE("CreateOrClearFromColor")
     db.execAndGet("SELECT value FROM Meta WHERE key = 'current.image'")
       .getInt();
   REQUIRE(currentPicture == 1);
+
+  REQUIRE(getLatestVersion(db) == 1);
+
+  auto kinds = getKinds(db, 1);
+  REQUIRE(kinds.size() == 1);
+}
+
+Sint64
+getLatestVersion(SQLite::Database& db)
+{ return db.execAndGet("SELECT MAX(id) FROM Command").getInt64(); }
+
+std::set<std::string>
+getKinds(SQLite::Database& db, Sint64 command_id)
+{
+  std::set<std::string> result;
+  SQLite::Statement query(db, R"==(SELECT DISTINCT kind
+FROM Path p JOIN Action a ON a.path_id=p.id
+WHERE a.command_id = 1)==");
+
+  while (query.executeStep()) result.insert(query.getColumn(0));
+
+  return result;
 }
 
 static void

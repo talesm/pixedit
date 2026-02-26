@@ -5,6 +5,8 @@
 #ifndef PIXEDIT_PIXFORMAT_INCLUDE_DB_ACTIONS_INCLUDED
 #define PIXEDIT_PIXFORMAT_INCLUDE_DB_ACTIONS_INCLUDED
 
+#include <set>
+
 #include <SQLiteCpp/SQLiteCpp.h>
 #include <nlohmann/json.hpp>
 
@@ -13,6 +15,15 @@
 namespace pixedit::persist {
 
 using json = nlohmann::json;
+
+/**
+ * Create single frame single layer picture.
+ *
+ * @param db the database.
+ * @param surface surface.
+ */
+void
+createOrClear(SQLite::Database& db, const Surface& surface);
 
 /**
  * Create or clear database tables.
@@ -25,13 +36,23 @@ createOrClear(SQLite::Database& db,
               SDL::Color color = {});
 
 /**
- * Create single frame single layer picture.
+ * Get the latest version
  *
- * @param db the database.
- * @param surface surface.
+ * @param db the database
+ * @return the latest command_id.
  */
-void
-createOrClear(SQLite::Database& db, const Surface& surface);
+Sint64
+getLatestVersion(SQLite::Database& db);
+
+/**
+ * Get all kinds present in a version
+ *
+ * @param db the database
+ * @param command_id the version. If zero or not present get lastest version
+ * @return the set with all path kinds.
+ */
+std::set<std::string>
+getKinds(SQLite::Database& db, Sint64 command_id);
 
 std::string
 ctos(SDL::Color color);
