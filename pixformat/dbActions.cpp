@@ -249,8 +249,8 @@ makeSurface32Buffer(const Surface& surface)
 {
   std::vector<Uint8> buffer;
   buffer.resize(surface->w * surface->h * 4);
-  if (surface.GetFormat() != SDL::PIXELFORMAT_ABGR32) {
-    copyTo(surface.Convert(SDL::PIXELFORMAT_ABGR32), buffer.data());
+  if (surface.GetFormat() != DEFAULT_FORMAT) {
+    copyTo(surface.Convert(DEFAULT_FORMAT), buffer.data());
   } else {
     copyTo(surface, buffer.data());
   }

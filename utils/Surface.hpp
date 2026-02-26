@@ -7,7 +7,7 @@ namespace pixedit {
 
 using SDL::Surface;
 
-constexpr auto DEFAULT_FORMAT = SDL::PIXELFORMAT_ABGR32;
+constexpr auto DEFAULT_FORMAT = SDL::PIXELFORMAT_RGBA8888;
 
 inline Surface
 createMask(int w, int h)
