@@ -35,6 +35,14 @@ public:
 
   void clearContents(const SDL::Surface& surface);
 
+  Sint64 getLatestVersion();
+
+  Sint64 newVersion(Sint64 currentVersion);
+
+  Sint64 putSurface(Sint64 pos, const Surface& surface);
+
+  void getSurface(Sint64 version, Sint64 pos, Surface* surface);
+
 private:
   struct impl;
 

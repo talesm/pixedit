@@ -1,5 +1,6 @@
 #include "PictureBuffer.hpp"
 #include "Color.hpp"
+#include "TempSurface.hpp"
 #include "loaders.hpp"
 #include "savers.hpp"
 
@@ -8,6 +9,15 @@ namespace pixedit {
 namespace defaults {
 extern const unsigned HISTORY_MAX;
 } // namespace defaults
+
+PictureBuffer::PictureBuffer(PictureFile file, Surface surface_, bool dirty)
+  : file(std::move(file))
+  , surface(std::move(surface_))
+  , document(PixDocument::convert(makeTempFilename("temp_", ".db"), surface))
+  , currentVersion(document.getLatestVersion())
+  , savedVersion(!dirty ? currentVersion : 0)
+{
+}
 
 bool
 PictureFile::load(PictureBuffer& buffer)
@@ -31,16 +41,14 @@ PictureFile::save(const PictureBuffer& buffer)
 
 std::unique_ptr<PictureBuffer>
 PictureBuffer::load(const std::string& filename)
-{
-  return loadBuffer(filename);
-}
+{ return loadBuffer(filename); }
 
 bool
 PictureBuffer::save(bool force)
 {
-  if (!force && lastSave == historyPoint) return false;
+  if (!force && !isDirty()) return false;
   if (!file.save(*this)) return false;
-  lastSave = historyPoint;
+  savedVersion = currentVersion;
   return true;
 }
 bool
@@ -57,37 +65,30 @@ PictureBuffer::saveAs(const std::string& filename)
 }
 bool
 PictureBuffer::saveCopy(const std::string& filename)
-{
-  return saveBuffer(*this, filename);
-}
+{ return saveBuffer(*this, filename); }
 
 void
 PictureBuffer::makeSnapshot()
 {
   if (!surface) return;
   if (selectionSurface) clearSelection();
-  if (historyPoint != history.end()) {
-    history.erase(++historyPoint, history.end());
-  }
-  historyPoint = history.emplace(history.end(), surface);
-  if (history.size() > defaults::HISTORY_MAX) history.pop_front();
+  lastVersion = currentVersion = document.newVersion(currentVersion);
+  document.putSurface(1, surface);
 }
 
 void
 PictureBuffer::refresh()
 {
-  if (!surface || history.empty() || historyPoint == history.end()) return;
+  if (!surface) return;
   if (selectionSurface) clearSelection();
-  surface = historyPoint->recover();
+  document.getSurface(currentVersion, 1, &surface);
 }
 
 bool
 PictureBuffer::undo()
 {
-  if (!surface || history.empty() || historyPoint == history.begin()) {
-    return false;
-  }
-  --historyPoint;
+  if (!surface || currentVersion <= 1) return false;
+  --currentVersion;
   refresh();
   return true;
 }
@@ -95,14 +96,10 @@ PictureBuffer::undo()
 bool
 PictureBuffer::redo()
 {
-  if (!surface || history.empty()) { return false; }
-  ++historyPoint;
-  if (historyPoint == history.end()) {
-    --historyPoint;
-    return false;
-  }
+  if (!surface || currentVersion >= lastVersion) { return false; }
+  ++currentVersion;
   refresh();
-  return false;
+  return true;
 }
 
 void

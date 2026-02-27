@@ -66,6 +66,21 @@ PixDocument::clearContents(const SDL::Surface& surface)
   persist::createOrClear(pimpl->db, surface);
   transaction.commit();
 }
+Sint64
+PixDocument::getLatestVersion()
+{ return persist::getLatestVersion(pimpl->db); }
+
+Sint64
+PixDocument::newVersion(Sint64 currentVersion)
+{ return persist::newVersion(pimpl->db, "Change", currentVersion); }
+
+Sint64
+PixDocument::putSurface(Sint64 pos, const Surface& surface)
+{ return persist::putSurface(pimpl->db, pos, surface); }
+
+void
+PixDocument::getSurface(Sint64 version, Sint64 pos, Surface* surface)
+{ persist::getSurface(pimpl->db, version, pos, surface); }
 
 PixDocument::PixDocument(std::unique_ptr<impl> impl)
   : pimpl{std::move(impl)}

@@ -1,14 +1,12 @@
 #ifndef PIXEDIT_SRC_PICTURE_BUFFER_INCLUDED
 #define PIXEDIT_SRC_PICTURE_BUFFER_INCLUDED
 
-#include <list>
 #include <memory>
 #include <string>
 #include <utility>
 #include <SDL3/SDL.h>
 #include "PictureFile.hpp"
-#include "Surface.hpp"
-#include "TempSurface.hpp"
+#include "PixDocument.hpp"
 #include "rect.hpp"
 
 namespace pixedit {
@@ -19,9 +17,10 @@ class PictureBuffer
 {
   PictureFile file;
   Surface surface;
-  std::list<TempSurface> history;
-  std::list<TempSurface>::iterator historyPoint = history.end();
-  std::list<TempSurface>::iterator lastSave = history.end();
+  PixDocument document;
+  Sint64 currentVersion = 0;
+  Sint64 lastVersion = currentVersion;
+  Sint64 savedVersion = currentVersion;
   Surface selectionSurface;
   Surface selectionMask;
   Rect selectionRect{0, 0, 10, 10};
@@ -31,20 +30,13 @@ public:
   PictureBuffer(std::string filename, Surface s, bool dirty = false)
     : PictureBuffer(PictureFile{std::move(filename)}, std::move(s), dirty) {};
 
-  PictureBuffer(PictureFile file, Surface surface_, bool dirty = false)
-    : file(std::move(file))
-    , surface(std::move(surface_))
-  {
-    if (surface) {
-      makeSnapshot();
-      if (!dirty) { lastSave = history.begin(); }
-    }
-  }
+  PictureBuffer(PictureFile file, Surface surface_, bool dirty = false);
 
   static std::unique_ptr<PictureBuffer> load(const std::string& filename);
 
   /// @brief True if this needs saving
-  bool isDirty() const { return lastSave != historyPoint; }
+  [[nodiscard]] constexpr bool isDirty() const
+  { return savedVersion != currentVersion; }
 
   bool save(bool force = false);
 
@@ -77,9 +69,7 @@ public:
   constexpr void setSelectionRect(SDL_Rect rect) { selectionRect = rect; }
 
   constexpr const Surface& getSelectionSurface() const
-  {
-    return selectionSurface;
-  }
+  { return selectionSurface; }
   constexpr const Surface& getSelectionMask() const { return selectionMask; }
 
   bool hasSelection() const { return selectionSurface != nullptr; }
