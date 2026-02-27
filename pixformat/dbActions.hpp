@@ -48,11 +48,11 @@ getLatestVersion(SQLite::Database& db);
  * Get all kinds present in a version
  *
  * @param db the database
- * @param command_id the version. If zero or not present get lastest version
+ * @param versionId the version. If zero or not present get lastest version
  * @return the set with all path kinds.
  */
 std::set<std::string>
-getKinds(SQLite::Database& db, Sint64 command_id);
+getKinds(SQLite::Database& db, Sint64 versionId);
 
 /**
  * Create new version
@@ -80,7 +80,7 @@ putSurface(SQLite::Database& db,
 
 void
 getSurface(SQLite::Database& db,
-           Sint64 command_id,
+           Sint64 versionId,
            Sint64 pos,
            Surface* surface);
 

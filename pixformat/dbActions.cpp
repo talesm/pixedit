@@ -38,17 +38,17 @@ putResource(SQLite::Database& db,
 
 static json
 getResource(const SQLite::Database& db,
-            Sint64 command_id,
+            Sint64 versionId,
             const std::string& kind,
             Sint64 pos,
             std::vector<Uint8>* content = nullptr);
 
-static const char createCommand[] = R"==(
+static const char createSchema[] = R"==(
 SAVEPOINT "Clearing";
 PRAGMA foreign_keys = OFF;
-DROP TABLE IF EXISTS "Action";
+DROP TABLE IF EXISTS "ResourceVersion";
 DROP TABLE IF EXISTS "Path";
-DROP TABLE IF EXISTS "Command";
+DROP TABLE IF EXISTS "Version";
 DROP TABLE IF EXISTS "Resource";
 DROP TABLE IF EXISTS "Buffer";
 DROP TABLE IF EXISTS "Meta";
@@ -68,7 +68,7 @@ CREATE TABLE "Resource" (
 	"options"	TEXT DEFAULT '{}',
         "buffer_id"     INTEGER REFERENCES "Buffer"("id")
 );
-CREATE TABLE "Command" (
+CREATE TABLE "Version" (
         "id"            INTEGER PRIMARY KEY,
         "description"   TEXT NOT NULL,
 	"options"       TEXT DEFAULT '{}'
@@ -79,21 +79,21 @@ CREATE TABLE "Path" (
         "pos"           INTEGER NOT NULL,
         UNIQUE (kind, pos)
 );
-CREATE TABLE "Action" (
+CREATE TABLE "ResourceVersion" (
 	"id"	        INTEGER PRIMARY KEY,
 	"resource_id"   INTEGER REFERENCES "Resource"("id") ON UPDATE CASCADE ON DELETE CASCADE,
-        "command_id"    INTEGER NOT NULL REFERENCES "Command"("id") ON UPDATE CASCADE ON DELETE CASCADE,
+        "version_id"    INTEGER NOT NULL REFERENCES "Version"("id") ON UPDATE CASCADE ON DELETE CASCADE,
         "path_id"       INTEGER NOT NULL REFERENCES "Path"("id") ON UPDATE CASCADE ON DELETE CASCADE,
-        UNIQUE (command_id, path_id) ON CONFLICT REPLACE
+        UNIQUE (version_id, path_id) ON CONFLICT REPLACE
 );
 INSERT INTO "Meta" VALUES ('format.version', '0.0.1');
-INSERT INTO "Command" VALUES (1, '', '{"baseline": true}');
+INSERT INTO "Version" VALUES (1, '', '{"baseline": true}');
 RELEASE SAVEPOINT "Clearing";
 )==";
 
 void
 doCreateOrClear(SQLite::Database& db)
-{ db.exec(createCommand); }
+{ db.exec(createSchema); }
 
 void
 createOrClear(SQLite::Database& db, const Surface& surface)
@@ -160,16 +160,16 @@ TEST_CASE("CreateOrClearFromSurface")
 
 Sint64
 getLatestVersion(SQLite::Database& db)
-{ return db.execAndGet("SELECT MAX(id) FROM Command").getInt64(); }
+{ return db.execAndGet("SELECT MAX(id) FROM Version").getInt64(); }
 
 std::set<std::string>
-getKinds(SQLite::Database& db, Sint64 command_id)
+getKinds(SQLite::Database& db, Sint64 versionId)
 {
   std::set<std::string> result;
   SQLite::Statement query(db, R"==(SELECT DISTINCT kind
-FROM Path p JOIN Action a ON a.path_id=p.id
-WHERE a.command_id = ?)==");
-  query.bind(1, command_id);
+FROM Path p JOIN ResourceVersion a ON a.path_id=p.id
+WHERE a.version_id = ?)==");
+  query.bind(1, versionId);
 
   while (query.executeStep()) result.insert(query.getColumn(0));
 
@@ -179,36 +179,36 @@ WHERE a.command_id = ?)==");
 Sint64
 newVersion(SQLite::Database& db,
            const std::string& description,
-           Sint64 commandId)
+           Sint64 srcVersionId)
 {
   // db.exec("SAVEPOINT newVersion");
-  if (commandId != 0) {
-    SQLite::Statement deleteActionQuery(
-      db, R"==(DELETE FROM Action WHERE command_id > ?1;)==");
-    deleteActionQuery.bind(1, commandId);
-    deleteActionQuery.exec();
-    SQLite::Statement deleteCommandQuery(
-      db, R"==(DELETE FROM Command WHERE id > ?1;)==");
-    deleteCommandQuery.bind(1, commandId);
-    deleteCommandQuery.exec();
+  if (srcVersionId != 0) {
+    SQLite::Statement deleteResourceVersionQuery(
+      db, R"==(DELETE FROM ResourceVersion WHERE version_id > ?1;)==");
+    deleteResourceVersionQuery.bind(1, srcVersionId);
+    deleteResourceVersionQuery.exec();
+    SQLite::Statement deleteVersionQuery(
+      db, R"==(DELETE FROM Version WHERE id > ?1;)==");
+    deleteVersionQuery.bind(1, srcVersionId);
+    deleteVersionQuery.exec();
   } else {
-    commandId = getLatestVersion(db);
+    srcVersionId = getLatestVersion(db);
   }
-  Sint64 newCommandId = commandId + 1;
-  SQLite::Statement commandQuery(
-    db, R"==(INSERT INTO Command VALUES (?, ?, '{}');)==");
-  commandQuery.bind(1, newCommandId);
-  commandQuery.bind(2, description);
-  commandQuery.exec();
+  Sint64 dstVersionId = srcVersionId + 1;
+  SQLite::Statement versionQuery(
+    db, R"==(INSERT INTO Version VALUES (?, ?, '{}');)==");
+  versionQuery.bind(1, dstVersionId);
+  versionQuery.bind(2, description);
+  versionQuery.exec();
 
-  SQLite::Statement actionsQuery(
-    db, R"==(INSERT INTO Action(resource_id, command_id, path_id)
-SELECT resource_id, ?1, path_id FROM Action WHERE command_id = ?2;)==");
-  actionsQuery.bind(1, newCommandId);
-  actionsQuery.bind(2, commandId);
-  actionsQuery.exec();
+  SQLite::Statement versionsQuery(
+    db, R"==(INSERT INTO ResourceVersion(resource_id, version_id, path_id)
+SELECT resource_id, ?1, path_id FROM ResourceVersion WHERE version_id = ?2;)==");
+  versionsQuery.bind(1, dstVersionId);
+  versionsQuery.bind(2, srcVersionId);
+  versionsQuery.exec();
 
-  return newCommandId;
+  return dstVersionId;
 }
 
 TEST_CASE("newVersion")
@@ -216,19 +216,19 @@ TEST_CASE("newVersion")
   SQLite::Database db("", SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
   createOrClear(db, {8, 8}, {1, 2, 3, 4});
   REQUIRE_EQ(getLatestVersion(db), 1);
-  REQUIRE_EQ(db.execAndGet("SELECT count(1) FROM Action").getInt(), 1);
+  REQUIRE_EQ(db.execAndGet("SELECT count(1) FROM ResourceVersion").getInt(), 1);
 
   newVersion(db, "a change 1");
   REQUIRE_EQ(getLatestVersion(db), 2);
-  REQUIRE_EQ(db.execAndGet("SELECT count(1) FROM Action").getInt(), 2);
+  REQUIRE_EQ(db.execAndGet("SELECT count(1) FROM ResourceVersion").getInt(), 2);
 
   newVersion(db, "a change 2");
   REQUIRE_EQ(getLatestVersion(db), 3);
-  REQUIRE_EQ(db.execAndGet("SELECT count(1) FROM Action").getInt(), 3);
+  REQUIRE_EQ(db.execAndGet("SELECT count(1) FROM ResourceVersion").getInt(), 3);
 
   newVersion(db, "a change 1b", 1);
   REQUIRE_EQ(getLatestVersion(db), 2);
-  REQUIRE_EQ(db.execAndGet("SELECT count(1) FROM Action").getInt(), 2);
+  REQUIRE_EQ(db.execAndGet("SELECT count(1) FROM ResourceVersion").getInt(), 2);
 }
 
 static void
@@ -387,36 +387,36 @@ putResource(SQLite::Database& db,
   auto pathId = makePath(db, kind, &pos);
   Sint64 resourceId = doInsertResource(db, options, content);
   SQLite::Statement query{
-    db, R"===(INSERT INTO "Action" (resource_id, command_id, path_id)
-VALUES (?, (SELECT MAX(id) FROM "Command"), ?);)==="};
+    db, R"===(INSERT INTO "ResourceVersion" (resource_id, version_id, path_id)
+VALUES (?, (SELECT MAX(id) FROM "Version"), ?);)==="};
 
   // Bind values
   query.bind(1, resourceId);
   query.bind(2, pathId);
 
   // Exec
-  if (!query.exec()) throw std::runtime_error{"Error creating action"};
+  if (!query.exec()) throw std::runtime_error{"Error creating ResourceVersion"};
   return pos;
 }
 
 static json
 getResource(const SQLite::Database& db,
-            Sint64 command_id,
+            Sint64 versionId,
             const std::string& kind,
             Sint64 pos,
             std::vector<Uint8>* content)
 {
   SQLite::Statement query(db, R"==(SELECT options, content
 FROM "Path" p
-JOIN "Action" a ON a.path_id = p.id
+JOIN "ResourceVersion" a ON a.path_id = p.id
 JOIN "Resource" r ON a.resource_id = r.id
 LEFT JOIN "Buffer" b ON r.buffer_id = b.id
-WHERE a.command_id = ?
+WHERE a.version_id = ?
 AND p.kind = ?
 AND p.pos = ?
 ;)==");
 
-  query.bind(1, command_id);
+  query.bind(1, versionId);
   query.bind(2, kind);
   query.bind(3, pos);
 
@@ -512,13 +512,10 @@ atoc(const std::string& value)
 }
 
 void
-getSurface(SQLite::Database& db,
-           Sint64 command_id,
-           Sint64 pos,
-           Surface* surface)
+getSurface(SQLite::Database& db, Sint64 versionId, Sint64 pos, Surface* surface)
 {
   std::vector<Uint8> content;
-  json options = getResource(db, command_id, KIND_SURFACE, pos, &content);
+  json options = getResource(db, versionId, KIND_SURFACE, pos, &content);
   int width = options["width"];
   int height = options["height"];
   int depth = options["depth"];
