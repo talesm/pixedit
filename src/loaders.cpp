@@ -2,10 +2,9 @@
 #include <fstream>
 #include <unordered_map>
 #include <vector>
-#include <SDL3_image/SDL_image.h>
 #include "PictureBuffer.hpp"
-#include "Surface.hpp"
 #include "replayPicture.hpp"
+#include "saveSurface.hpp"
 
 namespace pixedit {
 
@@ -19,7 +18,7 @@ getDefaultLoaderIds()
 static Surface
 doLoadSurface(const std::string& filename, Id loader)
 {
-  if (loader == loaders::PIX) { return nullptr; }
+  if (loader == loaders::PIX) return loadPixSurface(filename);
   if (loader == loaders::SDL_IMAGE) return SDL::LoadSurface(filename);
   if (loader == loaders::TEXT) {
     std::ifstream fStream(filename);

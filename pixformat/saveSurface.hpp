@@ -12,6 +12,9 @@ namespace pixedit {
 void
 savePixSurface(const Surface& surface, const std::string& filename);
 
+Surface
+loadPixSurface(const std::string& filename);
+
 }
 
 #endif // PIXEDITOR_SAVESURFACE_HPP

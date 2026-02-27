@@ -50,6 +50,14 @@ PixDocument::convert(const std::string& filename, const SDL::Surface& surface)
   doc.clearContents(surface);
   return doc;
 }
+PixDocument
+PixDocument::load(const std::string& filename)
+{
+  PixDocument doc(
+    std::make_unique<impl>(SQLite::Database(filename, SQLite::OPEN_READWRITE)));
+  // todo: Validate
+  return doc;
+}
 
 void
 PixDocument::clearContents(const SDL::Point& size)

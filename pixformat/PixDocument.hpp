@@ -29,7 +29,7 @@ public:
   static PixDocument convert(const std::string& filename,
                              const SDL::Surface& surface);
 
-  static PixDocument load(const std::string& path);
+  static PixDocument load(const std::string& filename);
 
   void clearContents(const SDL::Point& size = {});
 
@@ -42,6 +42,13 @@ public:
   Sint64 putSurface(Sint64 pos, const Surface& surface);
 
   void getSurface(Sint64 version, Sint64 pos, Surface* surface);
+
+  Surface getSurface(Sint64 version, int pos)
+  {
+    Surface surface;
+    getSurface(version, pos, &surface);
+    return surface;
+  }
 
 private:
   struct impl;

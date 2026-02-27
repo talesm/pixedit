@@ -10,9 +10,7 @@ namespace pixedit {
 
 bool
 saveBuffer(const PictureBuffer& buffer, const std::string& filename, Id saver)
-{
-  return saveSurface(buffer.getSurface(), filename, saver);
-}
+{ return saveSurface(buffer.getSurface(), filename, saver); }
 
 static bool
 doSaveSurface(const Surface& surface, const std::string& filename, Id saver)
@@ -61,7 +59,8 @@ savers::get(Id saver)
 Id
 saverForFile(const std::string& filename)
 {
-  if (filename.ends_with(".pix")) return savers::PIX;
+  if (filename.ends_with(".pix") || filename.ends_with(".db"))
+    return savers::PIX;
   if (filename.ends_with(".png")) return savers::SDL2_IMAGE_PNG;
   if (filename.ends_with(".jpg") || filename.ends_with(".jpeg"))
     return savers::SDL2_IMAGE_JPEG;
