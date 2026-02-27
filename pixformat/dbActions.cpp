@@ -168,7 +168,8 @@ getKinds(SQLite::Database& db, Sint64 command_id)
   std::set<std::string> result;
   SQLite::Statement query(db, R"==(SELECT DISTINCT kind
 FROM Path p JOIN Action a ON a.path_id=p.id
-WHERE a.command_id = 1)==");
+WHERE a.command_id = ?)==");
+  query.bind(1, command_id);
 
   while (query.executeStep()) result.insert(query.getColumn(0));
 
@@ -212,8 +213,7 @@ SELECT resource_id, ?1, path_id FROM Action WHERE command_id = ?2;)==");
 
 TEST_CASE("newVersion")
 {
-  SQLite::Database db("newVersion.db",
-                      SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
+  SQLite::Database db("", SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
   createOrClear(db, {8, 8}, {1, 2, 3, 4});
   REQUIRE_EQ(getLatestVersion(db), 1);
   REQUIRE_EQ(db.execAndGet("SELECT count(1) FROM Action").getInt(), 1);
