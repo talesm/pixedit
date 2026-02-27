@@ -80,11 +80,11 @@ CREATE TABLE "Path" (
         UNIQUE (kind, pos)
 );
 CREATE TABLE "ResourceVersion" (
-	"id"	        INTEGER PRIMARY KEY,
-	"resource_id"   INTEGER REFERENCES "Resource"("id") ON UPDATE CASCADE ON DELETE CASCADE,
         "version_id"    INTEGER NOT NULL REFERENCES "Version"("id") ON UPDATE CASCADE ON DELETE CASCADE,
         "path_id"       INTEGER NOT NULL REFERENCES "Path"("id") ON UPDATE CASCADE ON DELETE CASCADE,
-        UNIQUE (version_id, path_id) ON CONFLICT REPLACE
+	"resource_id"   INTEGER REFERENCES "Resource"("id") ON UPDATE CASCADE ON DELETE CASCADE,
+        UNIQUE ("version_id", "path_id") ON CONFLICT REPLACE,
+        PRIMARY KEY("version_id", "path_id")
 );
 INSERT INTO "Meta" VALUES ('format.version', '0.0.1');
 INSERT INTO "Version" VALUES (1, '', '{"baseline": true}');
