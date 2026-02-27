@@ -39,7 +39,7 @@ createOrClear(SQLite::Database& db,
  * Get the latest version
  *
  * @param db the database
- * @return the latest command_id.
+ * @return the latest versionId.
  */
 Sint64
 getLatestVersion(SQLite::Database& db);
@@ -58,13 +58,13 @@ getKinds(SQLite::Database& db, Sint64 versionId);
  * Create new version
  * @param db the database
  * @param description the description
- * @param command_id the command id to base version into
+ * @param versionId the command id to base version into
  * @return the new version command id
  */
 Sint64
 newVersion(SQLite::Database& db,
            const std::string& description,
-           Sint64 command_id = 0);
+           Sint64 versionId = 0);
 
 std::string
 ctos(SDL::Color color);
@@ -85,10 +85,10 @@ getSurface(SQLite::Database& db,
            Surface* surface);
 
 inline Surface
-getSurface(SQLite::Database& db, Sint64 command_id, Sint64 pos)
+getSurface(SQLite::Database& db, Sint64 versionId, Sint64 pos)
 {
   Surface s;
-  getSurface(db, command_id, pos, &s);
+  getSurface(db, versionId, pos, &s);
   return s;
 }
 
