@@ -15,6 +15,8 @@ using json = nlohmann::json;
 class PixDocument
 {
 public:
+  PixDocument();
+
   PixDocument(PixDocument&&) noexcept;
 
   PixDocument& operator=(PixDocument&&) noexcept;

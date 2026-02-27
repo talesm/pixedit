@@ -17,6 +17,8 @@ struct PixDocument::impl
     : db{std::move(db)} {};
 };
 
+PixDocument::PixDocument() = default;
+
 PixDocument::PixDocument(PixDocument&&) noexcept = default;
 
 PixDocument&
