@@ -92,6 +92,33 @@ getSurface(SQLite::Database& db, Sint64 versionId, Sint64 pos)
   return s;
 }
 
+struct Layer
+{
+  Sint64 surface;
+};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Layer, surface)
+
+struct Frame
+{
+  std::vector<Layer> layers;
+};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Frame, layers)
+
+struct Picture
+{
+  std::vector<Frame> frames;
+  int width;
+  int height;
+  int depth = 4;
+};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Picture, frames, width, height, depth)
+
+Sint64
+putPicture(SQLite::Database& db, Sint64 pos, const Picture& picture);
+
+Picture
+getPicture(SQLite::Database& db, Sint64 versionId, Sint64 pos);
+
 }
 
 #endif /* PIXEDIT_PIXFORMAT_INCLUDE_DB_ACTIONS_INCLUDED */

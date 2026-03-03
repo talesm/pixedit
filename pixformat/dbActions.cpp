@@ -14,6 +14,7 @@
 namespace pixedit::persist {
 
 constexpr auto KIND_SURFACE = "surface";
+constexpr auto KIND_PICTURE = "picture";
 
 static void
 doCreateOrClear(SQLite::Database& db);
@@ -99,9 +100,16 @@ void
 createOrClear(SQLite::Database& db, const Surface& surface)
 {
   doCreateOrClear(db);
-  putSurface(db, 0, surface);
+  auto surfaceId = putSurface(db, 0, surface);
+  putPicture(db,
+             0,
+             Picture{
+               .frames = {{.layers = {{.surface = surfaceId}}}},
+               .width = surface->w,
+               .height = surface->h,
+             });
 
-  db.exec(R"===(INSERT INTO "Meta" VALUES ('current.mode', 'surface');)===");
+  db.exec(R"===(INSERT INTO "Meta" VALUES ('current.mode', 'picture');)===");
   db.exec(R"===(INSERT INTO "Meta" VALUES ('current.image', 1);)===");
 }
 
@@ -109,9 +117,16 @@ void
 createOrClear(SQLite::Database& db, const SDL::Point& size, SDL::Color color)
 {
   doCreateOrClear(db);
-  putSurface(db, 0, size, color);
+  auto surfaceId = putSurface(db, 0, size, color);
+  putPicture(db,
+             0,
+             Picture{
+               .frames = {{.layers = {{.surface = surfaceId}}}},
+               .width = size.x,
+               .height = size.y,
+             });
 
-  db.exec(R"===(INSERT INTO "Meta" VALUES ('current.mode', 'surface');)===");
+  db.exec(R"===(INSERT INTO "Meta" VALUES ('current.mode', 'picture');)===");
   db.exec(R"===(INSERT INTO "Meta" VALUES ('current.image', 1);)===");
 }
 
@@ -123,17 +138,27 @@ TEST_CASE("CreateOrClearFromColor")
   auto currentMode =
     db.execAndGet("SELECT value FROM Meta WHERE key = 'current.mode'")
       .getString();
-  REQUIRE(currentMode == KIND_SURFACE);
+  REQUIRE_EQ(currentMode, KIND_PICTURE);
 
   auto currentPicture =
     db.execAndGet("SELECT value FROM Meta WHERE key = 'current.image'")
       .getInt();
-  REQUIRE(currentPicture == 1);
+  REQUIRE_EQ(currentPicture, 1);
 
-  REQUIRE(getLatestVersion(db) == 1);
+  REQUIRE_EQ(getLatestVersion(db), 1);
 
   auto kinds = getKinds(db, 1);
-  REQUIRE(kinds.size() == 1);
+  REQUIRE_EQ(kinds.size(), 2);
+
+  auto pictureJson = getResource(db, 1, KIND_PICTURE, 1);
+  REQUIRE_EQ(pictureJson.at("width"), 8);
+  REQUIRE_EQ(pictureJson.at("height"), 8);
+  REQUIRE_EQ(pictureJson.at("depth"), 4);
+  auto frames = pictureJson.at("frames");
+  REQUIRE_EQ(frames.size(), 1);
+  auto layers = frames.at(0).at("layers");
+  REQUIRE_EQ(layers.size(), 1);
+  REQUIRE_EQ(layers.at(0).at("surface"), 1);
 }
 
 TEST_CASE("CreateOrClearFromSurface")
@@ -145,17 +170,27 @@ TEST_CASE("CreateOrClearFromSurface")
   auto currentMode =
     db.execAndGet("SELECT value FROM Meta WHERE key = 'current.mode'")
       .getString();
-  REQUIRE(currentMode == KIND_SURFACE);
+  REQUIRE_EQ(currentMode, KIND_PICTURE);
 
   auto currentPicture =
     db.execAndGet("SELECT value FROM Meta WHERE key = 'current.image'")
       .getInt();
-  REQUIRE(currentPicture == 1);
+  REQUIRE_EQ(currentPicture, 1);
 
-  REQUIRE(getLatestVersion(db) == 1);
+  REQUIRE_EQ(getLatestVersion(db), 1);
 
   auto kinds = getKinds(db, 1);
-  REQUIRE(kinds.size() == 1);
+  REQUIRE_EQ(kinds.size(), 2);
+
+  auto pictureJson = getResource(db, 1, KIND_PICTURE, 1);
+  REQUIRE_EQ(pictureJson.at("width"), 8);
+  REQUIRE_EQ(pictureJson.at("height"), 8);
+  REQUIRE_EQ(pictureJson.at("depth"), 4);
+  auto frames = pictureJson.at("frames");
+  REQUIRE_EQ(frames.size(), 1);
+  auto layers = frames.at(0).at("layers");
+  REQUIRE_EQ(layers.size(), 1);
+  REQUIRE_EQ(layers.at(0).at("surface"), 1);
 }
 
 Sint64
@@ -216,19 +251,19 @@ TEST_CASE("newVersion")
   SQLite::Database db("", SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
   createOrClear(db, {8, 8}, {1, 2, 3, 4});
   REQUIRE_EQ(getLatestVersion(db), 1);
-  REQUIRE_EQ(db.execAndGet("SELECT count(1) FROM ResourceVersion").getInt(), 1);
+  REQUIRE_EQ(db.execAndGet("SELECT count(1) FROM ResourceVersion").getInt(), 2);
 
   newVersion(db, "a change 1");
   REQUIRE_EQ(getLatestVersion(db), 2);
-  REQUIRE_EQ(db.execAndGet("SELECT count(1) FROM ResourceVersion").getInt(), 2);
+  REQUIRE_EQ(db.execAndGet("SELECT count(1) FROM ResourceVersion").getInt(), 4);
 
   newVersion(db, "a change 2");
   REQUIRE_EQ(getLatestVersion(db), 3);
-  REQUIRE_EQ(db.execAndGet("SELECT count(1) FROM ResourceVersion").getInt(), 3);
+  REQUIRE_EQ(db.execAndGet("SELECT count(1) FROM ResourceVersion").getInt(), 6);
 
   newVersion(db, "a change 1b", 1);
   REQUIRE_EQ(getLatestVersion(db), 2);
-  REQUIRE_EQ(db.execAndGet("SELECT count(1) FROM ResourceVersion").getInt(), 2);
+  REQUIRE_EQ(db.execAndGet("SELECT count(1) FROM ResourceVersion").getInt(), 4);
 }
 
 static void
@@ -619,4 +654,12 @@ copyTo(const Surface& surface, Uint8* target)
     target += w * 4;
   }
 }
+
+Sint64
+putPicture(SQLite::Database& db, Sint64 pos, const Picture& picture)
+{ return putResource(db, KIND_PICTURE, pos, json(picture)); }
+
+Picture
+getPicture(SQLite::Database& db, Sint64 versionId, Sint64 pos)
+{ return getResource(db, versionId, KIND_PICTURE, pos); }
 }
