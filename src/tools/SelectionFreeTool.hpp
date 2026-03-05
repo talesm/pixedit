@@ -100,14 +100,14 @@ struct SelectionFreeTool
 
   void finishSelection(PictureBuffer& buffer, bool transparent, Color fillColor)
   {
-    SDL_Point p0 = points[0], p1 = points[0];
+    Point p0 = points[0], p1 = points[0];
     for (auto& p : points) {
       p0.x = std::min(p0.x, p.x);
       p0.y = std::min(p0.y, p.y);
       p1.x = std::max(p1.x, p.x);
       p1.y = std::max(p1.y, p.y);
     }
-    SDL_Rect rect = intersectFromOrigin(Rect(p0, p1), buffer.getSize());
+    SDL_Rect rect = intersectFromOrigin(Rect(p0, p1 - p0), buffer.getSize());
     for (auto& p : points) {
       p.x -= rect.x;
       p.y -= rect.y;
