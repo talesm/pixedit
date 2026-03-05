@@ -11,7 +11,7 @@ namespace pixedit {
 struct SelectionRectTool
 {
   SelectionHandTool handTool;
-  SDL_Point lastPoint;
+  Point lastPoint;
 
   void operator()(PictureView& view, PictureEvent event)
   {
@@ -25,7 +25,7 @@ struct SelectionRectTool
       view.beginEdit();
       lastPoint = view.effectivePos();
       view.enableScratch();
-      renderSelection(view.canvas, {lastPoint.x, lastPoint.y, 1, 1});
+      renderSelection(view.canvas, Rect{lastPoint, {1, 1}}, true);
       break;
 
     case PictureEvent::NONE:
@@ -33,7 +33,7 @@ struct SelectionRectTool
         auto currPoint = view.effectivePos();
         if (currPoint.x == lastPoint.x && currPoint.y == lastPoint.y) break;
         SDL_Rect rect =
-          intersectFromOrigin(Rect(currPoint, lastPoint), buffer.getSize());
+          intersectFromOrigin(makeRect(currPoint, lastPoint), buffer.getSize());
         view.enableScratch();
         renderSelection(view.canvas, rect, true);
       }
@@ -42,7 +42,7 @@ struct SelectionRectTool
       if (view.isEditing()) {
         auto currPoint = view.effectivePos();
         SDL_Rect rect =
-          intersectFromOrigin(Rect(currPoint, lastPoint), buffer.getSize());
+          intersectFromOrigin(makeRect(currPoint, lastPoint), buffer.getSize());
         view.cancelEdit();
         auto fillColor = view.canvas.getColorB();
         if (!view.fillSelectedOut) fillColor.a = 0;

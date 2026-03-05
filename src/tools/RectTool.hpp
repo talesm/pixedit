@@ -9,7 +9,7 @@ namespace pixedit {
 struct RectTool
 {
   bool outline = false;
-  SDL_Point lastPoint;
+  Point lastPoint;
 
   RectTool(bool outline)
     : outline(outline)
