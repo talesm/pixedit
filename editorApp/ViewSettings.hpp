@@ -12,7 +12,6 @@ struct ViewSettings
 {
   PictureView view;
   SDL_Texture* texture = nullptr;
-  int fileUnamedId = 0;
   std::string filename;
   std::string titleBuffer;
 };

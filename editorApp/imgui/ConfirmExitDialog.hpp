@@ -21,9 +21,10 @@ showConfirmExitDialog(bool* exiting)
         "Confirm exit", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
     auto buffer = currentBuffer();
     ImGui::Text("Image unsaved changes will be lost?");
-    const char* cstr = "";
-    if (buffer) { cstr = getSettingsFor(buffer).filename.c_str(); }
-    ImGui::Text("File: %s", cstr);
+    if (buffer) {
+      const char* cstr = buffer->getName().c_str();
+      ImGui::Text("File: %s", cstr);
+    }
     ImGui::Separator();
 
     if (ImGui::Button("Close",

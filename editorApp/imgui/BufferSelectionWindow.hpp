@@ -17,19 +17,15 @@ initBufferSelectionAuxWindow(
   const std::vector<std::shared_ptr<PictureBuffer>>* buffers,
   const bool& maximizeView)
 {
-  return [=]() {
-    static std::string title = "Files";
+  return [buffers, &maximizeView]() {
     auto buffer = currentBuffer();
-    if (!buffer || maximizeView || buffers->size() < 2) { return; }
-    if (ImGui::Begin(title.c_str())) {
-      if (ImGui::BeginCombo("File",
-                            buffer->getFilename().empty()
-                              ? "New File"
-                              : buffer->getFilename().c_str())) {
+    if (!buffer || !maximizeView || buffers->size() < 2) { return; }
+    if (ImGui::Begin("Files")) {
+      if (ImGui::BeginCombo("File", buffer->getName().c_str())) {
         int i = 0;
         for (auto& b : *buffers) {
           bool selected = b == buffer;
-          if (ImGui::Selectable(b->getFilename().c_str(), selected)) {
+          if (ImGui::Selectable(b->getName().c_str(), selected)) {
             pushAction(actions::VIEW_CHANGE, std::to_string(i));
           }
           if (selected) { ImGui::SetItemDefaultFocus(); }

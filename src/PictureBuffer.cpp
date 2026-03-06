@@ -101,6 +101,22 @@ PictureBuffer::redo()
   refresh();
   return true;
 }
+const std::string&
+PictureBuffer::getName()
+{
+  if (nameId.empty()) {
+    if (file.name.empty()) {
+      static int lastNewFile = 0;
+      nameId = std::format("New file {}", ++lastNewFile);
+    } else if (auto lastSlash = file.name.find_last_of('/');
+               lastSlash != std::string::npos) {
+      nameId = file.name.substr(lastSlash + 1);
+    } else {
+      nameId = file.name;
+    }
+  }
+  return nameId;
+}
 
 void
 PictureBuffer::persistSelection()

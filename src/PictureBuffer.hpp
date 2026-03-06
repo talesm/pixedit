@@ -16,6 +16,7 @@ namespace pixedit {
 class PictureBuffer
 {
   PictureFile file;
+  std::string nameId;
   Surface surface;
   PixDocument document;
   Sint64 currentVersion = 0;
@@ -52,11 +53,14 @@ public:
 
   bool redo();
 
-  constexpr const std::string& getFilename() const { return file.name; }
+  const std::string& getName();
 
-  constexpr const PictureFile& getFile() const { return file; }
+  [[nodiscard]] constexpr const std::string& getFilename() const
+  { return file.name; }
 
-  Surface getSurface() const { return surface; }
+  [[nodiscard]] constexpr const PictureFile& getFile() const { return file; }
+
+  [[nodiscard]] Surface getSurface() const { return surface; }
 
   void setSurface(Surface value) { surface = std::move(value); }
 

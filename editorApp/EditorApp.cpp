@@ -267,35 +267,19 @@ ViewSettings&
 getSettingsFor(const std::shared_ptr<PictureBuffer>& buffer)
 {
   auto& settings = ctx->viewSettings[buffer];
+  auto& name = buffer->getName();
   if (buffer->getFilename().empty()) {
-    if (settings.fileUnamedId == 0) {
-      int largestUnnamedId = 0;
-      for (auto& s : ctx->viewSettings) {
-        if (s.second.fileUnamedId > largestUnnamedId) {
-          largestUnnamedId = s.second.fileUnamedId;
-        }
-      }
-      settings.fileUnamedId = largestUnnamedId + 1;
-      std::stringstream ss;
-      ss << "New image " << settings.fileUnamedId;
-      settings.filename = ss.str();
-      ss << "###" << buffer.get();
-      settings.titleBuffer = ss.str();
+    if (settings.filename != name) {
+      settings.filename = name;
+      settings.titleBuffer =
+        std::format("{}###{:x}", name, size_t(buffer.get()));
     }
   } else {
     auto& filename = buffer->getFilename();
     if (filename != settings.filename) {
       settings.filename = filename;
-      settings.fileUnamedId = 0;
-
-      auto lastSlash = filename.find_last_of('/');
-      if (lastSlash == std::string::npos) {
-        settings.titleBuffer = filename;
-      } else {
-        std::stringstream ss;
-        ss << filename.substr(lastSlash + 1) << "###" << buffer.get();
-        settings.titleBuffer = ss.str();
-      }
+      settings.titleBuffer =
+        std::format("{}###{:x}", name, size_t(buffer.get()));
     }
   }
   return settings;
