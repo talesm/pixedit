@@ -1,8 +1,5 @@
 {
-  "dependencies" : [ {
-    "name" : "imgui",
-    "version>=" : "1.91.9"
-  }, "libpng", {
+  "dependencies" : [ "libpng", {
     "name" : "sqlitecpp",
     "version>=" : "3.3.3"
   }, {

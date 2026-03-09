@@ -144,7 +144,6 @@ target_include_directories(pix_test PRIVATE test/ ${PROJECT_BINARY_DIR} src/ uti
 target_link_libraries(pix_test PRIVATE SDL3pp::SDL3pp nlohmann_json::nlohmann_json SQLiteCpp)
 
 # Deps
-find_package(imgui CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(SQLiteCpp CONFIG REQUIRED)
 
@@ -156,15 +155,6 @@ target_link_libraries(pix_test PUBLIC doctest::doctest)
 find_path(PICOSHA2_INCLUDE_DIRS "picosha2.h")
 target_include_directories(pix_utils PUBLIC ${PICOSHA2_INCLUDE_DIRS})
 target_include_directories(pix_test PRIVATE ${PICOSHA2_INCLUDE_DIRS})
-
-# ImGui SDL3 binding
-add_library(imgui_sdl3
-        external/imgui_sdl3/imgui_impl_sdl3.cpp
-        external/imgui_sdl3/imgui_impl_sdl3.h
-        external/imgui_sdl3/imgui_impl_sdlrenderer3.cpp
-        external/imgui_sdl3/imgui_impl_sdlrenderer3.h)
-target_include_directories(imgui_sdl3 PUBLIC external/imgui_sdl3/)
-target_link_libraries(imgui_sdl3 PUBLIC SDL3pp::SDL3pp imgui::imgui)
 
 # tinyfiledialogs
 add_library(tinyfiledialogs external/tinyfiledialogs/tinyfiledialogs.c external/tinyfiledialogs/tinyfiledialogs.h)
@@ -184,6 +174,8 @@ FetchContent_Declare(SDL3ppExternal
         URL https://github.com/talesm/SDL3pp/releases/download/0.7.3/SDL3pp-0.7.3.tar.gz
 )
 FetchContent_MakeAvailable(SDL3ppExternal)
+
+add_subdirectory(external/imgui-1.92.6-docking)
 
 # Link to your project
 target_link_libraries(pix
