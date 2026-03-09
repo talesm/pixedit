@@ -106,12 +106,16 @@ EditorAppImpl::update()
   showAboutDialog();
 
   if (!maximizeView) {
+    int i = 0;
     for (auto& buffer : buffers) {
-      if (focusBufferNextFrame && buffer == currentBuffer()) {
+      bool isFocused = buffer == currentBuffer();
+      if (focusBufferNextFrame && isFocused) {
         focusBufferNextFrame = false;
         ImGui::SetNextWindowFocus();
       }
-      showPictureWindow(renderer.get(), buffer);
+      auto requestFocus = showPictureWindow(renderer.get(), buffer);
+      if (!isFocused && requestFocus) ctx->bufferIndex = i;
+      i++;
     }
   }
 }

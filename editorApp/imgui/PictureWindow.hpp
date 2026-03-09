@@ -7,13 +7,11 @@
 
 namespace pixedit {
 
-PictureManager&
-currentPicture();
-
-inline void
+inline bool
 showPictureWindow(SDL_Renderer* renderer,
                   const std::shared_ptr<PictureBuffer>& buffer)
 {
+  bool requestFocus = false;
   auto& settings = getSettingsFor(buffer);
   ImGuiWindowFlags flags = 0;
   if (buffer->isDirty()) { flags |= ImGuiWindowFlags_UnsavedDocument; }
@@ -45,6 +43,7 @@ showPictureWindow(SDL_Renderer* renderer,
 
     auto& view = settings.view;
     if (ImGui::IsWindowFocused()) {
+      requestFocus = true;
       ImGui::InvisibleButton("Canvas",
                              canvasSz,
                              ImGuiButtonFlags_MouseButtonLeft |
@@ -79,6 +78,7 @@ showPictureWindow(SDL_Renderer* renderer,
   }
   if (!stayOpen) { pushAction(actions::PIC_CLOSE); }
   ImGui::End();
+  return requestFocus;
 }
 
 } // namespace pixedit
