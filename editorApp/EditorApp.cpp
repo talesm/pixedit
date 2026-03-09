@@ -160,8 +160,8 @@ std::unique_ptr<EditorApp>
 createEditorApp(const EditorInitSettings& settings)
 {
   if (!SDL_Init(SDL::INIT_VIDEO)) throw std::runtime_error{SDL_GetError()};
-  auto [window, renderer] =
-    SDL::CreateWindowAndRenderer("Pixedit viewer", settings.windowSz);
+  auto [window, renderer] = SDL::CreateWindowAndRenderer(
+    "Pixedit viewer", settings.windowSz, SDL::WINDOW_RESIZABLE);
   Rect pictureViewport = {0, 0, settings.windowSz.x, settings.windowSz.y};
   auto editorApp = std::make_unique<EditorAppImpl>(
     std::move(window), std::move(renderer), pictureViewport);
