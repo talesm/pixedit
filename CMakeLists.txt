@@ -171,7 +171,7 @@ endforeach (SCRATCH_SRC ${SCRATCH_SOURCES})
 include(FetchContent)
 set(SDL3PP_FORCE_BUNDLED ON) # Enable this to force CMake to download SDL, SDL_image and SDL_ttf
 FetchContent_Declare(SDL3ppExternal
-        URL https://github.com/talesm/SDL3pp/releases/download/0.8.1/SDL3pp-0.8.1.tar.gz
+        URL https://github.com/talesm/SDL3pp/releases/download/0.9.0/SDL3pp-0.9.0.tar.gz
 )
 FetchContent_MakeAvailable(SDL3ppExternal)
 

@@ -1,5 +1,5 @@
 {
-  "dependencies" : [ "libpng", {
+  "dependencies" : [ {
     "name" : "sqlitecpp",
     "version>=" : "3.3.3"
   }, {
